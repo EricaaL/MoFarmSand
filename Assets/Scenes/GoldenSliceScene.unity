@@ -12096,6 +12096,7 @@ GameObject:
   - component: {fileID: 540190979}
   - component: {fileID: 540190981}
   - component: {fileID: 540190982}
+  - component: {fileID: 540190983}
   m_Layer: 0
   m_Name: CozyBridge
   m_TagString: Untagged
@@ -12117,6 +12118,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   seasonAtmosphere: {fileID: 540190981}
   snowCover: {fileID: 540190982}
+  leafLitter: {fileID: 540190983}
 --- !u!4 &540190980
 Transform:
   m_ObjectHideFlags: 0
@@ -12166,6 +12168,78 @@ MonoBehaviour:
   keepClearCenter: {x: 0, y: 0, z: 6}
   keepClearHalfSize: {x: 10, y: 9}
   spreadHalfSize: 24
+--- !u!114 &540190983
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 540190978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e722a4df2994394e997af18fc3908f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  leafPrefabs:
+  - {fileID: 1941742681057730442, guid: 1d606f87f2733f5458538c20f3ef75eb, type: 3}
+  - {fileID: 1684888891818450594, guid: 51885c6fae314a8479d1de009cbbfd70, type: 3}
+  - {fileID: 7496631395164444823, guid: 24cda155650cbea42abcc08eee3b47ea, type: 3}
+  - {fileID: 892179951917966906, guid: 15a41f7ec3ef9ea47866543e4cc15ff7, type: 3}
+  - {fileID: 8396460934639063031, guid: 921f940702784f447912c152135fb014, type: 3}
+  clusterCount: 18
+  clusterRadius: 2.2
+  stragglerShare: 0.25
+  leafSize: {x: 0.4, y: 0.7}
+  leafColors:
+    serializedVersion: 2
+    key0: {r: 0.85, g: 0.18, b: 0.12, a: 1}
+    key1: {r: 0.95, g: 0.5, b: 0.15, a: 1}
+    key2: {r: 1, g: 0.85, b: 0.3, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 32768
+    ctime2: 65535
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 3
+    m_NumAlphaKeys: 2
+  keepClearCenter: {x: 0, y: 0, z: 5}
+  keepClearHalfSize: {x: 4, y: 4}
+  spreadCenter: {x: 0, y: 5}
+  spreadHalfSize: 18
+  maxLeaves: 600
+  windForce: 3.5
+  windLift: 4.2
+  gustThreshold: 0.62
+  player: {fileID: 369750572}
+  disturbRadius: 1.4
+  kickForce: 9
+  hopLift: 9
+  fullKickSpeed: 3
+  gravity: 3.5
+  maxHeight: 0.4
+  maxRiseSpeed: 1.4
+  groundFriction: 5
+  airDrag: 1.5
+  spinSpeed: 7
+  leash: 3
 --- !u!1001 &600755074
 PrefabInstance:
   m_ObjectHideFlags: 0
