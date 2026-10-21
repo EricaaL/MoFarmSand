@@ -8,20 +8,32 @@ using UnityEngine;
 public class CozyBridge : MonoBehaviour
 {
     [SerializeField] private SeasonAtmosphere seasonAtmosphere;
+    [SerializeField] private SnowCover snowCover;
     private GameObject ambientFx;
+    private GameObject seasonFx;
 
     private void Awake()
     {
         if (seasonAtmosphere == null) seasonAtmosphere = GetComponent<SeasonAtmosphere>();
+        if (snowCover == null) snowCover = GetComponent<SnowCover>();
+    }
+
+    /// <summary>Forwarded by <see cref="DayClock"/> each frame so the snow keeps building through the day.</summary>
+    public void SetDayProgress(float progress01)
+    {
+        if (snowCover != null) snowCover.SetDayProgress(progress01);
     }
 
     public void Apply(DayPlan plan, DisasterData disaster, CozyWeatherMap map)
     {
         if (ambientFx != null) Destroy(ambientFx);
+        if (seasonFx != null) Destroy(seasonFx);
         if (plan == null || plan.date.season == null) return;
 
         SeasonData season = plan.date.season;
-        if (seasonAtmosphere != null && map != null) seasonAtmosphere.SetLook(map.LookFor(season), map.transitionSeconds);
+        CozyWeatherMap.SeasonLook look = map != null ? map.LookFor(season) : CozyWeatherMap.SeasonLook.Neutral;
+        if (seasonAtmosphere != null && map != null) seasonAtmosphere.SetLook(look, map.transitionSeconds);
+        if (snowCover != null) snowCover.SetSeason(look, plan.date.seasonProgress01, 1f / Mathf.Max(1, season.lengthInDays));
         CozyWeather cozy = CozyWeather.instance;
         if (cozy != null)
         {
@@ -42,15 +54,18 @@ public class CozyBridge : MonoBehaviour
                 if (profile != null) eco.SetWeather(profile, map.transitionSeconds);
             }
 
-            if (cozy.climateModule != null) cozy.climateModule.snowAmount = season.initialSnow01;
+            // Snow cover (climateModule.snowAmount) is owned by SnowCover, from the season look.
         }
 
-        GameObject fx = map != null ? map.AmbientFxFor(disaster) : null;
-        if (fx != null)
-        {
-            Camera cam = Camera.main;
-            Vector3 pos = cam != null ? cam.transform.position : transform.position;
-            ambientFx = Instantiate(fx, pos, Quaternion.identity, cam != null ? cam.transform : transform);
-        }
+        ambientFx = SpawnFx(map != null ? map.AmbientFxFor(disaster) : null);
+        seasonFx = SpawnFx(look.ambientFx);
+    }
+
+    private GameObject SpawnFx(GameObject prefab)
+    {
+        if (prefab == null) return null;
+        Camera cam = Camera.main;
+        Vector3 pos = cam != null ? cam.transform.position : transform.position;
+        return Instantiate(prefab, pos, Quaternion.identity, cam != null ? cam.transform : transform);
     }
 }

@@ -53,6 +53,18 @@ public class PauseScreen : IRunScreen
             15f, ImGuiKit.Muted, TextAnchor.MiddleLeft);
         y += 22 * s;
 
+        if (director.IsBeta)
+        {
+            if (inDay && ImGuiKit.Button(new Rect(x, y, w, bh), "Back to Beta Map", true, 22f)) { director.LeaveBetaDay(); return; }
+            if (inDay) y += bh + gap;
+            if (ImGuiKit.Button(new Rect(x, y, w, bh), confirmAbandon ? "Click again to wipe the beta slot" : "Reset Beta Slot", true, 22f))
+            {
+                if (confirmAbandon) { director.ResetBetaSlot(); return; }
+                confirmAbandon = true;
+            }
+            return;
+        }
+
         string abandon = confirmAbandon ? "Really abandon the year? Click again" : "Abandon Year";
         if (ImGuiKit.Button(new Rect(x, y, w, bh), abandon, true, 22f))
         {

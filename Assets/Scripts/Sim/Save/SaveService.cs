@@ -26,6 +26,8 @@ public struct SlotSummary
 public sealed class SaveService
 {
     public const int SlotCount = 3;
+    /// <summary>Hidden fourth slot (slot3.json) used only by the beta test scene; the title screen never lists it.</summary>
+    public const int BetaSlot = SlotCount;
 
     private readonly ISaveStore store;
 

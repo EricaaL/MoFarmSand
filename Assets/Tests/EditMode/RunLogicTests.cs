@@ -378,4 +378,45 @@ public class RunLogicTests
         Assert.AreEqual(0f, DayPlanner.ResistFor(run, db, "storm"));
         Assert.AreEqual(1.2f, DayPlanner.ModifierGrowth(run, db), 1e-5f);
     }
+
+    [Test]
+    public void FreeRoamCanEnterAnyNodeAndNeverEndsOrBanks()
+    {
+        MetaProgress meta = new MetaProgress();
+        RunState run = RunLogic.NewRun(9, db, meta);
+        run.freeRoam = true;
+        foreach (MapNode n in run.map.nodes) Assert.IsTrue(RunLogic.CanEnter(run, n.id), "every node is open");
+
+        // Jump straight to the final boss and lose: back on the map at full health, year still alive.
+        Assert.IsTrue(RunLogic.BeginNode(run, run.map.bossId));
+        DayPlan plan = DayPlanner.Plan(run, run.map.bossId, db);
+        run.hp = 0;
+        RunLogic.CompleteNode(run, meta, DayOutcome.Failed, plan, db);
+        Assert.AreEqual(RunPhase.ChoosingNode, run.phase);
+        Assert.AreEqual(run.maxHp, run.hp);
+
+        // Beat a season boss: no bank stop, no year end.
+        MapNode seasonBoss = run.map.nodes.Find(n => n.nodeTypeId == "season_boss");
+        Assert.IsTrue(RunLogic.BeginNode(run, seasonBoss.id));
+        RunLogic.CompleteNode(run, meta, DayOutcome.BossDefeated, DayPlanner.Plan(run, seasonBoss.id, db), db);
+        Assert.AreEqual(RunPhase.ChoosingNode, run.phase);
+        Assert.IsFalse(run.endYearAfterBanking);
+    }
+
+    [Test]
+    public void BetaKitHoldsEverySeasonsCropsAndOneOfEachKind() // seeds only fill leftover slots
+    {
+        RunState run = RunLogic.NewRun(4, db, new MetaProgress());
+        for (int layer = 0; layer < db.Calendar.TotalDays; layer += db.Calendar.DateOf(layer).season.lengthInDays)
+        {
+            SeasonData season = db.Calendar.DateOf(layer).season;
+            BetaKit.Fill(run, db, season);
+            HashSet<CropType> kinds = new HashSet<CropType>();
+            foreach (SlotSave s in run.inventory)
+                if (s.count > 0 && db.items.Get(s.itemId) is CropData crop) kinds.Add(crop.type);
+            Assert.AreEqual(3, kinds.Count, $"{season.displayName} kit has projectile, shooter and support crops");
+            foreach (PriceTable.PriceRow row in db.prices.rows)
+                if (row.StockedIn(season)) Assert.Greater(InventoryOps.CountOf(run.inventory, row.crop.Id), 0, $"{row.crop.Id} in {season.displayName}");
+        }
+    }
 }

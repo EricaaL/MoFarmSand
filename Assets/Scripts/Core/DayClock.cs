@@ -9,6 +9,7 @@ public class DayClock : MonoBehaviour
 {
     [SerializeField] private GameManager gameManager;
     [SerializeField] private DayNightLighting lighting;
+    [SerializeField] private CozyBridge cozyBridge;
 
     private readonly DayTimer timer = new DayTimer();
     private float nightSeconds;
@@ -59,6 +60,7 @@ public class DayClock : MonoBehaviour
         {
             bool timeUp = timer.Tick(Time.deltaTime);
             if (lighting != null) lighting.SetDayProgress(timer.Progress01);
+            if (cozyBridge != null) cozyBridge.SetDayProgress(timer.Progress01);
             if (timeUp) gameManager.StartNight();
         }
         else if (phase == GamePhase.Night)

@@ -43,11 +43,21 @@ public class CozyWeatherMap : ScriptableObject
         [Tooltip("Added to COZY's filter saturation.")] public float saturation;
         [Tooltip("Added to COZY's filter value.")] public float brightness;
         [Tooltip("Multiplies COZY's fog density.")] public float fogDensity;
+        [Tooltip("Multiplies COZY's sunlight color by day (1 = unchanged). Summer pushes this up for a stronger sun.")]
+        public float sunIntensity;
+        [Tooltip("Multiplies COZY's ambient light by day (1 = unchanged).")]
+        public float ambientIntensity;
+        [Tooltip("Particles that drift through the whole season (autumn leaves, winter snowfall). Not blended between seasons.")]
+        public GameObject ambientFx;
+        [Tooltip("Ground snow cover 0..1 at the start of the season.")]
+        [Range(0f, 1f)] public float snowStart01;
+        [Tooltip("Ground snow cover 0..1 at the end of the season.")]
+        [Range(0f, 1f)] public float snowEnd01;
 
         public static SeasonLook Neutral => new SeasonLook
         {
             skyTint = Color.white, fogTint = Color.white, cloudTint = Color.white, lightTint = Color.white,
-            ambientTint = Color.white, fogDensity = 1f,
+            ambientTint = Color.white, fogDensity = 1f, sunIntensity = 1f, ambientIntensity = 1f,
         };
 
         public static SeasonLook Lerp(SeasonLook a, SeasonLook b, float t)
@@ -65,6 +75,11 @@ public class CozyWeatherMap : ScriptableObject
                 saturation = Mathf.Lerp(a.saturation, b.saturation, t),
                 brightness = Mathf.Lerp(a.brightness, b.brightness, t),
                 fogDensity = Mathf.Lerp(a.fogDensity, b.fogDensity, t),
+                sunIntensity = Mathf.Lerp(a.sunIntensity, b.sunIntensity, t),
+                ambientIntensity = Mathf.Lerp(a.ambientIntensity, b.ambientIntensity, t),
+                ambientFx = b.ambientFx,
+                snowStart01 = Mathf.Lerp(a.snowStart01, b.snowStart01, t),
+                snowEnd01 = Mathf.Lerp(a.snowEnd01, b.snowEnd01, t),
             };
         }
     }
@@ -78,11 +93,21 @@ public class CozyWeatherMap : ScriptableObject
     public SeasonLook LookFor(SeasonData season)
     {
         for (int i = 0; i < seasonLooks.Count; i++)
-            if (seasonLooks[i].season == season) return seasonLooks[i];
+        {
+            if (seasonLooks[i].season != season) continue;
+            // Looks saved before these fields existed hold 0; read that as "unchanged".
+            SeasonLook look = seasonLooks[i];
+            if (look.sunIntensity <= 0f) look.sunIntensity = 1f;
+            if (look.ambientIntensity <= 0f) look.ambientIntensity = 1f;
+            return look;
+        }
         SeasonLook neutral = SeasonLook.Neutral;
         neutral.season = season;
         return neutral;
     }
+
+    /// <summary>The season's drifting particles (leaves, snowfall), or null.</summary>
+    public GameObject SeasonFxFor(SeasonData season) => LookFor(season).ambientFx;
 
     public WeatherProfile ProfileFor(SeasonData season, WeatherKind kind, DisasterData disaster)
     {

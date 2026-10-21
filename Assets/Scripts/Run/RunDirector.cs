@@ -16,6 +16,8 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
 {
     [SerializeField] private RunMode runMode = RunMode.Roguelike;
     [SerializeField] private GameDatabase db;
+    [Tooltip("Beta test scene: uses the hidden beta save slot, skips the title screen and lets you enter any map node.")]
+    [SerializeField] private bool betaMode;
 
     [Header("Scene")]
     [SerializeField] private GameManager gameManager;
@@ -58,6 +60,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     public static bool ModalOpen { get; private set; }
 
     public bool IsRoguelike => runMode == RunMode.Roguelike;
+    public bool IsBeta => betaMode;
     public bool IsDayRunning => dayRunning;
     /// <summary>The merchant is at his booth every day. Merchant days additionally stock charms (see DayPlanner).</summary>
     public bool MerchantOpen => dayRunning && plan != null;
@@ -73,6 +76,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     public FarmConditions Conditions => conditions;
     public SaveService Service => RunSession.Service;
     public int LastBankMessageCredited { get; set; }
+    private const int BetaCoins = 999;
     /// <summary>Plots added by each extra farmland (one column of the field).</summary>
     public int PlotsPerFarmland { get; private set; } = 3;
 
@@ -138,8 +142,58 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         PlotsPerFarmland = Mathf.Max(1, FarmlandLogic.PlotsPerFarmland(basePositions));
         SetFrozen(true);
 
+        if (betaMode) { StartBeta(); return; }
+        // The beta slot is private to the beta scene: never carry it into the normal game.
+        if (RunSession.ActiveSlot == SaveService.BetaSlot) RunSession.Unload();
+
         if (RunSession.HasActiveSlot && Run != null && File.hasRun) Route();
         else ShowTitle();
+    }
+
+    /// <summary>Beta scene: open the hidden slot and go straight to the free-roam map (or the day in progress).</summary>
+    private void StartBeta()
+    {
+        if (RunSession.ActiveSlot != SaveService.BetaSlot) OpenSlot(SaveService.BetaSlot);
+        if (!RunSession.HasActiveSlot) return;
+        bool usable = File.hasRun && Run.freeRoam && Run.phase != RunPhase.Won && Run.phase != RunPhase.Lost;
+        if (usable) Route(); else StartNewRun();
+    }
+
+    /// <summary>Beta: throws the beta save away and starts a fresh free-roam year.</summary>
+    public void ResetBetaSlot()
+    {
+        if (!betaMode) return;
+        leaving = true;
+        Time.timeScale = 1f;
+        if (clock != null) clock.Stop();
+        if (disaster != null) disaster.End();
+        Service.Delete(SaveService.BetaSlot);
+        RunSession.Unload();
+        ReloadScene();
+    }
+
+    /// <summary>Beta: drops today's day without finishing it and returns to the map.</summary>
+    public void LeaveBetaDay()
+    {
+        if (!betaMode || Run == null) return;
+        leaving = true;
+        Time.timeScale = 1f;
+        if (clock != null) clock.Stop();
+        if (disaster != null) disaster.End();
+        dayRunning = false;
+        Run.pendingNodeId = -1;
+        Run.hp = Run.maxHp;
+        Run.phase = RunPhase.ChoosingNode;
+        RunSession.Commit();
+        ReloadScene();
+    }
+
+    /// <summary>Beta: changes the year number, which scales every boss (see BossScaling).</summary>
+    public void SetBetaYear(int year)
+    {
+        if (!betaMode || Run == null) return;
+        Run.year = Mathf.Max(1, year);
+        RunSession.Commit();
     }
 
     private void OnDestroy()
@@ -307,6 +361,11 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         if (!RunSession.HasActiveSlot) return;
         int seed = Environment.TickCount ^ (int)(DateTime.UtcNow.Ticks & 0x7FFFFFFF);
         File.run = RunLogic.NewRun(seed, db, File.meta);
+        if (betaMode)
+        {
+            File.run.freeRoam = true;
+            File.run.coins = BetaCoins;
+        }
         File.hasRun = true;
         RunSession.Commit();
         Route();
@@ -392,6 +451,13 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
 
         RunState run = Run;
         if (plan.node != null && plan.node.healOnStart) run.hp = run.maxHp;
+        if (betaMode)
+        {
+            // Every beta day starts fully stocked for its season, so any boss can be tried at once.
+            run.hp = run.maxHp;
+            run.coins = Mathf.Max(run.coins, BetaCoins);
+            BetaKit.Fill(run, db, plan.date.season);
+        }
 
         inventory.Restore(run.inventory, run.activeSlot, db.items);
         health.Restore(run.hp, run.maxHp);

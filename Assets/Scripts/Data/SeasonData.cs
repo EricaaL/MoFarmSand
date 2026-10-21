@@ -29,6 +29,7 @@ public class SeasonData : ScriptableObject, IHasId
     [Header("COZY mapping")]
     [Range(0f, 1f)] public float cozyYearStart01;
     [Range(0f, 1f)] public float cozyYearSpan01 = 0.25f;
+    [Tooltip("Unused at runtime: ground snow now comes from CozyWeatherMap.SeasonLook.snowStart01/snowEnd01.")]
     [Range(0f, 1f)] public float initialSnow01;
 
     public string Id => seasonId;

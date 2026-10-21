@@ -38,7 +38,8 @@ public class MapScreen : IRunScreen
         {
             // Start with today's (or the next) layer near the bottom third of the screen.
             MapNode today0 = run.phase == RunPhase.InDay ? map.Get(run.pendingNodeId) : null;
-            int focusLayer = today0 != null ? today0.layer : run.DayIndex;
+            MapNode here = run.freeRoam && run.currentNodeId >= 0 ? map.Get(run.currentNodeId) : null;
+            int focusLayer = today0 != null ? today0.layer : here != null ? here.layer : run.DayIndex;
             float target = focusLayer * LayerHeight * s - h * 0.35f;
             scroll = Mathf.Clamp(target, 0f, Mathf.Max(0f, content - h));
             scrollInit = true;
@@ -125,11 +126,42 @@ public class MapScreen : IRunScreen
         }
 
         DrawHeader(run, w, s);
+        if (director.IsBeta && !readOnly) DrawBetaPanel(run, db, h, s, content);
         if (hovered != null) DrawTooltip(hovered, db, mouse, s, readOnly || RunLogic.CanEnter(run, hovered.id),
             BossScaling.ForYear(run.YearNumber(director.Meta), db.difficulty));
 
         if (readOnly && ImGuiKit.Button(new Rect(24 * s, h - 72 * s, 220 * s, 50 * s), "Close (Esc)", true, 22f))
             director.CloseRoute();
+    }
+
+    /// <summary>Beta controls: boss strength (year) and season shortcuts. Seasons scroll the map to their first layer.</summary>
+    private void DrawBetaPanel(RunState run, GameDatabase db, float h, float s, float content)
+    {
+        Rect panel = new Rect(24 * s, h - 260 * s, 300 * s, 236 * s);
+        ImGuiKit.Fill(panel, new Color(0.04f, 0.03f, 0.08f, 0.95f));
+        float x = panel.x + 12 * s, y = panel.y + 10 * s;
+        int year = run.YearNumber(director.Meta);
+        string scaling = BossScaling.Describe(BossScaling.ForYear(year, db.difficulty));
+        ImGuiKit.Label(new Rect(x, y, 276 * s, 26 * s), scaling.Length > 0 ? $"Boss year {year}: {scaling}" : $"Boss year {year}: base strength", 16f, Color.white, TextAnchor.MiddleLeft, true);
+        y += 32 * s;
+        if (ImGuiKit.Button(new Rect(x, y, 132 * s, 36 * s), "Year -", year > 1, 18f)) director.SetBetaYear(year - 1);
+        if (ImGuiKit.Button(new Rect(x + 144 * s, y, 132 * s, 36 * s), "Year +", true, 18f)) director.SetBetaYear(year + 1);
+        y += 48 * s;
+        ImGuiKit.Label(new Rect(x, y, 276 * s, 24 * s), "Jump to season", 16f, ImGuiKit.Muted, TextAnchor.MiddleLeft);
+        y += 28 * s;
+
+        // The first layer of each season is where its band starts on the map.
+        int shown = 0, lastSeason = -1;
+        for (int layer = 0; layer <= run.map.layerCount; layer++)
+        {
+            CalendarDate d = db.Calendar.DateOf(layer);
+            if (d.season == null || d.seasonIndex == lastSeason) continue;
+            lastSeason = d.seasonIndex;
+            Rect b = new Rect(x + (shown % 2) * 144 * s, y + (shown / 2) * 44 * s, 132 * s, 36 * s);
+            if (ImGuiKit.Button(b, d.season.displayName, true, 18f))
+                scroll = Mathf.Clamp(layer * LayerHeight * s - Screen.height * 0.35f, 0f, Mathf.Max(0f, content - Screen.height));
+            shown++;
+        }
     }
 
     private void DrawHeader(RunState run, float w, float s)
@@ -138,7 +170,8 @@ public class MapScreen : IRunScreen
         ImGuiKit.Fill(new Rect(0f, 0f, w, 78f * s), new Color(0.05f, 0.04f, 0.09f, 0.97f));
         ImGuiKit.Label(new Rect(24 * s, 8 * s, 700 * s, 36 * s), readOnly ? $"Year {year} - Your route" : $"Year {year} - Choose your next day", 32f, ImGuiKit.Accent, TextAnchor.MiddleLeft, true);
         ImGuiKit.Label(new Rect(24 * s, 44 * s, 700 * s, 26 * s),
-            readOnly ? "Scroll to look ahead. Hover a node for details." : "Scroll to explore. Glowing nodes are your options. Esc opens the menu.", 18f, ImGuiKit.Muted);
+            run.freeRoam ? "BETA - free roam: click any node, in any order. Esc opens the menu."
+            : readOnly ? "Scroll to look ahead. Hover a node for details." : "Scroll to explore. Glowing nodes are your options. Esc opens the menu.", 18f, run.freeRoam ? ImGuiKit.Accent : ImGuiKit.Muted);
         // During a day the live wallet and health are the truth (the saved run is only updated at day's end).
         bool live = director.IsDayRunning;
         int purse = live ? director.Wallet.Coins : run.coins;

@@ -8,6 +8,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/GoldenSliceScene.unity
     guid: ec275f65f30ce144b85e3a4247be9391
+  - enabled: 1
+    path: Assets/Scenes/BetaTestScene.unity
+    guid: 6fb5b388959172848b31462919c10e1b
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

@@ -51,7 +51,7 @@ public class PlayerCombat : MonoBehaviour
         if (cam == null) cam = Camera.main;
         CropData crop = inventory.ActiveCrop;
         bool harvestClick = interactor != null && interactor.PointerHarvestable() != null; // that click harvests, not throws
-        bool canAim = CanAct && !harvestClick && !HotbarView.PointerBusy && crop != null && crop.type == CropType.Projectile && inventory.ActiveCount > 0;
+        bool canAim = CanAct && !harvestClick && !HotbarView.PointerBusy && !PlayerDance.WheelOpen && crop != null && crop.type == CropType.Projectile && inventory.ActiveCount > 0;
 
         // Hold left click to aim (the arc shows), release to throw. Right click cancels the aim.
         ThrowAimResult aim = attackAction == null ? ThrowAimResult.None : throwAim.Step(new ThrowAimInput
@@ -82,14 +82,14 @@ public class PlayerCombat : MonoBehaviour
             trajectory?.Hide();
         }
 
-        if (CanAct && !HotbarView.PointerBusy && crop != null && crop.type == CropType.Support
+        if (CanAct && !HotbarView.PointerBusy && !PlayerDance.WheelOpen && crop != null && crop.type == CropType.Support
             && Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
         {
             TryEat(crop);
         }
 
         // Shooters (peas, corn): hold left click to auto-fire toward the cursor.
-        if (CanAct && !harvestClick && !HotbarView.PointerBusy && crop != null && crop.type == CropType.Shooter
+        if (CanAct && !harvestClick && !HotbarView.PointerBusy && !PlayerDance.WheelOpen && crop != null && crop.type == CropType.Shooter
             && attackAction != null && attackAction.IsPressed() && Time.time >= nextThrowTime
             && magazine.CanFire(crop, inventory.ActiveCount)
             && Mouse.current != null && TryGetGroundPoint(Mouse.current.position.ReadValue(), out Vector3 aimPoint))

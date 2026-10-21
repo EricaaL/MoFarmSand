@@ -83,6 +83,7 @@ public static class RunLogic
         if (run.phase != RunPhase.ChoosingNode) return false;
         MapNode target = run.map.Get(nodeId);
         if (target == null) return false;
+        if (run.freeRoam) return true;
         if (run.currentNodeId < 0) return target.layer == 0;
         MapNode current = run.map.Get(run.currentNodeId);
         return current != null && current.next.Contains(nodeId);
@@ -99,6 +100,8 @@ public static class RunLogic
     /// <summary>Finishes the pending day. The live inventory/health/wallet must already be snapshotted into run.</summary>
     public static void CompleteNode(RunState run, MetaProgress meta, DayOutcome outcome, DayPlan plan, GameDatabase db)
     {
+        if (run.freeRoam) { CompleteFreeRoamNode(run, outcome); return; }
+
         // Losing a season boss is survivable (it only slows next season's crops); every other loss ends the year.
         bool softLoss = outcome == DayOutcome.Failed && plan.node != null && plan.node.survivableLoss;
         if (outcome == DayOutcome.Failed && !softLoss) { FailRun(run, meta); return; }
@@ -145,6 +148,21 @@ public static class RunLogic
         {
             run.phase = RunPhase.ChoosingNode;
         }
+    }
+
+    /// <summary>Beta days: win or lose, record the visit, refill health and go straight back to the map. No rewards, banking or year end.</summary>
+    private static void CompleteFreeRoamNode(RunState run, DayOutcome outcome)
+    {
+        MapNode node = run.map.Get(run.pendingNodeId);
+        if (node != null && !run.visited.Contains(node.id)) run.visited.Add(node.id);
+        run.currentNodeId = run.pendingNodeId;
+        run.pendingNodeId = -1;
+        run.stats.daysSurvived++;
+        if (node != null) run.stats.layersReached = Mathf.Max(run.stats.layersReached, node.layer + 1);
+        if (outcome == DayOutcome.BossDefeated) run.stats.bossesFed++;
+        run.hp = run.maxHp;
+        run.endYearAfterBanking = false;
+        run.phase = RunPhase.ChoosingNode;
     }
 
     private static void ClearGrowthDebuff(RunState run)

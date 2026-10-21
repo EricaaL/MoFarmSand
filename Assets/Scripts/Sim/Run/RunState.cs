@@ -29,6 +29,8 @@ public class RunState
     public int stockroomLevel;
     /// <summary>Which year of the farm this is: 1 for the first run, 2 for the second... 0 in old saves.</summary>
     public int year;
+    /// <summary>Beta testing: any map node can be entered in any order, and the year never ends or banks.</summary>
+    public bool freeRoam;
     public MapGraph map = new MapGraph();
     public int currentNodeId = -1;
     public int pendingNodeId = -1;

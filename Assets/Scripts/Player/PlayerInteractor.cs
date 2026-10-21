@@ -29,7 +29,7 @@ public class PlayerInteractor : MonoBehaviour
         if (pressed && Current != null) Current.Interact(gameObject);
 
         // Left-click a ripe crop within reach to harvest it as well.
-        if (!HotbarView.PointerBusy && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        if (!HotbarView.PointerBusy && !PlayerDance.WheelOpen && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
             FarmTile tile = PointerHarvestable();
             if (tile != null && tile.CanInteract(gameObject)) tile.Interact(gameObject);

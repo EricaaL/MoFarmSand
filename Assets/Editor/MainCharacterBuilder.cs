@@ -26,11 +26,16 @@ public static class MainCharacterBuilder
     private const float WalkSpeed = 2.5f;
     private const float RunSpeed = 5f;
 
+    private const string DanceDir = AnimDir + "/Dances";
+    private const string DanceDataDir = "Assets/Data/Dances";
+    private const string DanceLibraryPath = DanceDataDir + "/DanceLibrary.asset";
+
     private struct ClipSpec
     {
-        public string oldName, newName, clipName;
+        public string oldName, newName, clipName, dir;
         public bool loop;
-        public ClipSpec(string o, string n, string c, bool l) { oldName = o; newName = n; clipName = c; loop = l; }
+        public ClipSpec(string o, string n, string c, bool l, string d = AnimDir) { oldName = o; newName = n; clipName = c; loop = l; dir = d; }
+        public string Path => $"{dir}/{newName}.fbx";
     }
 
     private static readonly ClipSpec[] Clips =
@@ -41,6 +46,20 @@ public static class MainCharacterBuilder
         new ClipSpec("Farming", "MainCharacter@Farming", "Farming", false),
     };
 
+    // Emote-wheel dances, in slice order (first slice at the top, then clockwise). The Animator state is named after the clip.
+    private static readonly ClipSpec[] Dances =
+    {
+        new ClipSpec("Chicken Dance", "MainCharacter@Dance_Chicken", "Dance_Chicken", true, DanceDir),
+        new ClipSpec("Dancing", "MainCharacter@Dance_Groove", "Dance_Groove", true, DanceDir),
+        new ClipSpec("Northern Soul Spin Combo", "MainCharacter@Dance_Spin", "Dance_Spin", true, DanceDir),
+    };
+
+    private static readonly string[] DanceLabels = { "Chicken", "Groove", "Spin" };
+    private static readonly Color[] DanceColors =
+    {
+        new Color(1f, 0.75f, 0.3f), new Color(0.75f, 0.45f, 1f), new Color(0.35f, 0.85f, 0.95f),
+    };
+
     [MenuItem("MoFarmSand/Setup Main Character")]
     public static void Build()
     {
@@ -48,14 +67,18 @@ public static class MainCharacterBuilder
         EnsureFolder(CharDir);
         EnsureFolder(CharDir + "/Source");
         EnsureFolder(CharDir + "/Materials");
+        EnsureFolder(DanceDir);
+        EnsureFolder(DanceDataDir);
 
         OrganizeAssets();
         Avatar avatar = SetupRiggedModel();
         foreach (ClipSpec c in Clips) SetupClip(c, avatar);
+        foreach (ClipSpec c in Dances) SetupClip(c, avatar);
         AssetDatabase.Refresh();
 
+        DanceLibrary library = EnsureDanceAssets();
         AnimatorController controller = BuildController();
-        SwapPlayerBody(controller, avatar);
+        SwapPlayerBody(controller, avatar, library);
 
         AssetDatabase.SaveAssets();
         Debug.Log("[MainCharacterBuilder] Main character set up.");
@@ -77,13 +100,15 @@ public static class MainCharacterBuilder
                 Debug.LogError("[MainCharacterBuilder] Could not create the rigged model from " + source);
         }
 
-        foreach (ClipSpec c in Clips)
-        {
-            string from = $"{AnimDir}/{c.oldName}.fbx";
-            if (File.Exists(from) && !File.Exists($"{AnimDir}/{c.newName}.fbx"))
-                Report(AssetDatabase.MoveAsset(from, $"{AnimDir}/{c.newName}.fbx"));
-        }
+        foreach (ClipSpec c in Clips) MoveClip(c);
+        foreach (ClipSpec c in Dances) MoveClip(c); // loose Mixamo downloads land in AnimDir; file them under Dances/
         AssetDatabase.Refresh();
+    }
+
+    private static void MoveClip(ClipSpec c)
+    {
+        string from = $"{AnimDir}/{c.oldName}.fbx";
+        if (File.Exists(from) && !File.Exists(c.Path)) Report(AssetDatabase.MoveAsset(from, c.Path));
     }
 
     private static Avatar SetupRiggedModel()
@@ -111,7 +136,7 @@ public static class MainCharacterBuilder
 
     private static void SetupClip(ClipSpec c, Avatar avatar)
     {
-        string path = $"{AnimDir}/{c.newName}.fbx";
+        string path = c.Path;
         ModelImporter mi = AssetImporter.GetAtPath(path) as ModelImporter;
         if (mi == null) { Debug.LogError("[MainCharacterBuilder] Missing clip file " + path); return; }
 
@@ -140,10 +165,39 @@ public static class MainCharacterBuilder
         mi.SaveAndReimport();
     }
 
-    private static AnimationClip LoadClip(string fileName)
+    private static AnimationClip LoadClip(string fileName, string dir = AnimDir)
     {
-        return AssetDatabase.LoadAllAssetsAtPath($"{AnimDir}/{fileName}.fbx")
+        return AssetDatabase.LoadAllAssetsAtPath($"{dir}/{fileName}.fbx")
             .OfType<AnimationClip>().FirstOrDefault(a => !a.name.StartsWith("__preview__"));
+    }
+
+    /// <summary>Dance assets are created once; re-runs keep any labels or colours tuned in the Inspector.</summary>
+    private static DanceLibrary EnsureDanceAssets()
+    {
+        DanceLibrary library = AssetDatabase.LoadAssetAtPath<DanceLibrary>(DanceLibraryPath);
+        if (library == null)
+        {
+            library = ScriptableObject.CreateInstance<DanceLibrary>();
+            AssetDatabase.CreateAsset(library, DanceLibraryPath);
+        }
+
+        for (int i = 0; i < Dances.Length; i++)
+        {
+            string path = $"{DanceDataDir}/{Dances[i].clipName}.asset";
+            DanceData data = AssetDatabase.LoadAssetAtPath<DanceData>(path);
+            if (data == null)
+            {
+                data = ScriptableObject.CreateInstance<DanceData>();
+                data.displayName = DanceLabels[i];
+                data.stateName = Dances[i].clipName;
+                data.color = DanceColors[i];
+                AssetDatabase.CreateAsset(data, path);
+            }
+            if (!library.dances.Contains(data)) library.dances.Add(data);
+        }
+        EditorUtility.SetDirty(library);
+        AssetDatabase.SaveAssets();
+        return library;
     }
 
     private static AnimatorController BuildController()
@@ -185,11 +239,28 @@ public static class MainCharacterBuilder
         cancel.duration = 0.1f;
         cancel.AddCondition(AnimatorConditionMode.Greater, 0.5f, "Speed");
 
+        // Dances: entered from PlayerDance via CrossFade; moving or planting leaves them.
+        foreach (ClipSpec spec in Dances)
+        {
+            AnimatorState dance = sm.AddState(spec.clipName);
+            dance.motion = LoadClip(spec.newName, spec.dir);
+
+            AnimatorStateTransition stop = dance.AddTransition(locomotion);
+            stop.hasExitTime = false;
+            stop.duration = 0.1f;
+            stop.AddCondition(AnimatorConditionMode.Greater, 0.5f, "Speed");
+
+            AnimatorStateTransition plant = dance.AddTransition(farm);
+            plant.hasExitTime = false;
+            plant.duration = 0.1f;
+            plant.AddCondition(AnimatorConditionMode.If, 0f, "Farm");
+        }
+
         EditorUtility.SetDirty(ctrl);
         return ctrl;
     }
 
-    private static void SwapPlayerBody(AnimatorController controller, Avatar avatar)
+    private static void SwapPlayerBody(AnimatorController controller, Avatar avatar, DanceLibrary library)
     {
         GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(RiggedPath);
         GameObject root = PrefabUtility.LoadPrefabContents(PlayerPrefabPath);
@@ -225,6 +296,14 @@ public static class MainCharacterBuilder
             SerializedObject so = new SerializedObject(pa);
             so.FindProperty("animator").objectReferenceValue = anim;
             so.ApplyModifiedPropertiesWithoutUndo();
+
+            PlayerDance pd = root.GetComponent<PlayerDance>();
+            if (pd == null) pd = root.AddComponent<PlayerDance>();
+            SerializedObject pds = new SerializedObject(pd);
+            pds.FindProperty("library").objectReferenceValue = library;
+            pds.FindProperty("animator").objectReferenceValue = anim;
+            pds.FindProperty("controller").objectReferenceValue = root.GetComponent<PlayerController>();
+            pds.ApplyModifiedPropertiesWithoutUndo();
 
             PlayerController pc = root.GetComponent<PlayerController>();
             if (pc != null)

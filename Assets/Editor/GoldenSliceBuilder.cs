@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -313,7 +314,11 @@ public static class GoldenSliceBuilder
         SetRef(hud, "hunger", boss.GetComponent<BossHunger>());
 
         EditorSceneManager.SaveScene(scene, ScenePath);
-        EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
+        // Keep any other scenes (e.g. the beta test scene) in the build list; the Golden Slice stays first.
+        List<EditorBuildSettingsScene> buildScenes = new List<EditorBuildSettingsScene> { new EditorBuildSettingsScene(ScenePath, true) };
+        foreach (EditorBuildSettingsScene existing in EditorBuildSettings.scenes)
+            if (existing.path != ScenePath) buildScenes.Add(existing);
+        EditorBuildSettings.scenes = buildScenes.ToArray();
         Debug.Log("[GoldenSliceBuilder] Golden Slice built: " + ScenePath);
     }
 

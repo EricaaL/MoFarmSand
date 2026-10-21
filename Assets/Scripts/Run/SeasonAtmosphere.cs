@@ -56,10 +56,17 @@ public class SeasonAtmosphere : MonoBehaviour
         cozy.ambientLightHorizonColor = Pull(cozy.ambientLightHorizonColor, look.ambientTint, w);
         cozy.ambientLightZenithColor = Pull(cozy.ambientLightZenithColor, look.ambientTint, w);
 
+        // A stronger sun (summer) only by day: w already fades with night strength.
+        cozy.sunlightColor = Scale(cozy.sunlightColor, Mathf.Lerp(1f, look.sunIntensity, w));
+        cozy.ambientLightHorizonColor = Scale(cozy.ambientLightHorizonColor, Mathf.Lerp(1f, look.ambientIntensity, w));
+        cozy.ambientLightZenithColor = Scale(cozy.ambientLightZenithColor, Mathf.Lerp(1f, look.ambientIntensity, w));
+
         cozy.filterSaturation += look.saturation * w;
         cozy.filterValue += look.brightness * w;
         cozy.fogDensityMultiplier *= Mathf.Lerp(1f, look.fogDensity, w);
     }
+
+    private static Color Scale(Color c, float k) => new Color(c.r * k, c.g * k, c.b * k, c.a);
 
     /// <summary>
     /// Lerps toward the tint but keeps the original brightness, so dark night colors turn

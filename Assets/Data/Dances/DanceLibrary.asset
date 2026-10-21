@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9599329b2c2521d4a9368c626ea1221b, type: 3}
+  m_Name: DanceLibrary
+  m_EditorClassIdentifier: 
+  dances:
+  - {fileID: 11400000, guid: 3f28a4037f344df49a7593fc6dd2344e, type: 2}
+  - {fileID: 11400000, guid: c950ecd06398b2443bd7ba2945de1096, type: 2}
+  - {fileID: 11400000, guid: d9058bd763f55134a9b72235cad550a3, type: 2}

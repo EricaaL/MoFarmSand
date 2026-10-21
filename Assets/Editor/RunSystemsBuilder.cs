@@ -196,6 +196,9 @@ public static class RunSystemsBuilder
         Material fxMat = Mat("RunFX", Color.white, "Universal Render Pipeline/Particles/Unlit");
         GameObject fxRain = Fx("FX_Rain", fxMat, new Color(0.6f, 0.75f, 1f, 0.8f), loop: true, rate: 220f, life: 1.1f, size: 0.05f, speed: 0f, gravity: 6f, shape: ParticleSystemShapeType.Box, shapeScale: new Vector3(24f, 0.1f, 24f), offset: new Vector3(0f, 10f, 4f));
         GameObject fxSnow = Fx("FX_Snow", fxMat, new Color(1f, 1f, 1f, 0.9f), loop: true, rate: 120f, life: 6f, size: 0.12f, speed: 0f, gravity: 0.25f, shape: ParticleSystemShapeType.Box, shapeScale: new Vector3(24f, 0.1f, 24f), offset: new Vector3(0f, 10f, 4f));
+        GameObject fxAutumnLeaves = AutumnLeavesFx(fxMat);
+        GameObject fxSeasonSnow = SeasonSnowFx(fxMat);
+        Material snowMoundMat = Mat("SnowMound", new Color(0.95f, 0.97f, 1f));
         GameObject fxHeat = Fx("FX_Heat", fxMat, new Color(1f, 0.7f, 0.3f, 0.35f), loop: true, rate: 30f, life: 4f, size: 0.25f, speed: 0.4f, gravity: -0.05f, shape: ParticleSystemShapeType.Box, shapeScale: new Vector3(18f, 0.1f, 18f), offset: new Vector3(0f, -4f, 6f));
         GameObject fxLocusts = Fx("FX_Locusts", fxMat, new Color(0.45f, 0.35f, 0.15f, 1f), loop: true, rate: 90f, life: 3f, size: 0.09f, speed: 3f, gravity: 0f, shape: ParticleSystemShapeType.Box, shapeScale: new Vector3(16f, 3f, 16f), offset: new Vector3(0f, 1f, 6f));
         GameObject fxSpores = Fx("FX_Spores", fxMat, new Color(0.65f, 0.3f, 0.75f, 0.7f), loop: true, rate: 40f, life: 5f, size: 0.14f, speed: 0.3f, gravity: -0.08f, shape: ParticleSystemShapeType.Box, shapeScale: new Vector3(18f, 0.1f, 18f), offset: new Vector3(0f, -4f, 6f));
@@ -409,6 +412,29 @@ public static class RunSystemsBuilder
             EditorUtility.SetDirty(cozy);
         }
 
+        // Backfill the stronger-sun / season-FX / snow-cover fields. A look with sunIntensity 0 predates them; looks
+        // that already have it are left alone, so values tuned in the Inspector survive re-runs.
+        for (int i = 0; i < cozy.seasonLooks.Count; i++)
+        {
+            CozyWeatherMap.SeasonLook look = cozy.seasonLooks[i];
+            if (look.sunIntensity > 0f) continue;
+            look.sunIntensity = 1f;
+            look.ambientIntensity = 1f;
+            if (look.season == summer)
+            {
+                look.sunIntensity = 1.6f; look.ambientIntensity = 1.15f;
+                look.saturation += 0.08f; look.brightness += 0.05f;
+            }
+            else if (look.season == autumn) look.ambientFx = fxAutumnLeaves;
+            else if (look.season == winter)
+            {
+                look.ambientFx = fxSeasonSnow;
+                look.snowStart01 = 0.35f; look.snowEnd01 = 1f;
+            }
+            cozy.seasonLooks[i] = look;
+            EditorUtility.SetDirty(cozy);
+        }
+
         // ---- Difficulty: bosses grow stronger each year ----
         DifficultyConfig difficulty = A<DifficultyConfig>($"{Data}/Run/DifficultyConfig.asset", d => { });
 
@@ -473,6 +499,13 @@ public static class RunSystemsBuilder
 
         CozyBridge bridge = Ensure<CozyBridge>(GetOrCreate("CozyBridge", managers));
         SetRef(bridge, "seasonAtmosphere", Ensure<SeasonAtmosphere>(bridge.gameObject));
+        SnowCover snowCover = Ensure<SnowCover>(bridge.gameObject);
+        SetRef(bridge, "snowCover", snowCover);
+        // Not GameObject.Find: the BarnHouse also has a renderer-less child called "Ground".
+        Transform env = Find("--- ENVIRONMENT ---");
+        Transform groundT = env != null ? env.Find("Ground") : null;
+        if (groundT != null) SetRef(snowCover, "ground", groundT.GetComponent<Renderer>());
+        SetRef(snowCover, "moundMaterial", AssetDatabase.LoadAssetAtPath<Material>($"{MatDir}/SnowMound.mat"));
 
         DisasterDirector disaster = Ensure<DisasterDirector>(GetOrCreate("DisasterDirector", managers));
         SetRef(disaster, "conditions", conditions);
@@ -484,6 +517,7 @@ public static class RunSystemsBuilder
         DayClock clock = Ensure<DayClock>(GetOrCreate("DayClock", managers));
         SetRef(clock, "gameManager", gm);
         SetRef(clock, "lighting", Object.FindFirstObjectByType<DayNightLighting>());
+        SetRef(clock, "cozyBridge", bridge);
 
         RunDirector director = Ensure<RunDirector>(GetOrCreate("RunDirector", managers));
         MerchantStall stall = BuildStall(runRoot, director);
@@ -819,6 +853,99 @@ public static class RunSystemsBuilder
         sh.shapeType = shape; sh.position = offset;
         if (shape == ParticleSystemShapeType.Box) sh.scale = shapeScale;
         else { sh.radius = shapeScale.x; if (circleEdge) sh.radiusThickness = 0f; }
+
+        go.GetComponent<ParticleSystemRenderer>().sharedMaterial = mat;
+        GameObject saved = PrefabUtility.SaveAsPrefabAsset(go, path);
+        Object.DestroyImmediate(go);
+        return saved;
+    }
+
+    /// <summary>Warm leaves that flutter down, land on the ground, lie there a while and fade.</summary>
+    private static GameObject AutumnLeavesFx(Material mat)
+    {
+        string path = $"{FxDir}/FX_AutumnLeaves.prefab";
+        GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        if (existing != null) return existing;
+
+        GameObject go = new GameObject("FX_AutumnLeaves");
+        ParticleSystem ps = go.AddComponent<ParticleSystem>();
+        ParticleSystem.MainModule main = ps.main;
+        main.loop = true; main.duration = 5f; main.playOnAwake = true; main.maxParticles = 1500;
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(8f, 11f);
+        main.startSpeed = 0f;
+        main.startSize = new ParticleSystem.MinMaxCurve(0.22f, 0.4f);
+        main.gravityModifier = 0.12f;
+        main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+        main.startColor = new ParticleSystem.MinMaxGradient(
+            new Gradient
+            {
+                colorKeys = new[] { new GradientColorKey(Hex("E8742A"), 0f), new GradientColorKey(Hex("C8402A"), 0.5f), new GradientColorKey(Hex("F2B33D"), 1f) },
+                alphaKeys = new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) },
+            }) { mode = ParticleSystemGradientMode.RandomColor };
+
+        ParticleSystem.EmissionModule em = ps.emission;
+        em.rateOverTime = 45f;
+
+        ParticleSystem.ShapeModule sh = ps.shape;
+        sh.shapeType = ParticleSystemShapeType.Box; sh.position = new Vector3(0f, 10f, 4f); sh.scale = new Vector3(26f, 0.1f, 26f);
+
+        // Sideways drift and flutter while falling.
+        ParticleSystem.NoiseModule noise = ps.noise;
+        noise.enabled = true; noise.strength = 1.4f; noise.frequency = 0.45f; noise.scrollSpeed = 0.6f; noise.damping = true;
+
+        ParticleSystem.RotationOverLifetimeModule rot = ps.rotationOverLifetime;
+        rot.enabled = true; rot.z = new ParticleSystem.MinMaxCurve(-2.5f, 2.5f);
+
+        // Land on the ground and stay put.
+        ParticleSystem.CollisionModule col = ps.collision;
+        col.enabled = true; col.type = ParticleSystemCollisionType.World; col.mode = ParticleSystemCollisionMode.Collision3D;
+        col.bounce = 0f; col.dampen = 1f; col.lifetimeLoss = 0f; col.radiusScale = 0.5f;
+
+        ParticleSystem.ColorOverLifetimeModule fade = ps.colorOverLifetime;
+        fade.enabled = true;
+        fade.color = new ParticleSystem.MinMaxGradient(new Gradient
+        {
+            colorKeys = new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+            alphaKeys = new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 0.8f), new GradientAlphaKey(0f, 1f) },
+        });
+
+        go.GetComponent<ParticleSystemRenderer>().sharedMaterial = mat;
+        GameObject saved = PrefabUtility.SaveAsPrefabAsset(go, path);
+        Object.DestroyImmediate(go);
+        return saved;
+    }
+
+    /// <summary>Soft, always-on winter snowfall with a slow sideways drift (lighter than the Frost disaster's FX_Snow).</summary>
+    private static GameObject SeasonSnowFx(Material mat)
+    {
+        string path = $"{FxDir}/FX_SeasonSnow.prefab";
+        GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        if (existing != null) return existing;
+
+        GameObject go = new GameObject("FX_SeasonSnow");
+        ParticleSystem ps = go.AddComponent<ParticleSystem>();
+        ParticleSystem.MainModule main = ps.main;
+        main.loop = true; main.duration = 5f; main.playOnAwake = true; main.maxParticles = 1500;
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(7f, 9f);
+        main.startSpeed = 0f;
+        main.startSize = new ParticleSystem.MinMaxCurve(0.1f, 0.2f);
+        main.gravityModifier = 0.08f;
+        main.startColor = new Color(1f, 1f, 1f, 0.9f);
+
+        ParticleSystem.EmissionModule em = ps.emission;
+        em.rateOverTime = 60f;
+
+        ParticleSystem.ShapeModule sh = ps.shape;
+        sh.shapeType = ParticleSystemShapeType.Box; sh.position = new Vector3(0f, 10f, 4f); sh.scale = new Vector3(26f, 0.1f, 26f);
+
+        ParticleSystem.NoiseModule noise = ps.noise;
+        noise.enabled = true; noise.strength = 0.6f; noise.frequency = 0.3f; noise.scrollSpeed = 0.3f; noise.damping = true;
+
+        ParticleSystem.CollisionModule col = ps.collision;
+        col.enabled = true; col.type = ParticleSystemCollisionType.World; col.mode = ParticleSystemCollisionMode.Collision3D;
+        col.bounce = 0f; col.dampen = 1f; col.lifetimeLoss = 1f;   // flakes vanish where they land; SnowCover builds the drifts
 
         go.GetComponent<ParticleSystemRenderer>().sharedMaterial = mat;
         GameObject saved = PrefabUtility.SaveAsPrefabAsset(go, path);
