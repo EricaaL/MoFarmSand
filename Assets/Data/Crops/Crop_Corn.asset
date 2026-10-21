@@ -24,8 +24,10 @@ MonoBehaviour:
   bulletSpeed: 22
   scareSeconds: 0
   projectilePrefab: {fileID: 3458525954966536003, guid: 776560f7adfa57b4dad01e3975a482a8, type: 3}
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 956b29c9650aa384fb29f127856d45ab, type: 3}
   color: {r: 1, g: 0.85, b: 0.2, a: 1}
+  growthStages: []
+  growthStageScale: 1
   climate:
     idealTemp: 26
     tempTolerance: 12

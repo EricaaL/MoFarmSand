@@ -13,7 +13,7 @@ public static class CaterpillarPaperBuilder
     private const string ArtDir = "Assets/Art/Characters/Caterpillar";
     private const string MatDir = "Assets/Art/Materials";
     private const float PixelsPerUnit = 420f;
-    private const float SegmentSpacing = 1f;
+    private const float SegmentSpacing = 0.85f;
 
     // Where the paper card sits on its sphere: pixel offset (x right, y up) from the card centre to the point that should
     // land on the sphere centre. Measured from the PSD cut (head circle sits below the antennae; tail body left of its antennae).

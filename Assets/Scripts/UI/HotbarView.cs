@@ -135,13 +135,10 @@ public class HotbarView
         if (slot.item != null && slot.count > 0)
         {
             float fade = beingDragged ? 0.35f : 1f;
-            // Seeds draw as a small packet (narrow tall rect) so they read differently from crops.
-            ItemIconDrawer.Draw(new Rect(r.x + r.width * 0.5f - 14f * s, r.y + 8f * s, 28f * s, 28f * s), slot.item, fade);
+            // The icon fills the slot; the name is only shown in the hover tooltip.
+            float iconSize = r.width - 14f * s;
+            ItemIconDrawer.Draw(new Rect(r.center.x - iconSize * 0.5f, r.center.y - iconSize * 0.5f, iconSize, iconSize), slot.item, fade);
 
-            // Names wrap to two lines and are shortened with "..." rather than spilling out of the slot.
-            float nameW = r.width - 8f * s;
-            string name = ImGuiKit.Fit(slot.item.DisplayName, 11f, nameW, 2);
-            ImGuiKit.HudLabel(new Rect(r.x + 4f * s, r.y + 37f * s, nameW, 26f * s), name, 11f, TextAnchor.UpperCenter, false, fade);
             ImGuiKit.HudLabel(new Rect(r.xMax - 40f * s, r.yMax - 17f * s, 36f * s, 15f * s), "x" + slot.count, 12f, TextAnchor.LowerRight, true);
 
             // Crops grown out of season are weaker: show their strength so you know what you're throwing.
