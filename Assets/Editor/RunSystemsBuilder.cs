@@ -196,7 +196,8 @@ public static class RunSystemsBuilder
         Material fxMat = Mat("RunFX", Color.white, "Universal Render Pipeline/Particles/Unlit");
         GameObject fxRain = Fx("FX_Rain", fxMat, new Color(0.6f, 0.75f, 1f, 0.8f), loop: true, rate: 220f, life: 1.1f, size: 0.05f, speed: 0f, gravity: 6f, shape: ParticleSystemShapeType.Box, shapeScale: new Vector3(24f, 0.1f, 24f), offset: new Vector3(0f, 10f, 4f));
         GameObject fxSnow = Fx("FX_Snow", fxMat, new Color(1f, 1f, 1f, 0.9f), loop: true, rate: 120f, life: 6f, size: 0.12f, speed: 0f, gravity: 0.25f, shape: ParticleSystemShapeType.Box, shapeScale: new Vector3(24f, 0.1f, 24f), offset: new Vector3(0f, 10f, 4f));
-        GameObject fxAutumnLeaves = AutumnLeavesFx(fxMat);
+        GameObject[] autumnLeafPrefabs = AutumnLeafPrefabs();
+        GameObject fxAutumnLeaves = AutumnLeavesFx(autumnLeafPrefabs);
         GameObject fxSeasonSnow = SeasonSnowFx(fxMat);
         Material snowMoundMat = Mat("SnowMound", new Color(0.95f, 0.97f, 1f));
         GameObject fxHeat = Fx("FX_Heat", fxMat, new Color(1f, 0.7f, 0.3f, 0.35f), loop: true, rate: 30f, life: 4f, size: 0.25f, speed: 0.4f, gravity: -0.05f, shape: ParticleSystemShapeType.Box, shapeScale: new Vector3(18f, 0.1f, 18f), offset: new Vector3(0f, -4f, 6f));
@@ -435,6 +436,16 @@ public static class RunSystemsBuilder
             EditorUtility.SetDirty(cozy);
         }
 
+        // Autumn starts with leaves already on the ground (backfilled separately so tuned counts survive re-runs).
+        for (int i = 0; i < cozy.seasonLooks.Count; i++)
+        {
+            CozyWeatherMap.SeasonLook look = cozy.seasonLooks[i];
+            if (look.season != autumn || look.groundLeaves > 0) continue;
+            look.groundLeaves = 320;
+            cozy.seasonLooks[i] = look;
+            EditorUtility.SetDirty(cozy);
+        }
+
         // ---- Difficulty: bosses grow stronger each year ----
         DifficultyConfig difficulty = A<DifficultyConfig>($"{Data}/Run/DifficultyConfig.asset", d => { });
 
@@ -501,6 +512,19 @@ public static class RunSystemsBuilder
         SetRef(bridge, "seasonAtmosphere", Ensure<SeasonAtmosphere>(bridge.gameObject));
         SnowCover snowCover = Ensure<SnowCover>(bridge.gameObject);
         SetRef(bridge, "snowCover", snowCover);
+        LeafLitter leafLitter = Ensure<LeafLitter>(bridge.gameObject);
+        SetRef(bridge, "leafLitter", leafLitter);
+        GameObject[] autumnLeafPrefabs = AutumnLeafPrefabs();   // returns the existing prefabs once they are built
+        if (autumnLeafPrefabs.Length > 0)
+        {
+            SerializedObject litterSo = new SerializedObject(leafLitter);
+            SerializedProperty prefabsProp = litterSo.FindProperty("leafPrefabs");
+            prefabsProp.arraySize = autumnLeafPrefabs.Length;
+            for (int i = 0; i < autumnLeafPrefabs.Length; i++) prefabsProp.GetArrayElementAtIndex(i).objectReferenceValue = autumnLeafPrefabs[i];
+            litterSo.ApplyModifiedPropertiesWithoutUndo();
+        }
+        SetRef(leafLitter, "player", player.transform);   // leaves scatter when the farmer walks through them
+
         // Not GameObject.Find: the BarnHouse also has a renderer-less child called "Ground".
         Transform env = Find("--- ENVIRONMENT ---");
         Transform groundT = env != null ? env.Find("Ground") : null;
@@ -860,12 +884,87 @@ public static class RunSystemsBuilder
         return saved;
     }
 
-    /// <summary>Warm leaves that flutter down, land on the ground, lie there a while and fade.</summary>
-    private static GameObject AutumnLeavesFx(Material mat)
+    /// <summary>Random red / orange / yellow per leaf; the same range as LeafLitter.leafColors on the ground.</summary>
+    private static ParticleSystem.MinMaxGradient AutumnLeafColors()
+    {
+        Gradient g = new Gradient();
+        g.SetKeys(
+            new[]
+            {
+                new GradientColorKey(new Color(0.85f, 0.18f, 0.12f), 0f),
+                new GradientColorKey(new Color(0.95f, 0.50f, 0.15f), 0.5f),
+                new GradientColorKey(new Color(1.00f, 0.85f, 0.30f), 1f),
+            },
+            new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) });
+        return new ParticleSystem.MinMaxGradient(g) { mode = ParticleSystemGradientMode.RandomColor };
+    }
+
+    private const string LeafPackDir ="Assets/Low Poly Trees Pack/Tree Assets";
+    private const string LeafPrefabDir = "Assets/Prefabs/Environment/AutumnLeaves";
+
+    /// <summary>
+    /// Autumn variants of the Low Poly Trees palm leaves (OneSided 01..05): the same meshes with the pack's autumn
+    /// material. They are prefab variants, so the pack itself is untouched. Existing prefabs are kept.
+    /// </summary>
+    private static GameObject[] AutumnLeafPrefabs()
+    {
+        Material autumn = AssetDatabase.LoadAssetAtPath<Material>($"{LeafPackDir}/Materials/Trees_Autumn.mat");
+        if (autumn == null)
+        {
+            Debug.LogWarning("[RunSystemsBuilder] Trees_Autumn.mat not found (is the Low Poly Trees Pack imported?). No autumn leaf prefabs built.");
+            return new GameObject[0];
+        }
+
+        EnsureFolder(LeafPrefabDir);
+        List<GameObject> leaves = new List<GameObject>();
+        for (int i = 1; i <= 5; i++)
+        {
+            string dst = $"{LeafPrefabDir}/Leaf_Autumn_0{i}.prefab";
+            GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(dst);
+            if (existing != null) { leaves.Add(existing); continue; }
+
+            GameObject src = AssetDatabase.LoadAssetAtPath<GameObject>($"{LeafPackDir}/Prefabs/Leaves/Palm_Leaves/OneSided/Palm_Leave_OneSided_0{i}.prefab");
+            if (src == null) { Debug.LogWarning($"[RunSystemsBuilder] Palm_Leave_OneSided_0{i} not found."); continue; }
+
+            GameObject inst = (GameObject)PrefabUtility.InstantiatePrefab(src);
+            inst.name = $"Leaf_Autumn_0{i}";
+            MeshRenderer r = inst.GetComponent<MeshRenderer>();
+            r.sharedMaterial = autumn;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;   // a flat leaf on the ground needs no shadow
+            leaves.Add(PrefabUtility.SaveAsPrefabAsset(inst, dst));
+            Object.DestroyImmediate(inst);
+        }
+        return leaves.ToArray();
+    }
+
+    /// <summary>
+    /// Particle-lit twin of the pack's autumn material (same atlas). The plain Lit shader ignores a particle's start
+    /// colour, so the falling leaves need this one to get their red-to-yellow variation.
+    /// </summary>
+    private static Material AutumnLeafParticleMaterial(Material packMaterial)
+    {
+        Material m = Mat("AutumnLeafParticle", Color.white, "Universal Render Pipeline/Particles/Lit");
+        Texture atlas = packMaterial != null && packMaterial.HasProperty("_BaseMap") ? packMaterial.GetTexture("_BaseMap") : null;
+        if (atlas != null) m.SetTexture("_BaseMap", atlas);
+        EditorUtility.SetDirty(m);
+        return m;
+    }
+
+    /// <summary>Autumn leaf meshes that tumble down, land on the ground and shrink away at the end of their life.</summary>
+    private static GameObject AutumnLeavesFx(GameObject[] leafPrefabs)
     {
         string path = $"{FxDir}/FX_AutumnLeaves.prefab";
         GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
         if (existing != null) return existing;
+        if (leafPrefabs == null || leafPrefabs.Length == 0) return null;
+
+        List<Mesh> meshes = new List<Mesh>();
+        foreach (GameObject leaf in leafPrefabs)
+        {
+            MeshFilter mf = leaf != null ? leaf.GetComponent<MeshFilter>() : null;
+            if (mf != null && mf.sharedMesh != null) meshes.Add(mf.sharedMesh);
+        }
+        if (meshes.Count == 0) return null;
 
         GameObject go = new GameObject("FX_AutumnLeaves");
         ParticleSystem ps = go.AddComponent<ParticleSystem>();
@@ -874,18 +973,17 @@ public static class RunSystemsBuilder
         main.simulationSpace = ParticleSystemSimulationSpace.World;
         main.startLifetime = new ParticleSystem.MinMaxCurve(8f, 11f);
         main.startSpeed = 0f;
-        main.startSize = new ParticleSystem.MinMaxCurve(0.22f, 0.4f);
+        // The meshes are about 3 units long, so this makes a leaf roughly 0.35-0.65 units, like the ground litter.
+        main.startSize = new ParticleSystem.MinMaxCurve(0.11f, 0.2f);
         main.gravityModifier = 0.12f;
-        main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
-        main.startColor = new ParticleSystem.MinMaxGradient(
-            new Gradient
-            {
-                colorKeys = new[] { new GradientColorKey(Hex("E8742A"), 0f), new GradientColorKey(Hex("C8402A"), 0.5f), new GradientColorKey(Hex("F2B33D"), 1f) },
-                alphaKeys = new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) },
-            }) { mode = ParticleSystemGradientMode.RandomColor };
+        main.startRotation3D = true;
+        main.startRotationX = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+        main.startRotationY = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+        main.startRotationZ = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+        main.startColor = AutumnLeafColors();
 
         ParticleSystem.EmissionModule em = ps.emission;
-        em.rateOverTime = 45f;
+        em.rateOverTime = 14f;   // a light drift; the ground litter (LeafLitter) carries the autumn look
 
         ParticleSystem.ShapeModule sh = ps.shape;
         sh.shapeType = ParticleSystemShapeType.Box; sh.position = new Vector3(0f, 10f, 4f); sh.scale = new Vector3(26f, 0.1f, 26f);
@@ -894,23 +992,29 @@ public static class RunSystemsBuilder
         ParticleSystem.NoiseModule noise = ps.noise;
         noise.enabled = true; noise.strength = 1.4f; noise.frequency = 0.45f; noise.scrollSpeed = 0.6f; noise.damping = true;
 
+        // Tumble on every axis while falling.
         ParticleSystem.RotationOverLifetimeModule rot = ps.rotationOverLifetime;
-        rot.enabled = true; rot.z = new ParticleSystem.MinMaxCurve(-2.5f, 2.5f);
+        rot.enabled = true; rot.separateAxes = true;
+        rot.x = new ParticleSystem.MinMaxCurve(-2f, 2f);
+        rot.y = new ParticleSystem.MinMaxCurve(-2f, 2f);
+        rot.z = new ParticleSystem.MinMaxCurve(-2.5f, 2.5f);
 
         // Land on the ground and stay put.
         ParticleSystem.CollisionModule col = ps.collision;
         col.enabled = true; col.type = ParticleSystemCollisionType.World; col.mode = ParticleSystemCollisionMode.Collision3D;
         col.bounce = 0f; col.dampen = 1f; col.lifetimeLoss = 0f; col.radiusScale = 0.5f;
 
-        ParticleSystem.ColorOverLifetimeModule fade = ps.colorOverLifetime;
-        fade.enabled = true;
-        fade.color = new ParticleSystem.MinMaxGradient(new Gradient
-        {
-            colorKeys = new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
-            alphaKeys = new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 0.8f), new GradientAlphaKey(0f, 1f) },
-        });
+        // The Lit leaf material ignores particle alpha, so shrink out instead of fading in the last 10% of life.
+        ParticleSystem.SizeOverLifetimeModule shrink = ps.sizeOverLifetime;
+        shrink.enabled = true;
+        shrink.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(0.9f, 1f), new Keyframe(1f, 0f)));
 
-        go.GetComponent<ParticleSystemRenderer>().sharedMaterial = mat;
+        ParticleSystemRenderer renderer = go.GetComponent<ParticleSystemRenderer>();
+        renderer.renderMode = ParticleSystemRenderMode.Mesh;
+        renderer.SetMeshes(meshes.GetRange(0, Mathf.Min(4, meshes.Count)).ToArray());   // a particle renderer takes at most 4 meshes
+        renderer.meshDistribution = ParticleSystemMeshDistribution.UniformRandom;
+        renderer.sharedMaterial = AutumnLeafParticleMaterial(leafPrefabs[0].GetComponent<MeshRenderer>().sharedMaterial);
+        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         GameObject saved = PrefabUtility.SaveAsPrefabAsset(go, path);
         Object.DestroyImmediate(go);
         return saved;
