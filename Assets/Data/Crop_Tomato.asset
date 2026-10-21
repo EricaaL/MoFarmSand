@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f74d53cc39d54f4eb0d229b75137570, type: 3}
+  m_Name: Crop_Tomato
+  m_EditorClassIdentifier: 
+  cropId: tomato
+  displayName: Tomato
+  type: 0
+  growTime: 11
+  fullnessValue: 20
+  shieldCharges: 1
+  harvestYield: 1
+  ammoPerCrop: 10
+  fireInterval: 0.15
+  bulletSpeed: 22
+  scareSeconds: 0
+  projectilePrefab: {fileID: 8603255046843703714, guid: 7dc24df7788cf334e8f19194f7cc5b5f, type: 3}
+  icon: {fileID: 0}
+  color: {r: 0.9, g: 0.19999996, b: 0.14999998, a: 1}
+  growthStages:
+  - {fileID: 1062580822279395355, guid: 317dd085d8db1fa4a8716b17a2ed8a71, type: 3}
+  - {fileID: 4733773441798381719, guid: 34b295f21200ec245ab44f1637f70d6d, type: 3}
+  - {fileID: 7609606087096494724, guid: 60c7fbe3c2e7ef2458a55df500ba22c1, type: 3}
+  growthStageScale: 1.1
+  climate:
+    idealTemp: 24
+    tempTolerance: 14
+    idealMoisture: 0.4
+    moistureTolerance: 0.6
+    seasonAffinity:
+    - season: {fileID: 11400000, guid: 1d6fbdaaca771e14a9656673775f7040, type: 2}
+      multiplier: 0.8
+    - season: {fileID: 11400000, guid: cc74ed0b11b6962469f72414350069e2, type: 2}
+      multiplier: 1.3
+    - season: {fileID: 11400000, guid: e86be3641e5dfff48a2987ea6cb996ac, type: 2}
+      multiplier: 0.7
+    - season: {fileID: 11400000, guid: 5bc8feee265739b4a9788711bdfbe020, type: 2}
+      multiplier: 0.4

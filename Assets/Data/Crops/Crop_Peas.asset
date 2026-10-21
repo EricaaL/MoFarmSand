@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f74d53cc39d54f4eb0d229b75137570, type: 3}
+  m_Name: Crop_Peas
+  m_EditorClassIdentifier: 
+  cropId: peas
+  displayName: Peas
+  type: 2
+  growTime: 12
+  fullnessValue: 2.5
+  shieldCharges: 1
+  harvestYield: 1
+  ammoPerCrop: 10
+  fireInterval: 0.15
+  bulletSpeed: 22
+  scareSeconds: 0
+  projectilePrefab: {fileID: 1583238866590143428, guid: f4343386da9e2304a917b98e6c7ca9d8, type: 3}
+  icon: {fileID: 0}
+  color: {r: 0.45, g: 0.85, b: 0.3, a: 1}
+  climate:
+    idealTemp: 14
+    tempTolerance: 12
+    idealMoisture: 0.5
+    moistureTolerance: 0.6
+    seasonAffinity:
+    - season: {fileID: 11400000, guid: 1d6fbdaaca771e14a9656673775f7040, type: 2}
+      multiplier: 1.5
+    - season: {fileID: 11400000, guid: cc74ed0b11b6962469f72414350069e2, type: 2}
+      multiplier: 0.8
+    - season: {fileID: 11400000, guid: e86be3641e5dfff48a2987ea6cb996ac, type: 2}
+      multiplier: 0.7
+    - season: {fileID: 11400000, guid: 5bc8feee265739b4a9788711bdfbe020, type: 2}
+      multiplier: 0.4

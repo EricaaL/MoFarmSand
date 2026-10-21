@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9533699d2feb27e43ba90d95f6905edc, type: 3}
+  m_Name: Event_StrayPup
+  m_EditorClassIdentifier: 
+  eventId: stray_pup
+  title: A Stray Pup
+  body: A scruffy pup watches you from the fence, tail wagging. It looks hungry.
+  options:
+  - label: Share your lunch
+    coinCost: 5
+    effects:
+    - {fileID: 11400000, guid: 21fe4234538d00342827133d3235a6a0, type: 2}
+  - label: Pet it and move on
+    coinCost: 0
+    effects: []

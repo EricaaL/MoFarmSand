@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eafab2bc466a9944986f5572a1357424, type: 3}
+  m_Name: ClimateConfig
+  m_EditorClassIdentifier: 
+  minGrowth: 0.12
+  maxGrowth: 1.6
+  minGrowSeconds: 10
+  seasonPenaltyExponent: 2
+  minQuality: 0.25
+  maxQuality: 1.25
+  fallbackKind: 0
+  rules:
+  - kind: 4
+    minTemp: -100
+    maxTemp: 1
+    minPrecip: 0.3
+    maxPrecip: 1
+  - kind: 5
+    minTemp: 30
+    maxTemp: 100
+    minPrecip: 0
+    maxPrecip: 1
+  - kind: 3
+    minTemp: -100
+    maxTemp: 100
+    minPrecip: 0.8
+    maxPrecip: 1
+  - kind: 2
+    minTemp: -100
+    maxTemp: 100
+    minPrecip: 0.55
+    maxPrecip: 1
+  - kind: 1
+    minTemp: -100
+    maxTemp: 100
+    minPrecip: 0.4
+    maxPrecip: 1

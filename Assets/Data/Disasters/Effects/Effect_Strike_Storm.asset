@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f4101ccf8b346940a0a0a2d9491ba73, type: 3}
+  m_Name: Effect_Strike_Storm
+  m_EditorClassIdentifier: 
+  firstDelay: 3
+  interval: 4
+  telegraphSeconds: 1.2
+  radius: 1.6
+  spawnRadius: 5
+  damage: 1
+  shake: 0.6
+  telegraphFx: {fileID: 9040053485993042298, guid: d689f6c14a388e145b835bfc1f7aa8ca, type: 3}
+  strikeFx: {fileID: 4402936336540693097, guid: 473bfde936b3c854698dc81dbcdf0ae5, type: 3}

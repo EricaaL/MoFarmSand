@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df566762791cd8d419a675a013281f6f, type: 3}
+  m_Name: DisasterRegistry
+  m_EditorClassIdentifier: 
+  items:
+  - {fileID: 11400000, guid: 5393e43af32424547ac240afeeb10483, type: 2}
+  - {fileID: 11400000, guid: 2d70eaa600054984a979c3f663f0c344, type: 2}
+  - {fileID: 11400000, guid: ff5b5579f3a448848836d587d81eb13c, type: 2}
+  - {fileID: 11400000, guid: 6eb2caeb4e581c145afb4c899ce6094c, type: 2}
+  - {fileID: 11400000, guid: 81f4e957de83a814fbced0f215735ce0, type: 2}
+  - {fileID: 11400000, guid: d60fa3f165684234f8fa4ee6244a87ad, type: 2}

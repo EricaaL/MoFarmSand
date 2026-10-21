@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5af8f227832a8924a8360e053d76286b, type: 3}
+  m_Name: Modifier_fertilizer
+  m_EditorClassIdentifier: 
+  modifierId: fertilizer
+  displayName: Fertilizer
+  description: All crops grow 20% faster.
+  price: 35
+  resistDisasterIds: []
+  resistAmount: 0
+  growthMult: 1.2
+  bonusMaxHp: 0

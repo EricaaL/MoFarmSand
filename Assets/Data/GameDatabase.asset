@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a30ff9484b520c846a0e846151ad8e25, type: 3}
+  m_Name: GameDatabase
+  m_EditorClassIdentifier: 
+  items: {fileID: 11400000, guid: b0f9f5e74280c0b439c7ecea96594cd1, type: 2}
+  disasters: {fileID: 11400000, guid: f11be2351ac8b2d45b9f7a3aca38d61d, type: 2}
+  nodeTypes: {fileID: 11400000, guid: 3601916f4a8f96540afd983b09167476, type: 2}
+  modifiers: {fileID: 11400000, guid: 7896d5107d92c814cb1d54699801ca90, type: 2}
+  events: {fileID: 11400000, guid: 27de8cc948b4e794585e5a88e4181cff, type: 2}
+  unlocks: {fileID: 11400000, guid: 7128b0a47d1fd7d4c9df17691d1b50d5, type: 2}
+  calendar: {fileID: 11400000, guid: 97d504b7d3caaa043906e2f825a8c3c3, type: 2}
+  climate: {fileID: 11400000, guid: e10a3b5930f31c841979067f75d1b630, type: 2}
+  mapGen: {fileID: 11400000, guid: e5cb0aa34fa778342aa8027ab560d760, type: 2}
+  economy: {fileID: 11400000, guid: 0d9f656788231ae44a1785eaadfc14de, type: 2}
+  prices: {fileID: 11400000, guid: 0465b2088b6468d46a68062242f3e91c, type: 2}
+  bank: {fileID: 11400000, guid: 21f031f745918b54c8e6af2bf7410d67, type: 2}
+  run: {fileID: 11400000, guid: d81a5d14120ee0a4caee66d53852ca33, type: 2}
+  difficulty: {fileID: 11400000, guid: 33c5ecb8f89f36d40b2b91a857bdce95, type: 2}
+  farmland: {fileID: 11400000, guid: c4680e0b8e51a8147bb077aad85f6bc2, type: 2}
+  stockroom: {fileID: 11400000, guid: d3fc85382229f6245ba70a220a525f70, type: 2}
+  cozyWeather: {fileID: 11400000, guid: c51beba5280d4664fa3171b533ca459a, type: 2}

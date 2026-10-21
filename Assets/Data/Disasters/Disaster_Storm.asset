@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 673834991c34f0146986f81facd3c888, type: 3}
+  m_Name: Disaster_Storm
+  m_EditorClassIdentifier: 
+  disasterId: storm
+  displayName: Storm
+  bannerText: Lightning strikes! Watch the red rings.
+  uiColor: {r: 0.4, g: 0.45, b: 0.85, a: 1}
+  seasonWeights:
+  - season: {fileID: 11400000, guid: 1d6fbdaaca771e14a9656673775f7040, type: 2}
+    weight: 3
+  - season: {fileID: 11400000, guid: cc74ed0b11b6962469f72414350069e2, type: 2}
+    weight: 1
+  - season: {fileID: 11400000, guid: e86be3641e5dfff48a2987ea6cb996ac, type: 2}
+    weight: 3
+  minDay: 0
+  severityRange: {x: 0.4, y: 1}
+  activeAtNight: 1
+  effects:
+  - {fileID: 11400000, guid: 82eae25b5e83da84f8be98bf39eb6b5e, type: 2}
+  - {fileID: 11400000, guid: 3c459c375c5722e41a91b49dad3fba4d, type: 2}

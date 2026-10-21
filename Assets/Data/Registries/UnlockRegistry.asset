@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f07c4dccffe5c84419c722f3bb26c357, type: 3}
+  m_Name: UnlockRegistry
+  m_EditorClassIdentifier: 
+  items:
+  - {fileID: 11400000, guid: 668dc8101110b144ab3236e7125cc06c, type: 2}
+  - {fileID: 11400000, guid: 3ebf55bfe3d5fc0488880820bdcc06b4, type: 2}
+  - {fileID: 11400000, guid: edebb77646f11e743bfa0726f868011e, type: 2}
+  - {fileID: 11400000, guid: 2d98c467f850ba844b3eb53ed6a97d5f, type: 2}
+  - {fileID: 11400000, guid: 65e83ca7ef2a3e4459f52c2fce367a0f, type: 2}

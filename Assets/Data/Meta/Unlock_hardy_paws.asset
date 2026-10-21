@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13e13505d82d586459cee17357914642, type: 3}
+  m_Name: Unlock_hardy_paws
+  m_EditorClassIdentifier: 
+  unlockId: hardy_paws
+  displayName: Hardy Paws
+  description: Start every run with +1 max HP.
+  cost: 40
+  onRunStart:
+  - {fileID: 11400000, guid: 21fe4234538d00342827133d3235a6a0, type: 2}

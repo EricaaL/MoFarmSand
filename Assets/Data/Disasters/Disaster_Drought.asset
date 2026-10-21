@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 673834991c34f0146986f81facd3c888, type: 3}
+  m_Name: Disaster_Drought
+  m_EditorClassIdentifier: 
+  disasterId: drought
+  displayName: Drought
+  bannerText: The soil cracks. Crops grow slowly.
+  uiColor: {r: 0.85, g: 0.6, b: 0.25, a: 1}
+  seasonWeights:
+  - season: {fileID: 11400000, guid: cc74ed0b11b6962469f72414350069e2, type: 2}
+    weight: 3
+  minDay: 3
+  severityRange: {x: 0.4, y: 1}
+  activeAtNight: 0
+  effects:
+  - {fileID: 11400000, guid: 83ddbaf5b0307064da36df5b3938a484, type: 2}
+  - {fileID: 11400000, guid: bf78a6adeeb04fd439359797d88b899c, type: 2}

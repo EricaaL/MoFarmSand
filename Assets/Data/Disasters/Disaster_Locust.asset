@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 673834991c34f0146986f81facd3c888, type: 3}
+  m_Name: Disaster_Locust
+  m_EditorClassIdentifier: 
+  disasterId: locust
+  displayName: Locust Swarm
+  bannerText: Hungry swarms devour your crops!
+  uiColor: {r: 0.55, g: 0.45, b: 0.15, a: 1}
+  seasonWeights:
+  - season: {fileID: 11400000, guid: cc74ed0b11b6962469f72414350069e2, type: 2}
+    weight: 2
+  - season: {fileID: 11400000, guid: e86be3641e5dfff48a2987ea6cb996ac, type: 2}
+    weight: 2
+  minDay: 2
+  severityRange: {x: 0.4, y: 1}
+  activeAtNight: 0
+  effects:
+  - {fileID: 11400000, guid: 946b0f06c594f9249883b538fb6a8b6e, type: 2}
+  - {fileID: 11400000, guid: 321fd9255a6925643a7a385d96f46e6c, type: 2}
