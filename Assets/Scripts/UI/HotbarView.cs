@@ -12,6 +12,9 @@ public class HotbarView
     /// <summary>True while the pointer is on the hotbar or an item is being dragged, so the world ignores the click.</summary>
     public static bool PointerBusy { get; private set; }
 
+    /// <summary>Another clickable HUD control (e.g. the beta "Get Seeds" button) that the world should also ignore clicks on. Set each frame by its owner.</summary>
+    public static Rect BlockRect { get; set; }
+
     private readonly PlayerInventory inventory;
     private readonly PlayerCombat combat;
     private RunDirector director;
@@ -35,7 +38,7 @@ public class HotbarView
         combat = inventory != null ? inventory.GetComponent<PlayerCombat>() : null;
     }
 
-    public static void Reset() { PointerBusy = false; }
+    public static void Reset() { PointerBusy = false; BlockRect = Rect.zero; }
 
     public void Draw(float screenW, float screenH)
     {
@@ -55,7 +58,7 @@ public class HotbarView
             if (SlotRect(i, left, top, size, gap).Contains(mouse)) { hover = i; break; }
 
         HandleInput(e, hover, bar);
-        PointerBusy = dragging || dragSlot >= 0 || bar.Contains(mouse);
+        PointerBusy = dragging || dragSlot >= 0 || bar.Contains(mouse) || BlockRect.Contains(mouse);
 
         for (int i = 0; i < count; i++) DrawSlot(i, SlotRect(i, left, top, size, gap), s, i == dragSlot && dragging);
 

@@ -35,7 +35,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     [SerializeField] private GameObject merchantStall;
     [SerializeField] private DayClock clock;
 
-    private enum View { None, MainMenu, HowToPlay, Options, Title, Map, Event, Bank, Shop, Summary, Items, Pause, Route, Controls }
+    private enum View { None, MainMenu, HowToPlay, Options, Title, Map, Event, Bank, Shop, Summary, Items, Pause, Route, Controls, BetaSeeds }
 
     private View view;
     private IRunScreen screen;
@@ -56,6 +56,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     private SummaryScreen summaryScreen;
     private ItemInfoScreen itemInfoScreen;
     private ControlsScreen controlsScreen;
+    private BetaSeedsScreen betaSeedsScreen;
     private RunHud hud;
     private DayPlan plan;
     private bool dayRunning;
@@ -112,6 +113,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         summaryScreen = new SummaryScreen(this);
         itemInfoScreen = new ItemInfoScreen(this);
         controlsScreen = new ControlsScreen(this);
+        betaSeedsScreen = new BetaSeedsScreen(this);
         hud = new RunHud(this);
     }
 
@@ -135,6 +137,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
             switch (view)
             {
                 case View.Items: CloseItems(); break;
+                case View.BetaSeeds: CloseBetaSeeds(); break;
                 case View.Options: CloseOptions(); break;
                 case View.HowToPlay: CloseHowToPlay(); break;
                 case View.Title: if (!RunSession.HasActiveSlot) ShowMainMenu(); break;
@@ -303,6 +306,16 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     }
 
     public void CloseItems() { if (view == View.Items) Show(View.None, null); }
+
+    /// <summary>Beta scene only: opens the "get any seed" picker during a day (pauses the world like any screen).</summary>
+    public void ShowBetaSeeds()
+    {
+        if (!betaMode || !dayRunning || view != View.None) return;
+        betaSeedsScreen.OnOpen();
+        Show(View.BetaSeeds, betaSeedsScreen);
+    }
+
+    public void CloseBetaSeeds() { if (view == View.BetaSeeds) Show(View.None, null); }
 
     // ---------------------------------------------------------------- run menu
 

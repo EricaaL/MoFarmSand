@@ -74,6 +74,14 @@ public class RunHud
         // Key hint, bottom left (the hotbar is bottom center).
         ImGuiKit.HudLabel(new Rect(16 * s, Screen.height - 48 * s, 360 * s, 32 * s), "[Tab] Items   [Esc] Menu", 20f, TextAnchor.MiddleLeft, true);
 
+        // Beta scene only: pick any seed. Registered with the hotbar's pointer check so clicking it doesn't also throw a crop.
+        if (director.IsBeta)
+        {
+            Rect seedsButton = new Rect(16 * s, Screen.height - 96 * s, 200 * s, 40 * s);
+            HotbarView.BlockRect = seedsButton;
+            if (ImGuiKit.Button(seedsButton, "Get Seeds", true, 20f)) director.ShowBetaSeeds();
+        }
+
         // Purse (below the chip).
         ImGuiKit.HudLabel(new Rect(w - 360 * s, 104 * s, 344 * s, 34 * s), $"Coins: {director.Wallet.Coins}", 26f, TextAnchor.MiddleRight, true);
 
