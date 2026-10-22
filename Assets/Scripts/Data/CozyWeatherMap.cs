@@ -51,6 +51,8 @@ public class CozyWeatherMap : ScriptableObject
         public GameObject ambientFx;
         [Tooltip("Fallen leaves that lie on the ground all season and never fade (autumn). 0 = none. Not blended between seasons.")]
         [Min(0)] public int groundLeaves;
+        [Tooltip("Swap the scene's trees for their snow-covered versions (winter). Not blended between seasons.")]
+        public bool snowyTrees;
         [Tooltip("Ground snow cover 0..1 at the start of the season.")]
         [Range(0f, 1f)] public float snowStart01;
         [Tooltip("Ground snow cover 0..1 at the end of the season.")]
@@ -81,6 +83,7 @@ public class CozyWeatherMap : ScriptableObject
                 ambientIntensity = Mathf.Lerp(a.ambientIntensity, b.ambientIntensity, t),
                 ambientFx = b.ambientFx,
                 groundLeaves = b.groundLeaves,
+                snowyTrees = b.snowyTrees,
                 snowStart01 = Mathf.Lerp(a.snowStart01, b.snowStart01, t),
                 snowEnd01 = Mathf.Lerp(a.snowEnd01, b.snowEnd01, t),
             };

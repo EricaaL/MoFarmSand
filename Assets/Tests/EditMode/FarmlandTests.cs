@@ -145,91 +145,7 @@ public class FarmlandTests
         Assert.AreEqual(expected, file.run.farmlands);
     }
 
-    // ------------------------------------------------------------------ layout
-
-    [Test]
-    public void EachFarmlandAddsOneFullColumnOfPlots()
-    {
-        List<Vector3> field = BaseField();
-        Assert.AreEqual(3, FarmlandLogic.PlotsPerFarmland(field), "a column is as tall as the field");
-
-        for (int n = 0; n <= 4; n++)
-            Assert.AreEqual(n * 3, FarmlandLogic.PositionsFor(n, field).Count, $"{n} farmlands");
-    }
-
-    [Test]
-    public void NewPlotsGoToTheRightThenTheLeftAndNeverOverlapAnything()
-    {
-        List<Vector3> field = BaseField();
-        List<Vector3> extra = FarmlandLogic.PositionsFor(4, field);
-
-        // First farmland: right of the field. Second: left. Then further out.
-        Assert.AreEqual(4.4f, extra[0].x, 1e-3f);
-        Assert.AreEqual(-4.4f, extra[3].x, 1e-3f);
-        Assert.AreEqual(6.6f, extra[6].x, 1e-3f);
-        Assert.AreEqual(-6.6f, extra[9].x, 1e-3f);
-
-        List<Vector3> all = new List<Vector3>(field);
-        all.AddRange(extra);
-        for (int i = 0; i < all.Count; i++)
-            for (int j = i + 1; j < all.Count; j++)
-                Assert.GreaterOrEqual(Vector3.Distance(all[i], all[j]), 2.1f, $"plots {i} and {j} overlap");
-
-        foreach (Vector3 p in extra)
-            Assert.AreEqual(0.1f, p.y, 1e-4f, "same ground height");
-    }
-
-    [Test]
-    public void LayoutRepeatsTheFieldsRowsAndStaysOffTheMerchantAndBell()
-    {
-        List<Vector3> field = BaseField();
-        List<Vector3> extra = FarmlandLogic.PositionsFor(4, field);
-
-        HashSet<float> rows = new HashSet<float>();
-        foreach (Vector3 p in extra) rows.Add(Mathf.Round(p.z * 10f) / 10f);
-        Assert.AreEqual(3, rows.Count, "no new rows: the field only grows sideways");
-
-        Vector3 merchant = new Vector3(0f, 0f, 11f), bell = new Vector3(-6f, 0f, 0f);
-        foreach (Vector3 p in extra)
-        {
-            Assert.Greater(Vector3.Distance(p, merchant), 3f, "plots stay clear of the merchant's booth");
-            Assert.Greater(Vector3.Distance(p, bell), 2.5f, "and the bell");
-        }
-    }
-
-    [Test]
-    public void ManyFarmlandsFillOutSideColumnsThenStartNewRowsBehindTheField()
-    {
-        List<Vector3> field = TwoByTwoField();
-        List<Vector3> extra = FarmlandLogic.PositionsFor(14, field, maxColumnsPerSide: 4);
-        Assert.AreEqual(14 * 2, extra.Count, "every farmland adds one column of 2 plots");
-
-        List<Vector3> all = new List<Vector3>(field);
-        all.AddRange(extra);
-        for (int i = 0; i < all.Count; i++)
-            for (int j = i + 1; j < all.Count; j++)
-                Assert.GreaterOrEqual(Vector3.Distance(all[i], all[j]), 2.1f, $"plots {i} and {j} overlap");
-
-        float maxSideX = 0f;
-        for (int i = 0; i < 16; i++) maxSideX = Mathf.Max(maxSideX, Mathf.Abs(extra[i].x));
-        Assert.AreEqual(9.9f, maxSideX, 1e-3f, "the first 8 columns sit beside the field (4 per side)");
-        Assert.Greater(extra[16].z, 5.2f + 0.1f, "the 9th column starts a new band of rows behind the field");
-    }
-
-    [Test]
-    public void ColumnsThatWouldLandOnTheMerchantOrBellAreSkippedNotLost()
-    {
-        List<Vector3> field = TwoByTwoField();
-        List<Vector3> keepClear = new List<Vector3> { new Vector3(0f, 0f, 9.6f), new Vector3(-6f, 0f, 0f) };
-        List<Vector3> extra = FarmlandLogic.PositionsFor(30, field, 4, keepClear);
-
-        Assert.AreEqual(30 * 2, extra.Count, "the full number of columns is still delivered");
-        foreach (Vector3 p in extra)
-        {
-            Assert.GreaterOrEqual(Vector3.Distance(new Vector3(p.x, 0f, p.z), keepClear[0]), 2.8f);
-            Assert.GreaterOrEqual(Vector3.Distance(new Vector3(p.x, 0f, p.z), keepClear[1]), 2.8f);
-        }
-    }
+    // ------------------------------------------------------------------ placing
 
     private static List<Vector3> TwoByTwoField()
     {
@@ -240,14 +156,85 @@ public class FarmlandTests
     }
 
     [Test]
-    public void LayoutIsDeterministicAndSafeWithNoField()
+    public void EachFarmlandIsAColumnOfPlotsToPlace()
     {
-        List<Vector3> field = BaseField();
-        CollectionAssert.AreEqual(FarmlandLogic.PositionsFor(3, field), FarmlandLogic.PositionsFor(3, field));
-        Assert.IsEmpty(FarmlandLogic.PositionsFor(0, field));
-        Assert.IsEmpty(FarmlandLogic.PositionsFor(3, new List<Vector3>()));
-        Assert.IsEmpty(FarmlandLogic.PositionsFor(3, null));
+        Assert.AreEqual(3, FarmlandLogic.PlotsPerFarmland(BaseField()), "a farmland gives as many plots as the field is tall");
+        Assert.AreEqual(2, FarmlandLogic.PlotsPerFarmland(TwoByTwoField()));
         Assert.AreEqual(0, FarmlandLogic.PlotsPerFarmland(null));
+    }
+
+    [Test]
+    public void UnplacedPlotsAreOwnedMinusPlacedAndNeverNegative()
+    {
+        Assert.AreEqual(4, FarmlandLogic.UnplacedPlots(2, 2, 0));
+        Assert.AreEqual(1, FarmlandLogic.UnplacedPlots(2, 2, 3));
+        Assert.AreEqual(0, FarmlandLogic.UnplacedPlots(2, 2, 4));
+        Assert.AreEqual(0, FarmlandLogic.UnplacedPlots(1, 2, 9), "more placed than owned reads as none waiting");
+        Assert.AreEqual(0, FarmlandLogic.UnplacedPlots(0, 2, 0));
+    }
+
+    [Test]
+    public void SnapPutsPlotsOnTheFieldsGrid()
+    {
+        List<Vector3> field = TwoByTwoField();
+        Vector3 snapped = FarmlandLogic.SnapToField(new Vector3(4.6f, 5f, 8.1f), field);
+        Assert.AreEqual(-1.1f + 2.2f * 3f, snapped.x, 1e-3f);
+        Assert.AreEqual(3f + 2.2f * 2f, snapped.z, 1e-3f);
+        Assert.AreEqual(0.1f, snapped.y, 1e-4f, "keeps the field's ground height");
+
+        Vector3 loose = new Vector3(1f, 2f, 3f);
+        Assert.AreEqual(loose, FarmlandLogic.SnapToField(loose, null), "no field: left alone");
+    }
+
+    [Test]
+    public void ClearMeansNothingCloserThanTheSpacing()
+    {
+        List<Vector3> field = TwoByTwoField();
+        Assert.IsFalse(FarmlandLogic.IsClear(field[0], field, 1.8f), "on top of a plot");
+        Assert.IsFalse(FarmlandLogic.IsClear(field[0] + new Vector3(1f, 0f, 0f), field, 1.8f));
+        Assert.IsTrue(FarmlandLogic.IsClear(field[0] + new Vector3(-2.2f, 0f, 0f), field, 1.8f), "one grid step away fits");
+        Assert.IsTrue(FarmlandLogic.IsClear(Vector3.zero, null, 1.8f));
+    }
+
+    [Test]
+    public void PlacingIsLimitedToThePlotsYouOwn()
+    {
+        MetaProgress meta = new MetaProgress();
+        Assert.IsFalse(FarmlandLogic.TryPlace(meta, Vector3.zero, 0), "nothing owned yet");
+        Assert.IsTrue(FarmlandLogic.TryPlace(meta, new Vector3(1f, 0.1f, 1f), 2));
+        Assert.IsTrue(FarmlandLogic.TryPlace(meta, new Vector3(5f, 0.1f, 1f), 2));
+        Assert.IsFalse(FarmlandLogic.TryPlace(meta, new Vector3(9f, 0.1f, 1f), 2), "both owned plots are already down");
+        Assert.AreEqual(2, meta.placedPlots.Count);
+    }
+
+    [Test]
+    public void PickingUpForgetsOnlyThePlotThatWasThere()
+    {
+        MetaProgress meta = new MetaProgress();
+        Vector3 a = new Vector3(1f, 0.1f, 1f), b = new Vector3(5f, 0.1f, 1f);
+        FarmlandLogic.TryPlace(meta, a, 5);
+        FarmlandLogic.TryPlace(meta, b, 5);
+
+        Assert.IsFalse(FarmlandLogic.TryPickUp(meta, new Vector3(3f, 0.1f, 1f)), "nothing placed there");
+        Assert.IsTrue(FarmlandLogic.TryPickUp(meta, a));
+        Assert.AreEqual(1, meta.placedPlots.Count);
+        Assert.AreEqual(b, meta.placedPlots[0]);
+        Assert.IsFalse(FarmlandLogic.TryPickUp(null, a));
+    }
+
+    [Test]
+    public void PlacedPlotsSurviveSavingAndSanitizeDropsBrokenOnes()
+    {
+        SaveFile file = new SaveFile { hasRun = true, run = RunLogic.NewRun(3, db, new MetaProgress()) };
+        file.meta.placedPlots.Add(new Vector3(4.4f, 0.1f, 3f));
+        file.meta.placedPlots.Add(new Vector3(float.NaN, 0.1f, 3f));
+
+        SaveFile back = JsonUtility.FromJson<SaveFile>(JsonUtility.ToJson(file));
+        Assert.AreEqual(2, back.meta.placedPlots.Count);
+        Assert.AreEqual(4.4f, back.meta.placedPlots[0].x, 1e-3f);
+
+        SaveService.Sanitize(file, db);
+        Assert.AreEqual(1, file.meta.placedPlots.Count, "the NaN plot is dropped");
     }
 
     // ------------------------------------------------------------------ spawning
@@ -261,53 +248,46 @@ public class FarmlandTests
     }
 
     [Test]
-    public void SpawnerBuildsConfiguredPlotsNextToTheExistingField()
+    public void SpawnerSetsAPlacedPlotDownWhereAsked()
     {
         Transform parent = Track(new GameObject("FarmTiles")).transform;
-        List<FarmTile> existing = new List<FarmTile>();
-        foreach (Vector3 p in BaseField()) existing.Add(MakeTile(p, parent));
+        FarmTile template = MakeTile(Vector3.zero, parent);
         FarmConditions conditions = Track(new GameObject("Conditions")).AddComponent<FarmConditions>();
+        Vector3 spot = new Vector3(8.8f, 0.1f, 3f);
 
-        List<FarmTile> spawned = FarmlandSpawner.Spawn(2, existing[0], existing, parent, conditions);
-        foreach (FarmTile t in spawned) created.Add(t.gameObject);
+        FarmTile tile = FarmlandSpawner.SpawnAt(spot, template, parent, conditions);
+        created.Add(tile.gameObject);
 
-        Assert.AreEqual(6, spawned.Count, "two farmlands x three plots");
-        foreach (FarmTile t in spawned)
-        {
-            Assert.AreSame(parent, t.transform.parent);
-            Assert.AreEqual(FarmTile.TileState.Empty, t.State);
-            Assert.That(t.name, Does.StartWith("FarmTile_Extra_"));
-        }
-        Assert.AreEqual(existing.Count + 6, parent.GetComponentsInChildren<FarmTile>().Length);
+        Assert.AreEqual(spot, tile.transform.position);
+        Assert.AreSame(parent, tile.transform.parent);
+        Assert.IsTrue(tile.IsPlaced);
+        Assert.IsFalse(template.IsPlaced, "the starting field is never a placed plot");
+        Assert.AreEqual(FarmTile.TileState.Empty, tile.State);
+        Assert.IsTrue(tile.CanPickUp, "an empty placed plot can be picked up");
+        Assert.IsFalse(template.CanPickUp, "the starting field stays put");
     }
 
     [Test]
-    public void SpawnerDoesNothingWithoutFarmlandsOrAField()
+    public void SpawnerDoesNothingWithoutATemplate()
     {
         Transform parent = Track(new GameObject("FarmTiles")).transform;
-        FarmTile tile = MakeTile(Vector3.zero, parent);
-        List<FarmTile> field = new List<FarmTile> { tile };
-
-        Assert.IsEmpty(FarmlandSpawner.Spawn(0, tile, field, parent, null));
-        Assert.IsEmpty(FarmlandSpawner.Spawn(2, null, field, parent, null));
-        Assert.IsEmpty(FarmlandSpawner.Spawn(2, tile, new List<FarmTile>(), parent, null));
+        Assert.IsNull(FarmlandSpawner.SpawnAt(Vector3.zero, null, parent, null));
     }
 
     [Test]
-    public void NewPlotsPlantSeedsLikeTheOriginals()
+    public void PlacedPlotsPlantSeedsLikeTheOriginals()
     {
         Transform parent = Track(new GameObject("FarmTiles")).transform;
-        List<FarmTile> existing = new List<FarmTile>();
-        foreach (Vector3 p in BaseField()) existing.Add(MakeTile(p, parent));
-        existing[0].SetFreePlanting(true); // the template starts out in legacy mode
+        FarmTile template = MakeTile(Vector3.zero, parent);
+        template.SetFreePlanting(true); // the template starts out in legacy mode
 
-        List<FarmTile> spawned = FarmlandSpawner.Spawn(1, existing[0], existing, parent, null);
-        foreach (FarmTile t in spawned) created.Add(t.gameObject);
+        FarmTile tile = FarmlandSpawner.SpawnAt(new Vector3(4.4f, 0.1f, 3f), template, parent, null);
+        created.Add(tile.gameObject);
 
         // A plot with no seed in hand can't be planted for free.
         GameObject player = Track(new GameObject("Player"));
         player.AddComponent<PlayerInventory>();
-        spawned[0].Interact(player);
-        Assert.AreEqual(FarmTile.TileState.Empty, spawned[0].State, "extra plots need seeds, same as the rest of the field");
+        tile.Interact(player);
+        Assert.AreEqual(FarmTile.TileState.Empty, tile.State, "placed plots need seeds, same as the rest of the field");
     }
 }

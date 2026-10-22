@@ -81,7 +81,7 @@ public static class UpgradeList
             cfg.maxFarmlands > 0 ? $"Extra Farmland  ({owned}/{cfg.maxFarmlands})" : $"Extra Farmland  (owned {owned})", 22f, maxed ? ImGuiKit.Accent : Color.white, TextAnchor.MiddleLeft, true);
         string detail = maxed
             ? $"Your farm is as big as it gets: {owned * director.PlotsPerFarmland} extra plots."
-            : $"Adds {director.PlotsPerFarmland} more plots to your field, every year. Each farmland costs more than the last.";
+            : $"Gives you {director.PlotsPerFarmland} plots in your hotbar to place anywhere on open ground. Each farmland costs more than the last.";
         ImGuiKit.Label(new Rect(row.x + 26 * s, row.y + 32 * s, width - 200 * s, row.height - 34 * s), detail, 16f, ImGuiKit.Muted, TextAnchor.UpperLeft);
 
         string label = maxed ? "Maxed" : $"{price} coins";

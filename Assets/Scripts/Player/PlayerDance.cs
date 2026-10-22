@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -13,13 +14,26 @@ public class PlayerDance : MonoBehaviour
     /// <summary>True while the wheel is open (and until the selecting click is released), so the world ignores the click.</summary>
     public static bool WheelOpen => open || (swallowClick && Mouse.current != null && Mouse.current.leftButton.isPressed);
 
+    private static readonly int DanceAHash = Animator.StringToHash("DanceA");
+    private static readonly int DanceBHash = Animator.StringToHash("DanceB");
+
+    private const int RoomySlices = 5;      // up to this many slices the wheel keeps its base radius
+    private const float RadiusPerExtraSlice = 0.1f;
+    private const int SmallLabelSlices = 6; // above this many slices the labels shrink so they don't overlap
+
     [SerializeField] private DanceLibrary library;
     [SerializeField] private Animator animator;
     [SerializeField] private PlayerController controller;
+    [Tooltip("Placeholder clips of the DanceA / DanceB states in MainCharacter.controller; the chosen dance is swapped in over one of them.")]
+    [SerializeField] private AnimationClip slotA;
+    [SerializeField] private AnimationClip slotB;
     [SerializeField] private float crossFade = 0.15f;
     [SerializeField] private float radius = 170f;   // authored at 1080p, scaled by ImGuiKit
     [SerializeField] private float deadZone = 45f;
 
+    private readonly List<DanceSlot> playable = new List<DanceSlot>();
+    private AnimatorOverrideController overrides;
+    private bool nextIsB;     // dances alternate between the two states so one dance blends into the next
     private Vector2 center;   // GUI space (y down)
     private int hover = -1;
 
@@ -27,13 +41,24 @@ public class PlayerDance : MonoBehaviour
     {
         if (animator == null) animator = GetComponentInChildren<Animator>();
         if (controller == null) controller = GetComponent<PlayerController>();
+        if (animator != null && animator.runtimeAnimatorController != null && slotA != null && slotB != null)
+        {
+            overrides = new AnimatorOverrideController(animator.runtimeAnimatorController);
+            animator.runtimeAnimatorController = overrides;
+        }
     }
+
+    /// <summary>The dances shown on the wheel (edited in the Inspector).</summary>
+    public DanceLibrary Library => library;
+
+    /// <summary>Wheel radius in authored pixels: grows with the slice count so ten labels still fit.</summary>
+    private float WheelRadius(int slices) => radius * (1f + Mathf.Max(0, slices - RoomySlices) * RadiusPerExtraSlice);
 
     private void OnDisable() { Close(); swallowClick = false; }
 
     private void Update()
     {
-        if (library == null || library.dances.Count == 0 || Keyboard.current == null || Mouse.current == null) return;
+        if (library == null || Keyboard.current == null || Mouse.current == null) return;
 
         if (open && (RunDirector.ModalOpen || !CanDance)) { Close(); return; }
 
@@ -43,14 +68,14 @@ public class PlayerDance : MonoBehaviour
             return;
         }
 
-        hover = PieMenuMath.SliceAt(MouseGui() - center, library.dances.Count, ImGuiKit.S(deadZone));
+        hover = PieMenuMath.SliceAt(MouseGui() - center, playable.Count, ImGuiKit.S(deadZone));
 
         if (Mouse.current.rightButton.wasPressedThisFrame) { Close(); return; }
 
         bool click = Mouse.current.leftButton.wasPressedThisFrame;
         if (click || Keyboard.current.qKey.wasReleasedThisFrame)
         {
-            if (hover >= 0) Play(library.dances[hover]);
+            if (hover >= 0) Play(playable[hover]);
             swallowClick = click;
             Close();
         }
@@ -60,9 +85,11 @@ public class PlayerDance : MonoBehaviour
 
     private void Open()
     {
+        library.CollectPlayable(playable);
+        if (playable.Count == 0) return; // nothing assigned in the Inspector yet
         open = true;
         hover = -1;
-        float margin = ImGuiKit.S(radius) + ImGuiKit.S(30f);
+        float margin = ImGuiKit.S(WheelRadius(playable.Count)) + ImGuiKit.S(30f);
         Vector2 m = MouseGui();
         center = new Vector2(
             Mathf.Clamp(m.x, margin, Mathf.Max(margin, Screen.width - margin)),
@@ -71,10 +98,12 @@ public class PlayerDance : MonoBehaviour
 
     private void Close() { open = false; hover = -1; }
 
-    private void Play(DanceData dance)
+    private void Play(DanceSlot dance)
     {
-        if (animator == null || dance == null) return;
-        animator.CrossFadeInFixedTime(Animator.StringToHash(dance.stateName), crossFade);
+        if (animator == null || overrides == null || dance == null || dance.clip == null) return;
+        overrides[nextIsB ? slotB : slotA] = dance.clip;
+        animator.CrossFadeInFixedTime(nextIsB ? DanceBHash : DanceAHash, crossFade);
+        nextIsB = !nextIsB;
         if (controller != null) controller.PlayThrowSquash(); // small pop so the start reads on camera
     }
 
@@ -90,14 +119,15 @@ public class PlayerDance : MonoBehaviour
     {
         if (!open || library == null || Event.current.type != EventType.Repaint) return;
 
-        int n = library.dances.Count;
-        float r = ImGuiKit.S(radius);
+        int n = playable.Count;
+        float r = ImGuiKit.S(WheelRadius(n));
+        bool compact = n > SmallLabelSlices;
         float inner = ImGuiKit.S(deadZone);
 
         ImGuiKit.Circle(center, r + ImGuiKit.S(6f), new Color(0f, 0f, 0f, 0.55f));
         ImGuiKit.Circle(center, r, ImGuiKit.Ink);
 
-        if (hover >= 0) DrawWedge(hover, n, inner, r, library.dances[hover].color);
+        if (hover >= 0) DrawWedge(hover, n, inner, r, playable[hover].color);
 
         for (int i = 0; i < n; i++)
         {
@@ -107,8 +137,9 @@ public class PlayerDance : MonoBehaviour
             ImGuiKit.Line(center + d * inner, center + d * r, ImGuiKit.S(3f), new Color(1f, 1f, 1f, 0.35f));
 
             Vector2 mid = center + edge * (r * 0.66f);
-            Rect label = new Rect(mid.x - ImGuiKit.S(80f), mid.y - ImGuiKit.S(20f), ImGuiKit.S(160f), ImGuiKit.S(40f));
-            ImGuiKit.HudLabel(label, library.dances[i].displayName, 22f, TextAnchor.MiddleCenter, true, i == hover ? 1f : 0.8f);
+            float labelWidth = compact ? 110f : 160f;
+            Rect label = new Rect(mid.x - ImGuiKit.S(labelWidth * 0.5f), mid.y - ImGuiKit.S(20f), ImGuiKit.S(labelWidth), ImGuiKit.S(40f));
+            ImGuiKit.HudLabel(label, playable[i].displayName, compact ? 18f : 22f, TextAnchor.MiddleCenter, true, i == hover ? 1f : 0.8f);
         }
 
         ImGuiKit.Circle(center, inner, new Color(0.08f, 0.07f, 0.12f, 0.95f));

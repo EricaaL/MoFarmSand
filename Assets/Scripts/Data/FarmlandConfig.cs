@@ -12,6 +12,10 @@ public class FarmlandConfig : ScriptableObject
     [Min(1)] public int roundTo = 5;
     [Tooltip("Most extra farmlands that can be bought. 0 = unlimited.")]
     [Min(0)] public int maxFarmlands = 0;
-    [Tooltip("Columns placed to each side of the starting field before new columns start a new band of rows behind it.")]
-    [Min(1)] public int maxColumnsPerSide = 4;
+    [Tooltip("The hotbar item a bought farmland turns into (one per plot). Single owner of the plot's name and icon.")]
+    public FarmlandPlotItem plotItem;
+    [Tooltip("How far from the player a plot can be placed or picked up (metres).")]
+    [Min(1f)] public float placeReach = 6f;
+    [Tooltip("Closest two plot centres may be (metres), so plots never overlap.")]
+    [Min(0.5f)] public float minPlotSpacing = 1.8f;
 }

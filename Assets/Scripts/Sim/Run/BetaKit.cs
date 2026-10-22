@@ -5,6 +5,8 @@ public static class BetaKit
 {
     public const int CropCount = 20;
     public const int SeedCount = 5;
+    /// <summary>Hotbar slots the kit leaves empty, so unplaced farmland plots always have room.</summary>
+    public const int FreeSlots = 1;
 
     /// <summary>Replaces the run's inventory with the kit for <paramref name="season"/>. Crops come first so they always fit the 8 slots.</summary>
     public static void Fill(RunState run, GameDatabase db, SeasonData season)
@@ -30,11 +32,19 @@ public static class BetaKit
             covered.Add(row.crop.type);
         }
 
-        // Whatever slots remain hold seeds for planting.
+        // Whatever slots remain hold seeds for planting, except the last one, which stays free for farmland plots.
         foreach (PriceTable.PriceRow row in db.prices.rows)
         {
             if (row.seed == null || !row.StockedIn(season)) continue;
+            if (FilledSlots(run.inventory) >= InventoryOps.Slots - FreeSlots) break;
             InventoryOps.Add(run.inventory, row.seed.Id, SeedCount);
         }
+    }
+
+    private static int FilledSlots(List<SlotSave> slots)
+    {
+        int filled = 0;
+        foreach (SlotSave s in slots) if (s.count > 0) filled++;
+        return filled;
     }
 }

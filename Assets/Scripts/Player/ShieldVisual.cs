@@ -8,6 +8,9 @@ public class ShieldVisual : MonoBehaviour
     [SerializeField] private Color color = new Color(0.55f, 0.38f, 0.2f, 0.4f);
     [SerializeField] private float diameter = 2.2f;
 
+    private const float WarnSeconds = 3f;
+    private const float BlinkInterval = 0.12f;
+
     private PlayerHealth health;
     private GameObject bubble;
 
@@ -43,4 +46,11 @@ public class ShieldVisual : MonoBehaviour
     private void OnDisable() { health.OnChanged -= Refresh; }
 
     private void Refresh() { bubble.SetActive(health.HasShield); }
+
+    private void Update()
+    {
+        // Blink for the last few seconds so it's clear the shield is about to pop.
+        if (!health.HasShield || health.ShieldTimeLeft > WarnSeconds) return;
+        bubble.SetActive(Mathf.FloorToInt(Time.time / BlinkInterval) % 2 == 0);
+    }
 }

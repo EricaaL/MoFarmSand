@@ -28,6 +28,29 @@ public class DataDriftTests
         AssertValid(db.modifiers);
         AssertValid(db.events);
         AssertValid(db.unlocks);
+        AssertValid(db.tips);
+    }
+
+    [Test]
+    public void EveryTipIdHasATipAsset()
+    {
+        foreach (string id in TipIds.All)
+        {
+            TipData tip = db.tips.Get(id);
+            Assert.IsNotNull(tip, $"no TipData for '{id}'");
+            Assert.IsFalse(string.IsNullOrWhiteSpace(tip.body), $"tip '{id}' has no text");
+        }
+    }
+
+    [Test]
+    public void EveryCropHasThreeGrowthModels()
+    {
+        foreach (ItemData item in db.items.All)
+        {
+            if (!(item is CropData crop)) continue;
+            Assert.AreEqual(3, crop.growthStages.Length, $"{crop.Id} needs sprout, growing and ripe models");
+            foreach (UnityEngine.GameObject model in crop.growthStages) Assert.IsNotNull(model, $"{crop.Id} has an empty growth stage");
+        }
     }
 
     [Test]

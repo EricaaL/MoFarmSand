@@ -415,6 +415,9 @@ public class RunLogicTests
             foreach (SlotSave s in run.inventory)
                 if (s.count > 0 && db.items.Get(s.itemId) is CropData crop) kinds.Add(crop.type);
             Assert.AreEqual(3, kinds.Count, $"{season.displayName} kit has projectile, shooter and support crops");
+            int filled = 0;
+            foreach (SlotSave s in run.inventory) if (s.count > 0) filled++;
+            Assert.LessOrEqual(filled, InventoryOps.Slots - BetaKit.FreeSlots, $"{season.displayName} kit leaves a slot free for farmland plots");
             foreach (PriceTable.PriceRow row in db.prices.rows)
                 if (row.StockedIn(season)) Assert.Greater(InventoryOps.CountOf(run.inventory, row.crop.Id), 0, $"{row.crop.Id} in {season.displayName}");
         }

@@ -46,7 +46,9 @@ public static class HeldItemText
         {
             visible = true,
             main = "x" + count,
-            sub = item is SeedData ? (count == 1 ? "seed" : "seeds") : string.Empty
+            sub = item is SeedData ? (count == 1 ? "seed" : "seeds")
+                : item is FarmlandPlotItem ? (count == 1 ? "plot" : "plots")
+                : string.Empty
         };
     }
 }

@@ -51,6 +51,14 @@ public static class ItemInfoBuilder
         ItemInfo info;
         if (item is SeedData seed) info = BuildSeed(seed, ctx);
         else if (item is CropData crop) info = BuildCrop(crop, ctx);
+        else if (item is FarmlandPlotItem plot)
+            return new ItemInfo
+            {
+                title = plot.DisplayName,
+                subtitle = "Farmland",
+                summary = "Place it on open ground near you. An empty placed plot can be picked up again with [R].",
+                color = plot.ItemColor
+            };
         else return new ItemInfo { title = item != null ? item.DisplayName : "Unknown" };
 
         // A locked variant still shows its full stats, so you can decide whether it's worth unlocking.
@@ -144,7 +152,7 @@ public static class ItemInfoBuilder
             color = crop.color,
             summary = shooter ? $"Hold left-click to fire it at the boss at night. One crop holds {crop.ammoPerCrop} shots. Drag it off the hotbar to fire one shot there."
                     : attack ? "Throw it at the boss at night to feed it. Hold left-click to aim, release to throw (right-click cancels), or drag it from the hotbar to where you want it to land."
-                             : "Eat it for a Bark Shield that protects you. Right-click to eat, or drag it off the hotbar."
+                             : $"Eat it for a Bark Shield that protects you for {crop.shieldSeconds:0} seconds. Right-click to eat, or drag it off the hotbar."
         };
         info.Add("You have", ctx.owned.ToString(), ctx.owned > 0 ? InfoTone.Normal : InfoTone.Muted);
 
@@ -168,8 +176,7 @@ public static class ItemInfoBuilder
         }
         else
         {
-            // The shield is a single flag: it absorbs exactly one hit however many charges the crop lists.
-            info.Add("What it does", $"Defense: grants a Bark Shield that blocks the next {Mathf.Max(1, crop.shieldCharges)} hit(s) at full strength", InfoTone.Good);
+            info.Add("What it does", $"Defense: grants a Bark Shield that blocks the next {Mathf.Max(1, crop.shieldCharges)} hit(s) at full strength, for {crop.shieldSeconds:0}s", InfoTone.Good);
             info.Add("Heals?", "No. It stops damage instead of restoring hearts", InfoTone.Muted);
         }
 

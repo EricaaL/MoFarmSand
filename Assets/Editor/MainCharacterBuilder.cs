@@ -26,7 +26,15 @@ public static class MainCharacterBuilder
     private const float WalkSpeed = 2.5f;
     private const float RunSpeed = 5f;
 
-    private const string DanceDir = AnimDir + "/Dances";
+    // Playback speed of the Farm state, so planting and harvesting feel snappy.
+    private const float FarmSpeed = 3f;
+
+    private const string DanceDir =AnimDir + "/Dances";
+    private const string BreakdanceDir = DanceDir + "/Breakdance Pack";
+    private const string DanceStateA = "DanceA"; // must match PlayerDance's state hashes
+    private const string DanceStateB = "DanceB";
+    private const string PlaceholderAPath = AnimDir + "/DanceSlotA.anim";
+    private const string PlaceholderBPath = AnimDir + "/DanceSlotB.anim";
     private const string DanceDataDir = "Assets/Data/Dances";
     private const string DanceLibraryPath = DanceDataDir + "/DanceLibrary.asset";
 
@@ -34,7 +42,8 @@ public static class MainCharacterBuilder
     {
         public string oldName, newName, clipName, dir;
         public bool loop;
-        public ClipSpec(string o, string n, string c, bool l, string d = AnimDir) { oldName = o; newName = n; clipName = c; loop = l; dir = d; }
+        public bool grounded; // drop the clip's vertical root motion so airborne moves stay at ground level
+        public ClipSpec(string o, string n, string c, bool l, string d = AnimDir, bool g = false) { oldName = o; newName = n; clipName = c; loop = l; dir = d; grounded = g; }
         public string Path => $"{dir}/{newName}.fbx";
     }
 
@@ -52,12 +61,15 @@ public static class MainCharacterBuilder
         new ClipSpec("Chicken Dance", "MainCharacter@Dance_Chicken", "Dance_Chicken", true, DanceDir),
         new ClipSpec("Dancing", "MainCharacter@Dance_Groove", "Dance_Groove", true, DanceDir),
         new ClipSpec("Northern Soul Spin Combo", "MainCharacter@Dance_Spin", "Dance_Spin", true, DanceDir),
+        new ClipSpec("Northern Soul Floor Combo", "MainCharacter@Dance_Floor", "Dance_Floor", true, DanceDir),
+        new ClipSpec("Flying Shoulder Throw", "MainCharacter@Dance_Flip", "Dance_Flip", true, DanceDir, true),
     };
 
-    private static readonly string[] DanceLabels = { "Chicken", "Groove", "Spin" };
+    private static readonly string[] DanceLabels = { "Chicken", "Groove", "Spin", "Floor", "Flip" };
     private static readonly Color[] DanceColors =
     {
         new Color(1f, 0.75f, 0.3f), new Color(0.75f, 0.45f, 1f), new Color(0.35f, 0.85f, 0.95f),
+        new Color(1f, 0.5f, 0.7f), new Color(0.55f, 0.9f, 0.45f),
     };
 
     [MenuItem("MoFarmSand/Setup Main Character")]
@@ -74,6 +86,7 @@ public static class MainCharacterBuilder
         Avatar avatar = SetupRiggedModel();
         foreach (ClipSpec c in Clips) SetupClip(c, avatar);
         foreach (ClipSpec c in Dances) SetupClip(c, avatar);
+        SetupBreakdancePack(avatar);
         AssetDatabase.Refresh();
 
         DanceLibrary library = EnsureDanceAssets();
@@ -82,6 +95,20 @@ public static class MainCharacterBuilder
 
         AssetDatabase.SaveAssets();
         Debug.Log("[MainCharacterBuilder] Main character set up.");
+    }
+
+    /// <summary>
+    /// Imports every FBX in the Breakdance Pack as a Humanoid clip on the dog's avatar, so each one previews on the dog
+    /// in the Inspector. The clips are not on the emote wheel; add a spec to <see cref="Dances"/> to use one.
+    /// </summary>
+    private static void SetupBreakdancePack(Avatar avatar)
+    {
+        if (!AssetDatabase.IsValidFolder(BreakdanceDir)) return;
+        foreach (string guid in AssetDatabase.FindAssets("t:Model", new[] { BreakdanceDir }))
+        {
+            string name = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(guid));
+            SetupClip(new ClipSpec(name, name, name, false, BreakdanceDir), avatar);
+        }
     }
 
     private static void OrganizeAssets()
@@ -107,8 +134,10 @@ public static class MainCharacterBuilder
 
     private static void MoveClip(ClipSpec c)
     {
-        string from = $"{AnimDir}/{c.oldName}.fbx";
-        if (File.Exists(from) && !File.Exists(c.Path)) Report(AssetDatabase.MoveAsset(from, c.Path));
+        if (File.Exists(c.Path)) return;
+        // Mixamo downloads land loose in AnimDir or, for dances, straight in the clip's own folder.
+        foreach (string from in new[] { $"{AnimDir}/{c.oldName}.fbx", $"{c.dir}/{c.oldName}.fbx" })
+            if (File.Exists(from)) { Report(AssetDatabase.MoveAsset(from, c.Path)); return; }
     }
 
     private static Avatar SetupRiggedModel()
@@ -146,6 +175,21 @@ public static class MainCharacterBuilder
         mi.materialImportMode = ModelImporterMaterialImportMode.None;
         mi.importAnimation = true;
 
+        // Mixamo clips are exported "with skin": we only want their animation, so skip everything else in the file.
+        mi.importBlendShapes = false;
+        mi.importNormals = ModelImporterNormals.None;
+        mi.importTangents = ModelImporterTangents.None;
+        mi.importVisibility = false;
+        mi.importCameras = false;
+        mi.importLights = false;
+        mi.importConstraints = false;
+        mi.importAnimatedCustomProperties = false;
+        mi.isReadable = false;
+        mi.meshCompression = ModelImporterMeshCompression.High;
+        // Smaller clips: Optimal picks the best curve compression per clip; constant scale curves are pure waste.
+        mi.animationCompression = ModelImporterAnimationCompression.Optimal;
+        mi.removeConstantScaleCurves = true;
+
         ModelImporterClipAnimation[] defaults = mi.defaultClipAnimations;
         if (defaults.Length > 0)
         {
@@ -160,6 +204,13 @@ public static class MainCharacterBuilder
             clip.keepOriginalOrientation = true;
             clip.keepOriginalPositionY = true;
             clip.keepOriginalPositionXZ = true;
+            if (c.grounded)
+            {
+                // The Flip clip launches the hips ~1.2 body heights up; unbaked height is discarded (no root motion).
+                clip.lockRootHeightY = false;
+                clip.keepOriginalPositionY = false;
+                clip.heightFromFeet = true;
+            }
             mi.clipAnimations = new[] { clip };
         }
         mi.SaveAndReimport();
@@ -171,7 +222,10 @@ public static class MainCharacterBuilder
             .OfType<AnimationClip>().FirstOrDefault(a => !a.name.StartsWith("__preview__"));
     }
 
-    /// <summary>Dance assets are created once; re-runs keep any labels or colours tuned in the Inspector.</summary>
+    /// <summary>
+    /// The library is created once and seeded with the <see cref="Dances"/> specs while it has no clips. After that the
+    /// slots belong to the Inspector, so re-runs never overwrite what was dragged in.
+    /// </summary>
     private static DanceLibrary EnsureDanceAssets()
     {
         DanceLibrary library = AssetDatabase.LoadAssetAtPath<DanceLibrary>(DanceLibraryPath);
@@ -181,23 +235,34 @@ public static class MainCharacterBuilder
             AssetDatabase.CreateAsset(library, DanceLibraryPath);
         }
 
-        for (int i = 0; i < Dances.Length; i++)
+        if (!library.slots.Any(s => s.clip != null))
         {
-            string path = $"{DanceDataDir}/{Dances[i].clipName}.asset";
-            DanceData data = AssetDatabase.LoadAssetAtPath<DanceData>(path);
-            if (data == null)
+            library.slots.Clear();
+            for (int i = 0; i < Dances.Length && i < DanceLibrary.MaxSlots; i++)
             {
-                data = ScriptableObject.CreateInstance<DanceData>();
-                data.displayName = DanceLabels[i];
-                data.stateName = Dances[i].clipName;
-                data.color = DanceColors[i];
-                AssetDatabase.CreateAsset(data, path);
+                library.slots.Add(new DanceSlot
+                {
+                    displayName = DanceLabels[i],
+                    clip = LoadClip(Dances[i].newName, Dances[i].dir),
+                    color = DanceColors[i],
+                });
             }
-            if (!library.dances.Contains(data)) library.dances.Add(data);
         }
         EditorUtility.SetDirty(library);
         AssetDatabase.SaveAssets();
         return library;
+    }
+
+    /// <summary>An empty clip that stands in for "the chosen dance" in a dance state; each state needs its own asset to override.</summary>
+    private static AnimationClip EnsurePlaceholder(string path)
+    {
+        AnimationClip clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+        if (clip == null)
+        {
+            clip = new AnimationClip { name = Path.GetFileNameWithoutExtension(path) };
+            AssetDatabase.CreateAsset(clip, path);
+        }
+        return clip;
     }
 
     private static AnimatorController BuildController()
@@ -222,6 +287,7 @@ public static class MainCharacterBuilder
 
         AnimatorState farm = sm.AddState("Farm");
         farm.motion = LoadClip("MainCharacter@Farming");
+        farm.speed = FarmSpeed;
 
         AnimatorStateTransition toFarm = locomotion.AddTransition(farm);
         toFarm.hasExitTime = false;
@@ -239,11 +305,12 @@ public static class MainCharacterBuilder
         cancel.duration = 0.1f;
         cancel.AddCondition(AnimatorConditionMode.Greater, 0.5f, "Speed");
 
-        // Dances: entered from PlayerDance via CrossFade; moving or planting leaves them.
-        foreach (ClipSpec spec in Dances)
+        // Dances: two generic states entered from PlayerDance via CrossFade. PlayerDance swaps the chosen clip over the
+        // placeholder at runtime (AnimatorOverrideController); moving or planting leaves them.
+        foreach (string stateName in new[] { DanceStateA, DanceStateB })
         {
-            AnimatorState dance = sm.AddState(spec.clipName);
-            dance.motion = LoadClip(spec.newName, spec.dir);
+            AnimatorState dance = sm.AddState(stateName);
+            dance.motion = EnsurePlaceholder(stateName == DanceStateA ? PlaceholderAPath : PlaceholderBPath);
 
             AnimatorStateTransition stop = dance.AddTransition(locomotion);
             stop.hasExitTime = false;
@@ -302,6 +369,8 @@ public static class MainCharacterBuilder
             SerializedObject pds = new SerializedObject(pd);
             pds.FindProperty("library").objectReferenceValue = library;
             pds.FindProperty("animator").objectReferenceValue = anim;
+            pds.FindProperty("slotA").objectReferenceValue = EnsurePlaceholder(PlaceholderAPath);
+            pds.FindProperty("slotB").objectReferenceValue = EnsurePlaceholder(PlaceholderBPath);
             pds.FindProperty("controller").objectReferenceValue = root.GetComponent<PlayerController>();
             pds.ApplyModifiedPropertiesWithoutUndo();
 

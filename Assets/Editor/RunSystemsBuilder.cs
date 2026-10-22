@@ -431,6 +431,7 @@ public static class RunSystemsBuilder
             {
                 look.ambientFx = fxSeasonSnow;
                 look.snowStart01 = 0.35f; look.snowEnd01 = 1f;
+                look.snowyTrees = true;
             }
             cozy.seasonLooks[i] = look;
             EditorUtility.SetDirty(cozy);
@@ -450,7 +451,9 @@ public static class RunSystemsBuilder
         DifficultyConfig difficulty = A<DifficultyConfig>($"{Data}/Run/DifficultyConfig.asset", d => { });
 
         // ---- Farmland: buy extra columns of plots, each pricier than the last ----
+        FarmlandPlotItem plotItem = A<FarmlandPlotItem>($"{Data}/Run/FarmlandPlot.asset", p => { });
         FarmlandConfig farmland = A<FarmlandConfig>($"{Data}/Run/FarmlandConfig.asset", f => { });
+        if (farmland.plotItem == null) { farmland.plotItem = plotItem; EditorUtility.SetDirty(farmland); }
         StockroomConfig stockroom = A<StockroomConfig>($"{Data}/Run/StockroomConfig.asset", f => { });
 
         // ---- Aggregate ----
@@ -543,6 +546,7 @@ public static class RunSystemsBuilder
         SetRef(clock, "lighting", Object.FindFirstObjectByType<DayNightLighting>());
         SetRef(clock, "cozyBridge", bridge);
 
+        Ensure<PlayerPlotPlacer>(player);   // places bought farmland plots from the hotbar
         RunDirector director = Ensure<RunDirector>(GetOrCreate("RunDirector", managers));
         MerchantStall stall = BuildStall(runRoot, director);
 
@@ -855,7 +859,7 @@ public static class RunSystemsBuilder
         return so;
     }
 
-    private static GameObject Fx(string name, Material mat, Color color, bool loop, float rate, float life, float size, float speed, float gravity,
+    internal static GameObject Fx(string name, Material mat, Color color, bool loop, float rate, float life, float size, float speed, float gravity,
         ParticleSystemShapeType shape, Vector3 shapeScale, Vector3 offset, int burst = 0, bool circleEdge = false)
     {
         string path = $"{FxDir}/{name}.prefab";
@@ -1057,7 +1061,7 @@ public static class RunSystemsBuilder
         return saved;
     }
 
-    private static Material Mat(string name, Color color, string shaderName = "Universal Render Pipeline/Lit")
+    internal static Material Mat(string name, Color color, string shaderName = "Universal Render Pipeline/Lit")
     {
         string path = $"{MatDir}/{name}.mat";
         Material m = AssetDatabase.LoadAssetAtPath<Material>(path);

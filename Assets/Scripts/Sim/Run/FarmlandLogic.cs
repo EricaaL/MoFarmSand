@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>Pure rules for buying extra farmland and where the new plots go.</summary>
+/// <summary>Pure rules for buying extra farmland and for tracking the plots the player places.</summary>
 public static class FarmlandLogic
 {
     // ------------------------------------------------------------------ buying
@@ -25,87 +25,57 @@ public static class FarmlandLogic
         return true;
     }
 
-    // ------------------------------------------------------------------ layout
+    // ------------------------------------------------------------------ placing
 
-    /// <summary>
-    /// Plot positions for <paramref name="extraFarmlands"/> new columns, derived from the existing field so it works
-    /// with any grid. Columns go to the right first, then the left, out to <paramref name="maxColumnsPerSide"/> each way;
-    /// after that, new bands of rows start behind the field and fill centre-out, each repeating the field's rows.
-    /// A column that would sit within <paramref name="clearRadius"/> of a <paramref name="keepClear"/> point (merchant, bell)
-    /// is skipped, so every farmland you buy still adds a full column.
-    /// </summary>
-    public static List<Vector3> PositionsFor(int extraFarmlands, IReadOnlyList<Vector3> baseTiles, int maxColumnsPerSide = 4,
-        IReadOnlyList<Vector3> keepClear = null, float clearRadius = 2.8f)
+    /// <summary>Plots still waiting in the hotbar: owned (farmlands x plots each) minus the ones already placed.</summary>
+    public static int UnplacedPlots(int farmlands, int plotsPerFarmland, int placed)
+        => Mathf.Max(0, farmlands * Mathf.Max(0, plotsPerFarmland) - Mathf.Max(0, placed));
+
+    /// <summary>Snaps a world point onto the starting field's grid (same spacing), keeping the field's height.</summary>
+    public static Vector3 SnapToField(Vector3 point, IReadOnlyList<Vector3> baseTiles)
     {
-        List<Vector3> result = new List<Vector3>();
-        if (extraFarmlands <= 0 || baseTiles == null || baseTiles.Count == 0) return result;
-
+        if (baseTiles == null || baseTiles.Count == 0) return point;
         List<float> xs = Distinct(baseTiles, v => v.x);
         List<float> zs = Distinct(baseTiles, v => v.z);
-        float y = baseTiles[0].y;
-
         float spacing = xs.Count > 1 ? (xs[xs.Count - 1] - xs[0]) / (xs.Count - 1) : 2.2f;
         float zStep = zs.Count > 1 ? (zs[zs.Count - 1] - zs[0]) / (zs.Count - 1) : spacing;
-        float zSpan = zs[zs.Count - 1] - zs[0];
-        float centerX = (xs[0] + xs[xs.Count - 1]) * 0.5f;
-        float halfColumns = (xs.Count - 1) * 0.5f;
-
-        int perSide = Mathf.Max(1, maxColumnsPerSide);
-        int beside = perSide * 2;                 // extra columns that fit next to the starting field
-        int bandColumns = xs.Count + beside;      // columns in every later band (same width as the field + side columns)
-
-        int placed = 0;
-        for (int candidate = 0; placed < extraFarmlands && candidate < 4000; candidate++)
-        {
-            float x, zShift;
-            if (candidate < beside)
-            {
-                float side = candidate % 2 == 0 ? 1f : -1f;
-                int ring = candidate / 2 + 1;
-                x = centerX + side * (halfColumns + ring) * spacing;
-                zShift = 0f;
-            }
-            else
-            {
-                int later = candidate - beside;
-                int band = 1 + later / bandColumns;
-                x = centerX + CenteredOffset(later % bandColumns, bandColumns) * spacing;
-                zShift = band * (zSpan + zStep);
-            }
-
-            List<Vector3> column = new List<Vector3>(zs.Count);
-            foreach (float z in zs) column.Add(new Vector3(x, y, z + zShift));
-            if (Blocked(column, keepClear, clearRadius)) continue;
-
-            result.AddRange(column);
-            placed++;
-        }
-        return result;
+        float x = xs[0] + Mathf.Round((point.x - xs[0]) / spacing) * spacing;
+        float z = zs[0] + Mathf.Round((point.z - zs[0]) / zStep) * zStep;
+        return new Vector3(x, baseTiles[0].y, z);
     }
 
-    private static bool Blocked(List<Vector3> column, IReadOnlyList<Vector3> keepClear, float radius)
+    /// <summary>True when no occupied point is closer than <paramref name="minSpacing"/> (flat distance).</summary>
+    public static bool IsClear(Vector3 spot, IReadOnlyList<Vector3> occupied, float minSpacing)
     {
-        if (keepClear == null) return false;
-        foreach (Vector3 plot in column)
-            foreach (Vector3 point in keepClear)
-            {
-                Vector3 d = plot - point; d.y = 0f;
-                if (d.magnitude < radius) return true;
-            }
+        if (occupied == null) return true;
+        foreach (Vector3 o in occupied)
+        {
+            Vector3 d = o - spot; d.y = 0f;
+            if (d.magnitude < minSpacing) return false;
+        }
+        return true;
+    }
+
+    /// <summary>Records a placed plot. Refuses when every plot you own is already placed.</summary>
+    public static bool TryPlace(MetaProgress meta, Vector3 spot, int ownedPlots)
+    {
+        if (meta == null || meta.placedPlots.Count >= ownedPlots) return false;
+        meta.placedPlots.Add(spot);
+        return true;
+    }
+
+    /// <summary>Forgets the placed plot at <paramref name="spot"/> (within 0.1 m), so it returns to the hotbar.</summary>
+    public static bool TryPickUp(MetaProgress meta, Vector3 spot)
+    {
+        if (meta == null) return false;
+        for (int i = 0; i < meta.placedPlots.Count; i++)
+        {
+            Vector3 d = meta.placedPlots[i] - spot; d.y = 0f;
+            if (d.magnitude > 0.1f) continue;
+            meta.placedPlots.RemoveAt(i);
+            return true;
+        }
         return false;
-    }
-
-    /// <summary>The m-th column offset (in column widths) counting out from the centre, right first. Works for odd and even widths.</summary>
-    private static float CenteredOffset(int m, int columns)
-    {
-        if (columns % 2 == 1)
-        {
-            if (m == 0) return 0f;
-            int k = (m + 1) / 2;
-            return m % 2 == 1 ? k : -k;
-        }
-        int ring = m / 2;
-        return m % 2 == 0 ? ring + 0.5f : -(ring + 0.5f);
     }
 
     /// <summary>Number of plots a farmland adds, for display ("+3 plots").</summary>

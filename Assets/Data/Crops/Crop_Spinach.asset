@@ -18,6 +18,7 @@ MonoBehaviour:
   growTime: 12
   fullnessValue: 20
   shieldCharges: 3
+  shieldSeconds: 20
   harvestYield: 2
   ammoPerCrop: 10
   fireInterval: 0.15
@@ -26,7 +27,10 @@ MonoBehaviour:
   projectilePrefab: {fileID: 0}
   icon: {fileID: 21300000, guid: ab542465d4b939747963e0085b7432a4, type: 3}
   color: {r: 0.2, g: 0.55, b: 0.3, a: 1}
-  growthStages: []
+  growthStages:
+  - {fileID: 2486392463609676552, guid: 296f60ce75c26b04d9c2ace848931548, type: 3}
+  - {fileID: 4452773279852914346, guid: a2b422447fe2abc4aad5544297ecc1df, type: 3}
+  - {fileID: 5956781816299370783, guid: b052b42402e4b1144af4a935fe6d19c9, type: 3}
   growthStageScale: 1
   climate:
     idealTemp: 5

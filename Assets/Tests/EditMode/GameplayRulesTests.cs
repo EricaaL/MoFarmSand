@@ -60,6 +60,55 @@ public class GameplayRulesTests
     }
 
     [Test]
+    public void PlayerHealth_ShieldWearsOffAfterItsDuration()
+    {
+        go = new GameObject("p");
+        PlayerHealth h = go.AddComponent<PlayerHealth>();
+        CallAwake(h);
+        h.GrantShield(2, 20f);
+
+        h.TickShield(19.9f);
+        Assert.IsTrue(h.HasShield, "still up just before 20 s");
+        h.TickShield(0.2f);
+        Assert.IsFalse(h.HasShield, "gone after 20 s even though nothing hit it");
+        Assert.AreEqual(0f, h.ShieldTimeLeft);
+        h.TakeDamage(1);
+        Assert.AreEqual(2, h.Hp, "unshielded again");
+    }
+
+    [Test]
+    public void PlayerHealth_EatingAgainRefreshesButNeverShortensTheShield()
+    {
+        go = new GameObject("p");
+        PlayerHealth h = go.AddComponent<PlayerHealth>();
+        CallAwake(h);
+        h.GrantShield(1, 20f);
+        h.TickShield(15f);
+        h.GrantShield(1, 3f);
+        Assert.AreEqual(5f, h.ShieldTimeLeft, 1e-3f, "a shorter shield doesn't cut the time left");
+        h.GrantShield(1, 20f);
+        Assert.AreEqual(20f, h.ShieldTimeLeft, 1e-3f, "a longer one refreshes it");
+        Assert.AreEqual(3, h.ShieldCharges, "charges still stack (three crops eaten)");
+    }
+
+    [Test]
+    public void PlayerHealth_UsingTheLastChargeEndsTheTimer()
+    {
+        go = new GameObject("p");
+        PlayerHealth h = go.AddComponent<PlayerHealth>();
+        CallAwake(h);
+        h.GrantShield();
+        h.TakeDamage(1);
+        Assert.AreEqual(0f, h.ShieldTimeLeft);
+    }
+
+    [Test]
+    public void SupportCropsDefaultToATwentySecondShield()
+    {
+        Assert.AreEqual(20f, MakeCrop(CropType.Support).shieldSeconds);
+    }
+
+    [Test]
     public void PlayerHealth_DiedFiresOnce()
     {
         go = new GameObject("p");

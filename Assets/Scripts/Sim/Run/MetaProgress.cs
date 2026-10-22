@@ -12,6 +12,8 @@ public class MetaProgress
     public int bestLayer;
     /// <summary>Extra farmlands (columns of plots) bought with vault coins. Permanent.</summary>
     public int farmlands;
+    /// <summary>Where the player has placed bought plots. Plots owned minus these are waiting in the hotbar. Permanent.</summary>
+    public List<UnityEngine.Vector3> placedPlots = new List<UnityEngine.Vector3>();
     /// <summary>Bigger Stockroom level (0 = none). Permanent.</summary>
     public int stockroomLevel;
     /// <summary>Bigger Vault level (0 = none). Raises the vault limit. Permanent.</summary>

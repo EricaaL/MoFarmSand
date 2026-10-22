@@ -36,6 +36,10 @@ public class DisasterDirector : MonoBehaviour, IFarmWorld
 
     private readonly ModifierStack fallbackGrowth = new ModifierStack();
 
+    /// <summary>A plot placed or picked up mid-day joins or leaves today's disaster.</summary>
+    public void AddPlot(IFarmPlot plot) { if (plot != null && !plots.Contains(plot)) plots.Add(plot); }
+    public void RemovePlot(IFarmPlot plot) { plots.Remove(plot); }
+
     public void Begin(DisasterRoll roll, int runSeed, int nodeId)
     {
         End();

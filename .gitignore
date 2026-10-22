@@ -59,3 +59,7 @@ crashlytics-build.properties
 
 # Personal tool settings
 .claude/settings.local.json
+
+# Editor screenshots taken through MCP / the Game view (4K, ~34 MB)
+/Assets/Screenshots/
+/Assets/Screenshots.meta

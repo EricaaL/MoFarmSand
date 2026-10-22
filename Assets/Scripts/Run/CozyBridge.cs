@@ -10,6 +10,7 @@ public class CozyBridge : MonoBehaviour
     [SerializeField] private SeasonAtmosphere seasonAtmosphere;
     [SerializeField] private SnowCover snowCover;
     [SerializeField] private LeafLitter leafLitter;
+    [SerializeField] private SeasonTrees seasonTrees;
     private GameObject ambientFx;
     private GameObject seasonFx;
 
@@ -18,6 +19,7 @@ public class CozyBridge : MonoBehaviour
         if (seasonAtmosphere == null) seasonAtmosphere = GetComponent<SeasonAtmosphere>();
         if (snowCover == null) snowCover = GetComponent<SnowCover>();
         if (leafLitter == null) leafLitter = GetComponent<LeafLitter>();
+        if (seasonTrees == null) seasonTrees = GetComponent<SeasonTrees>();
     }
 
     /// <summary>Forwarded by <see cref="DayClock"/> each frame so the snow keeps building through the day.</summary>
@@ -36,6 +38,7 @@ public class CozyBridge : MonoBehaviour
         CozyWeatherMap.SeasonLook look = map != null ? map.LookFor(season) : CozyWeatherMap.SeasonLook.Neutral;
         if (seasonAtmosphere != null && map != null) seasonAtmosphere.SetLook(look, map.transitionSeconds);
         if (leafLitter != null) leafLitter.SetCount(look.groundLeaves);
+        if (seasonTrees != null) seasonTrees.SetSnowy(look.snowyTrees);
         if (snowCover != null) snowCover.SetSeason(look, plan.date.seasonProgress01, 1f / Mathf.Max(1, season.lengthInDays));
         CozyWeather cozy = CozyWeather.instance;
         if (cozy != null)

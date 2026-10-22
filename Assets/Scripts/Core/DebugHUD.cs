@@ -81,7 +81,7 @@ public class DebugHUD : MonoBehaviour
             float hs = ImGuiKit.Scale;
             ImGuiKit.HudLabel(new Rect(16f * hs, 10f * hs, 520f * hs, 60f * hs), "HP " + hearts, 44f, TextAnchor.MiddleLeft, true);
             if (health.HasShield)
-                ImGuiKit.HudLabel(new Rect(16f * hs, 68f * hs, 420f * hs, 36f * hs), $"[BARK SHIELD x{health.ShieldCharges}]", 24f, TextAnchor.MiddleLeft, true);
+                ImGuiKit.HudLabel(new Rect(16f * hs, 68f * hs, 420f * hs, 36f * hs), $"[BARK SHIELD x{health.ShieldCharges} - {Mathf.CeilToInt(health.ShieldTimeLeft)}s]", 24f, TextAnchor.MiddleLeft, true);
         }
 
         // Hotbar (bottom center): slots, hover tooltip, drag-to-use.

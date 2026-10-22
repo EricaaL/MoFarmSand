@@ -12,7 +12,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9599329b2c2521d4a9368c626ea1221b, type: 3}
   m_Name: DanceLibrary
   m_EditorClassIdentifier: 
-  dances:
-  - {fileID: 11400000, guid: 3f28a4037f344df49a7593fc6dd2344e, type: 2}
-  - {fileID: 11400000, guid: c950ecd06398b2443bd7ba2945de1096, type: 2}
-  - {fileID: 11400000, guid: d9058bd763f55134a9b72235cad550a3, type: 2}
+  slots:
+  - displayName: Chicken
+    clip: {fileID: -203655887218126122, guid: d639206c5e5fa22409c0cb64b9525170, type: 3}
+    color: {r: 1, g: 0.75, b: 0.3, a: 1}
+  - displayName: Groove
+    clip: {fileID: -203655887218126122, guid: ffb9bc2362f3d6547b0a7ec57fe85323, type: 3}
+    color: {r: 0.75, g: 0.45, b: 1, a: 1}
+  - displayName: Spin
+    clip: {fileID: -203655887218126122, guid: c4cd5ef7bc49f0f4fbf3a872dfadbb15, type: 3}
+    color: {r: 0.35, g: 0.85, b: 0.95, a: 1}
+  - displayName: Floor
+    clip: {fileID: -203655887218126122, guid: 9a877b52184fc0145a1a1d041e822d58, type: 3}
+    color: {r: 1, g: 0.5, b: 0.7, a: 1}
+  - displayName: Flip
+    clip: {fileID: -203655887218126122, guid: f5159872da86095428353015c58a2013, type: 3}
+    color: {r: 0.55, g: 0.9, b: 0.45, a: 1}
+  - displayName: 
+    clip: {fileID: 0}
+    color: {r: 1, g: 0.45, b: 0.4, a: 1}
+  - displayName: breakdance ending 2
+    clip: {fileID: -203655887218126122, guid: abcf63b6304a6f742a35e62e6d5fc2e9, type: 3}
+    color: {r: 0.45, g: 0.6, b: 1, a: 1}
+  - displayName: 
+    clip: {fileID: 0}
+    color: {r: 0.95, g: 0.9, b: 0.4, a: 1}
+  - displayName: 
+    clip: {fileID: 0}
+    color: {r: 0.6, g: 0.95, b: 0.8, a: 1}

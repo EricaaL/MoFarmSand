@@ -20,6 +20,13 @@ public class RunHud
         toastUntil = Time.unscaledTime + 3f;
     }
 
+    /// <summary>Shows a short fading note in the middle of the screen.</summary>
+    public void Say(string text)
+    {
+        toast = text;
+        toastUntil = Time.unscaledTime + 3f;
+    }
+
     public void Draw()
     {
         DayPlan plan = director.Plan;

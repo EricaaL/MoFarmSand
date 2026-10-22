@@ -162,6 +162,7 @@ public class HotbarView
 
         string hint = bar.Contains(mouse) ? "Drop here to cancel"
             : isSeed ? "Drop on a plot to plant"
+            : slot.item is FarmlandPlotItem ? "Drop on open ground to place"
             : slot.item is CropData crop && crop.type == CropType.Projectile ? "Drop to throw it there"
             : slot.item is CropData shooter && shooter.type == CropType.Shooter ? "Drop to shoot there"
             : "Drop to eat";
@@ -241,7 +242,7 @@ public class HotbarView
         if (director != null && director.IsRoguelike && director.IsDayRunning && director.Plan != null && director.Run != null)
             info = ItemInfoBuilder.Build(slot.item, director.BuildItemContext(slot.item));
         else
-            info = new ItemInfo { title = slot.item.DisplayName, subtitle = slot.item is SeedData ? "Seed" : "Crop", color = slot.item.ItemColor };
+            info = new ItemInfo { title = slot.item.DisplayName, subtitle = slot.item is SeedData ? "Seed" : slot.item is FarmlandPlotItem ? "Farmland" : "Crop", color = slot.item.ItemColor };
 
         cachedInfo = info;
         cachedItem = slot.item;

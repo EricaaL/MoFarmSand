@@ -116,7 +116,7 @@ public class PlayerInventory : MonoBehaviour
     {
         if (item == null || slots[ActiveIndex].item != item || slots[ActiveIndex].count < amount) return false;
         slots[ActiveIndex].count -= amount;
-        if (slots[ActiveIndex].count <= 0 && item is SeedData) slots[ActiveIndex].item = null;
+        if (slots[ActiveIndex].count <= 0 && !(item is CropData)) slots[ActiveIndex].item = null;
         OnChanged?.Invoke();
         return true;
     }
@@ -132,6 +132,7 @@ public class PlayerInventory : MonoBehaviour
             int take = Mathf.Min(left, slots[i].count);
             slots[i].count -= take;
             left -= take;
+            if (slots[i].count <= 0 && item is FarmlandPlotItem) slots[i].item = null;
         }
         OnChanged?.Invoke();
         return true;

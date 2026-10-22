@@ -22,6 +22,8 @@ public class FarmTile : MonoBehaviour, IInteractable, IFarmPlot
     private Vector3 stageBaseScale = Vector3.one;
     private int stageIndex = -1;
     private float stagePop = 1f;
+    private Vector3 stageBasePos;
+    private float stagePhase;
     private TileState state;
     private CropData crop;
     private float quality = 1f;
@@ -46,6 +48,14 @@ public class FarmTile : MonoBehaviour, IInteractable, IFarmPlot
 
     public GameObject WitherFx => witherFx;
     public void SetWitherFx(GameObject fx) { witherFx = fx; }
+
+    /// <summary>True for plots the player placed (not the starting field). Only these can be picked up.</summary>
+    public bool IsPlaced { get; private set; }
+    public bool CanPickUp => IsPlaced && state == TileState.Empty && !IsBlocked;
+    public void SetPlaced(bool placed) { IsPlaced = placed; }
+
+    /// <summary>Squash-pop, used when a plot is set down.</summary>
+    public void Pop() { popTime = 0f; }
 
     public void SetFreePlanting(bool allowed) { allowFreePlanting = allowed; }
     public void SetConditions(FarmConditions c) { conditions = c; }
@@ -72,24 +82,31 @@ public class FarmTile : MonoBehaviour, IInteractable, IFarmPlot
 
     private string EmptyPrompt()
     {
+        string pickUp = CanPickUp ? "[R] Pick up plot" : string.Empty;
         if (allowFreePlanting) return "[E] Plant";
-        if (playerInventory == null) return string.Empty;
+        if (playerInventory == null) return pickUp;
         SeedData seed = playerInventory.ActiveSeed;
         if (seed != null && playerInventory.ActiveCount > 0)
         {
             // Warn before planting out of season: the crop will be slow and weak.
             float q = conditions != null && seed.grows != null ? conditions.QualityFor(seed.grows) : 1f;
             string warn = q < 0.9f ? $"  - wrong season: slow, {Mathf.RoundToInt(q * 100f)}% strength" : string.Empty;
-            return $"[E] Plant {seed.DisplayName} ({playerInventory.ActiveCount} left){warn}";
+            return $"[E] Plant {seed.DisplayName} ({playerInventory.ActiveCount} left){warn}" + (CanPickUp ? "   " + pickUp : string.Empty);
         }
-        // Not holding a seed: say nothing. (The old "Need seeds" hint showed even with seeds elsewhere in the hotbar.)
-        return string.Empty;
+        // Not holding a seed: say nothing about planting. (The old "Need seeds" hint showed even with seeds elsewhere in the hotbar.)
+        return pickUp;
     }
 
     private static readonly List<FarmTile> all = new List<FarmTile>();
 
     /// <summary>Raised after a seed is planted: the tile and who planted it (drives the farming animation).</summary>
     public static event System.Action<FarmTile, GameObject> Planted;
+    /// <summary>Raised when a growing crop becomes ripe.</summary>
+    public static event System.Action<FarmTile> Ripened;
+    /// <summary>Raised after a ripe crop is picked (the crop that was harvested).</summary>
+    public static event System.Action<FarmTile, CropData> Harvested;
+    /// <summary>Raised when a disaster destroys what was growing.</summary>
+    public static event System.Action<FarmTile> Withered;
 
     private void OnEnable() { all.Add(this); }
     private void OnDisable() { all.Remove(this); }
@@ -165,6 +182,7 @@ public class FarmTile : MonoBehaviour, IInteractable, IFarmPlot
             if (conditions != null) conditions.TryGrantBonusSeed(inv);
             SetState(TileState.Empty);
             popTime = 0f;
+            Harvested?.Invoke(this, crop);
         }
     }
 
@@ -175,6 +193,7 @@ public class FarmTile : MonoBehaviour, IInteractable, IFarmPlot
         if (witherFx != null) Destroy(Instantiate(witherFx, transform.position + Vector3.up * 0.3f, Quaternion.identity), 2f);
         SetState(TileState.Empty);
         popTime = 0f;
+        Withered?.Invoke(this);
     }
 
     /// <summary>Disaster hook: the tile can't be used for a while (flood).</summary>
@@ -199,7 +218,11 @@ public class FarmTile : MonoBehaviour, IInteractable, IFarmPlot
             if (HasStages) ShowStage(crop.StageIndexFor(t, false));
             else if (cropVisual != null) cropVisual.localScale = Vector3.one * matureScale * Mathf.Lerp(0.3f, 1f, t);
             if (label != null) label.text = Mathf.CeilToInt(Mathf.Max(0f, timer / Mathf.Max(0.05f, Rate))) + "s";
-            if (timer <= 0f) SetState(TileState.Harvestable);
+            if (timer <= 0f)
+            {
+                SetState(TileState.Harvestable);
+                Ripened?.Invoke(this);
+            }
         }
         else if (state == TileState.Harvestable && soilRenderer != null && !IsBlocked)
         {
@@ -213,6 +236,14 @@ public class FarmTile : MonoBehaviour, IInteractable, IFarmPlot
             stagePop = Mathf.Min(1f, stagePop + Time.deltaTime * 4f);
             float s = 1f + 0.3f * Mathf.Sin(stagePop * Mathf.PI);
             stageInstance.transform.localScale = Vector3.Scale(stageBaseScale, new Vector3(s, 2f - s, s));
+        }
+
+        // A ripe model bobs and turns slowly so it reads as "ready" from across the field.
+        if (stageInstance != null && state == TileState.Harvestable)
+        {
+            Transform t = stageInstance.transform;
+            t.position = stageBasePos + Vector3.up * (0.06f * Mathf.Sin(Time.time * 3f + stagePhase));
+            t.Rotate(Vector3.up, 25f * Time.deltaTime, Space.World);
         }
 
         // Squash/pop feedback on plant and harvest.
@@ -264,6 +295,8 @@ public class FarmTile : MonoBehaviour, IInteractable, IFarmPlot
             for (int r = 1; r < renderers.Length; r++) b.Encapsulate(renderers[r].bounds);
             stageInstance.transform.position += new Vector3(transform.position.x - b.center.x, top - b.min.y, transform.position.z - b.center.z);
         }
+        stageBasePos = stageInstance.transform.position;
+        stagePhase = transform.position.x * 1.7f + transform.position.z * 0.9f; // neighbours bob out of step
         stagePop = 0f;
     }
 

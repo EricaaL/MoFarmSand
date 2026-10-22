@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum LoadStatus { Ok, Empty, Corrupt, TooNew }
@@ -105,6 +106,9 @@ public sealed class SaveService
         meta.vaultCoins = Mathf.Clamp(meta.vaultCoins, 0, db.bank != null ? VaultLogic.Cap(meta, db.bank) : int.MaxValue);
         if (db.unlocks != null) meta.unlockedIds.RemoveAll(id => !db.unlocks.TryGet(id, out _));
         meta.farmlands = TierPricing.ClampOwned(meta.farmlands, db.farmland != null ? db.farmland.maxFarmlands : 0);
+        if (meta.placedPlots == null) meta.placedPlots = new List<Vector3>();
+        meta.placedPlots.RemoveAll(p => float.IsNaN(p.x) || float.IsNaN(p.y) || float.IsNaN(p.z)
+            || float.IsInfinity(p.x) || float.IsInfinity(p.y) || float.IsInfinity(p.z));
         meta.stockroomLevel = TierPricing.ClampOwned(meta.stockroomLevel, db.stockroom != null ? db.stockroom.maxLevel : 0);
 
         if (!file.hasRun) return;

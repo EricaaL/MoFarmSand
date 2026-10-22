@@ -46,6 +46,8 @@ public class CropData : ItemData
     public float fullnessValue = 20f;
     [Tooltip("Bark Shield charges granted when eaten (Support crops).")]
     public int shieldCharges = 1;
+    [Tooltip("Seconds the Bark Shield lasts after eating (Support crops). It wears off even if it blocked nothing.")]
+    public float shieldSeconds = PlayerHealth.DefaultShieldSeconds;
     public int harvestYield = 1;
 
     [Header("Shooter (peas, corn)")]
@@ -93,6 +95,7 @@ public class CropData : ItemData
         growTime = Mathf.Max(0f, growTime);
         fullnessValue = Mathf.Max(0f, fullnessValue);
         shieldCharges = Mathf.Max(0, shieldCharges);
+        shieldSeconds = Mathf.Max(1f, shieldSeconds);
         harvestYield = Mathf.Max(1, harvestYield);
         ammoPerCrop = Mathf.Max(1, ammoPerCrop);
         fireInterval = Mathf.Max(0.02f, fireInterval);

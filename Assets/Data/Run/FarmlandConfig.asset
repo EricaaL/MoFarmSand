@@ -16,5 +16,6 @@ MonoBehaviour:
   priceGrowth: 1.7
   roundTo: 5
   maxFarmlands: 0
-  maxPrice: 150
-  maxColumnsPerSide: 4
+  plotItem: {fileID: 11400000, guid: d02b6acd20bd457438fc1c5c451f336a, type: 2}
+  placeReach: 6
+  minPlotSpacing: 1.8

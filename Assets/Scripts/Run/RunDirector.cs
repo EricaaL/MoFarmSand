@@ -35,7 +35,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     [SerializeField] private GameObject merchantStall;
     [SerializeField] private DayClock clock;
 
-    private enum View { None, Title, Map, Event, Bank, Shop, Summary, Items, Pause, Route }
+    private enum View { None, MainMenu, HowToPlay, Options, Title, Map, Event, Bank, Shop, Summary, Items, Pause, Route, Controls }
 
     private View view;
     private IRunScreen screen;
@@ -43,6 +43,11 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     private IRunScreen pauseReturnScreen;
     private PauseScreen pauseScreen;
     private MapScreen routeScreen;
+    private View optionsReturnView;
+    private IRunScreen optionsReturnScreen;
+    private MainMenuScreen mainMenuScreen;
+    private OptionsScreen optionsScreen;
+    private HowToPlayScreen howToPlayScreen;
     private TitleScreen titleScreen;
     private MapScreen mapScreen;
     private EventScreen eventScreen;
@@ -50,6 +55,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     private ShopScreen shopScreen;
     private SummaryScreen summaryScreen;
     private ItemInfoScreen itemInfoScreen;
+    private ControlsScreen controlsScreen;
     private RunHud hud;
     private DayPlan plan;
     private bool dayRunning;
@@ -77,14 +83,25 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     public SaveService Service => RunSession.Service;
     public int LastBankMessageCredited { get; set; }
     private const int BetaCoins = 999;
-    /// <summary>Plots added by each extra farmland (one column of the field).</summary>
+    /// <summary>Farmlands every beta day owns at least, so placing plots can be tested without buying any.</summary>
+    private const int BetaFarmlands = 1;
+    /// <summary>Plots each bought farmland gives you to place (the length of a column of the starting field).</summary>
     public int PlotsPerFarmland { get; private set; } = 3;
+    /// <summary>The hotbar item for a placeable plot, or null if the farmland config has none.</summary>
+    public FarmlandPlotItem PlotItem => db != null && db.farmland != null ? db.farmland.plotItem : null;
+
+    // The starting field, remembered at Start (before any placed plot exists): placed plots copy the first tile and snap to its grid.
+    private FarmTile plotTemplate;
+    private readonly List<Vector3> fieldPositions = new List<Vector3>();
 
     private void Awake()
     {
         ModalOpen = false;
         Time.timeScale = 1f; // a previous scene may have been left paused
         if (!IsRoguelike) return;
+        mainMenuScreen = new MainMenuScreen(this);
+        optionsScreen = new OptionsScreen(this);
+        howToPlayScreen = new HowToPlayScreen(this);
         titleScreen = new TitleScreen(this);
         mapScreen = new MapScreen(this);
         routeScreen = new MapScreen(this, readOnly: true);
@@ -94,6 +111,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         shopScreen = new ShopScreen(this);
         summaryScreen = new SummaryScreen(this);
         itemInfoScreen = new ItemInfoScreen(this);
+        controlsScreen = new ControlsScreen(this);
         hud = new RunHud(this);
     }
 
@@ -117,7 +135,11 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
             switch (view)
             {
                 case View.Items: CloseItems(); break;
+                case View.Options: CloseOptions(); break;
+                case View.HowToPlay: CloseHowToPlay(); break;
+                case View.Title: if (!RunSession.HasActiveSlot) ShowMainMenu(); break;
                 case View.Route: CloseRoute(); break;
+                case View.Controls: CloseControls(); break;
                 case View.Pause: ClosePause(); break;
                 case View.None: if (dayRunning) ShowPause(); break;
                 case View.Map: ShowPause(); break;
@@ -131,15 +153,16 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         if (gameManager != null) gameManager.OutcomeHandler = this;
 
         FarmTile[] tiles = FindObjectsByType<FarmTile>(FindObjectsSortMode.None);
-        List<Vector3> basePositions = new List<Vector3>();
+        fieldPositions.Clear();
         foreach (FarmTile t in tiles)
         {
             t.SetFreePlanting(false);
             t.SetConditions(conditions);
-            basePositions.Add(t.transform.position);
+            fieldPositions.Add(t.transform.position);
         }
-        // How many plots one extra farmland adds (the length of a column), for the shop text.
-        PlotsPerFarmland = Mathf.Max(1, FarmlandLogic.PlotsPerFarmland(basePositions));
+        plotTemplate = tiles.Length > 0 ? tiles[0] : null;
+        // How many plots one bought farmland gives you (the length of a column), for the shop text.
+        PlotsPerFarmland = Mathf.Max(1, FarmlandLogic.PlotsPerFarmland(fieldPositions));
         SetFrozen(true);
 
         if (betaMode) { StartBeta(); return; }
@@ -147,7 +170,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         if (RunSession.ActiveSlot == SaveService.BetaSlot) RunSession.Unload();
 
         if (RunSession.HasActiveSlot && Run != null && File.hasRun) Route();
-        else ShowTitle();
+        else ShowMainMenu();
     }
 
     /// <summary>Beta scene: open the hidden slot and go straight to the free-roam map (or the day in progress).</summary>
@@ -235,7 +258,39 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         if (playerCombat != null) playerCombat.CanAct = !frozen;
     }
 
+    public void ShowMainMenu() { dayRunning = false; mainMenuScreen.OnOpen(); Show(View.MainMenu, mainMenuScreen); }
     public void ShowTitle() { dayRunning = false; Show(View.Title, titleScreen); }
+
+    public void ShowHowToPlay()
+    {
+        if (view != View.MainMenu) return;
+        howToPlayScreen.OnOpen();
+        Show(View.HowToPlay, howToPlayScreen);
+    }
+
+    public void CloseHowToPlay() { if (view == View.HowToPlay) ShowMainMenu(); }
+
+    /// <summary>Options page, from the main menu or the Esc menu; Back returns to whichever opened it.</summary>
+    public void ShowOptions()
+    {
+        if (view != View.MainMenu && view != View.Pause) return;
+        optionsReturnView = view;
+        optionsReturnScreen = screen;
+        optionsScreen.OnOpen();
+        Show(View.Options, optionsScreen);
+    }
+
+    public void CloseOptions() { if (view == View.Options) Show(optionsReturnView, optionsReturnScreen); }
+
+    public void QuitGame()
+    {
+        leaving = true;
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
     public void ShowMap() { dayRunning = false; Show(View.Map, mapScreen); }
     public void ShowBank() { dayRunning = false; Show(View.Bank, bankScreen); }
     public void ShowSummary() { dayRunning = false; Show(View.Summary, summaryScreen); }
@@ -277,6 +332,15 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     }
 
     public void CloseRoute() { if (view == View.Route) Show(View.Pause, pauseScreen); }
+
+    public void ShowControls()
+    {
+        if (view != View.Pause) return;
+        controlsScreen.OnOpen();
+        Show(View.Controls, controlsScreen);
+    }
+
+    public void CloseControls() { if (view == View.Controls) Show(View.Pause, pauseScreen); }
 
     public void ShowItemsFromPause()
     {
@@ -457,6 +521,8 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
             run.hp = run.maxHp;
             run.coins = Mathf.Max(run.coins, BetaCoins);
             BetaKit.Fill(run, db, plan.date.season);
+            run.farmlands = Mathf.Max(run.farmlands, BetaFarmlands);
+            if (Meta != null) Meta.farmlands = Mathf.Max(Meta.farmlands, BetaFarmlands);
         }
 
         inventory.Restore(run.inventory, run.activeSlot, db.items);
@@ -464,6 +530,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         wallet.Set(run.coins);
 
         BuildFarmlands(run.farmlands);
+        GivePlotItems(run.farmlands);
 
         conditions.Growth.Clear();
         conditions.Growth.Set("day", plan.growthMultiplier);
@@ -495,20 +562,72 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         if (plan.startsAtNight) gameManager.StartNight(instant: true);
     }
 
-    /// <summary>Adds the extra farmland columns you've bought. The disaster director gathers plots afterwards, so they're included.</summary>
-    private void BuildFarmlands(int extra)
-    {
-        if (extra <= 0) return;
-        FarmTile[] tiles = FindObjectsByType<FarmTile>(FindObjectsSortMode.None);
-        if (tiles.Length == 0) return;
-        FarmTile template = tiles[0];
+    private int OwnedPlots(int farmlands) => farmlands * PlotsPerFarmland;
 
-        // Keep new columns off the merchant's booth and the bell.
-        List<Vector3> keepClear = new List<Vector3>();
-        if (merchantStall != null) keepClear.Add(merchantStall.transform.position);
-        BellTrigger bell = FindFirstObjectByType<BellTrigger>();
-        if (bell != null) keepClear.Add(bell.transform.position);
-        FarmlandSpawner.Spawn(extra, template, tiles, template.transform.parent, conditions, db.farmland != null ? db.farmland.maxColumnsPerSide : 4, keepClear);
+    /// <summary>Rebuilds the plots you placed on earlier days. The disaster director gathers plots afterwards, so they're included.</summary>
+    private void BuildFarmlands(int farmlands)
+    {
+        MetaProgress meta = Meta;
+        if (meta == null || plotTemplate == null) return;
+        // Placed plots can't outnumber owned ones (edited save, or an old layout): the extras are forgotten.
+        int owned = OwnedPlots(farmlands);
+        if (meta.placedPlots.Count > owned) meta.placedPlots.RemoveRange(owned, meta.placedPlots.Count - owned);
+        foreach (Vector3 spot in meta.placedPlots)
+            FarmlandSpawner.SpawnAt(spot, plotTemplate, plotTemplate.transform.parent, conditions);
+    }
+
+    /// <summary>Puts the plots you haven't placed yet into the hotbar.</summary>
+    private void GivePlotItems(int farmlands)
+    {
+        FarmlandPlotItem item = PlotItem;
+        if (item == null || inventory == null || Meta == null) return;
+        int waiting = FarmlandLogic.UnplacedPlots(farmlands, PlotsPerFarmland, Meta.placedPlots.Count);
+        if (waiting > 0 && !inventory.AddItem(item, waiting))
+            hud?.Say("Free a hotbar slot to get your farmland plots");
+    }
+
+    /// <summary>Where a plot dropped near <paramref name="point"/> would sit: snapped to the starting field's grid.</summary>
+    public Vector3 SnapPlotSpot(Vector3 point) => FarmlandLogic.SnapToField(point, fieldPositions);
+
+    /// <summary>True when no existing plot is too close to <paramref name="spot"/>.</summary>
+    public bool IsPlotSpotClear(Vector3 spot)
+    {
+        List<Vector3> occupied = new List<Vector3>();
+        foreach (FarmTile t in FindObjectsByType<FarmTile>(FindObjectsSortMode.None)) occupied.Add(t.transform.position);
+        return FarmlandLogic.IsClear(spot, occupied, db.farmland != null ? db.farmland.minPlotSpacing : 1.8f);
+    }
+
+    /// <summary>Sets a plot down at <paramref name="spot"/> (already checked against the world by the player). Spends nothing from the hotbar: the caller consumes the item.</summary>
+    public bool TryPlacePlot(Vector3 spot, out FarmTile tile, out string message)
+    {
+        tile = null; message = string.Empty;
+        if (!dayRunning || Meta == null || Run == null || plotTemplate == null) { message = "Can't place a plot now"; return false; }
+
+        Vector3 snapped = SnapPlotSpot(spot);
+        if (!IsPlotSpotClear(snapped)) { message = "Too close to another plot"; return false; }
+        if (!FarmlandLogic.TryPlace(Meta, snapped, OwnedPlots(Run.farmlands))) { message = "No plots left to place"; return false; }
+
+        RunSession.Commit();
+        tile = FarmlandSpawner.SpawnAt(snapped, plotTemplate, plotTemplate.transform.parent, conditions);
+        tile.Pop();
+        disaster?.AddPlot(tile);
+        return true;
+    }
+
+    /// <summary>Picks an empty placed plot back up into the hotbar. Returns false (with a reason) if it can't be.</summary>
+    public bool TryPickUpPlot(FarmTile tile, out string message)
+    {
+        message = string.Empty;
+        FarmlandPlotItem item = PlotItem;
+        if (tile == null || item == null || Meta == null) return false;
+        if (!tile.CanPickUp) { message = "Only an empty placed plot can be picked up"; return false; }
+        if (!inventory.AddItem(item, 1)) { message = "Hotbar is full"; return false; }
+        if (!FarmlandLogic.TryPickUp(Meta, tile.transform.position)) { inventory.TryRemove(item, 1); return false; }
+
+        RunSession.Commit();
+        disaster?.RemovePlot(tile);
+        Destroy(tile.gameObject);
+        return true;
     }
 
     // ---------------------------------------------------------------- day end
@@ -526,7 +645,8 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         if (clock != null) clock.Stop();
         RunState run = Run;
 
-        // Snapshot the live scene back into the run.
+        // Snapshot the live scene back into the run. Unplaced plots are derived from the save each day, so they never go into the inventory.
+        if (PlotItem != null) inventory.TryRemove(PlotItem, inventory.CountOf(PlotItem));
         run.inventory = inventory.Snapshot();
         run.activeSlot = inventory.ActiveIndex;
         run.hp = health.Hp;
@@ -633,7 +753,8 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     {
         if (!IsRoguelike || leaving) return;
         // Between unloading the slot and the scene reload there can be one more frame: don't draw run screens with no run.
-        if (view != View.Title && Run == null) return;
+        bool noRunScreen = view == View.Title || view == View.MainMenu || view == View.HowToPlay || (view == View.Options && optionsReturnView == View.MainMenu);
+        if (!noRunScreen && Run == null) return;
         GUI.depth = -10;
         if (screen != null) screen.Draw();
         else if (dayRunning) hud.Draw();

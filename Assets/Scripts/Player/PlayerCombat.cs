@@ -23,6 +23,9 @@ public class PlayerCombat : MonoBehaviour
     private readonly ThrowAim throwAim = new ThrowAim();
     private readonly CropMagazine magazine = new CropMagazine();
 
+    /// <summary>Raised when a crop leaves the player's hands (thrown or fired). Drives the throw/shoot sounds.</summary>
+    public static event System.Action<CropData> Fired;
+
     public bool CanAct { get; set; } = true;
     /// <summary>True while the throw button is held and the arc is showing.</summary>
     public bool IsAiming => throwAim.IsAiming;
@@ -130,6 +133,7 @@ public class PlayerCombat : MonoBehaviour
         GameObject go = Instantiate(crop.projectilePrefab, p0, Quaternion.LookRotation(dir));
         CropProjectile proj = go.GetComponent<CropProjectile>();
         if (proj != null) proj.Init(crop, dir * crop.bulletSpeed, quality, useGravity: false);
+        Fired?.Invoke(crop);
 
         Vector3 face = dir; face.y = 0f;
         if (face.sqrMagnitude > 0.01f) transform.rotation = Quaternion.LookRotation(face);
@@ -172,6 +176,13 @@ public class PlayerCombat : MonoBehaviour
     {
         message = string.Empty;
         if (!CanAct) { message = "Can't do that right now"; return false; }
+
+        if (inventory.ActiveItem is FarmlandPlotItem)
+        {
+            PlayerPlotPlacer placer = GetComponent<PlayerPlotPlacer>();
+            if (placer == null) { message = "Can't place a plot here"; return false; }
+            return placer.TryPlaceAt(screenPoint, out message);
+        }
 
         SeedData seed = inventory.ActiveSeed;
         if (seed != null)
@@ -236,7 +247,7 @@ public class PlayerCombat : MonoBehaviour
     {
         float quality = inventory.ActiveQuality;
         if (!inventory.TryConsume(crop, 1)) return false;
-        health.GrantShield(ClimateModel.ShieldCharges(crop, quality));
+        health.GrantShield(ClimateModel.ShieldCharges(crop, quality), crop.shieldSeconds);
         return true;
     }
 
@@ -249,6 +260,7 @@ public class PlayerCombat : MonoBehaviour
         GameObject go = Instantiate(crop.projectilePrefab, p0, Quaternion.identity);
         CropProjectile proj = go.GetComponent<CropProjectile>();
         if (proj != null) proj.Init(crop, v0, quality);
+        Fired?.Invoke(crop);
         GetComponent<PlayerController>()?.PlayThrowSquash();
 
         Vector3 face = v0; face.y = 0f;

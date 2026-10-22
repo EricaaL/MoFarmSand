@@ -17,7 +17,7 @@ public class TitleScreen : IRunScreen
 
     private void DrawSlotList()
     {
-        Rect panel = ImGuiKit.Modal(1100f, 620f, "The Miracle Berry");
+        Rect panel = ImGuiKit.Modal(1100f, 620f, "DOGSEND");
         float s = ImGuiKit.Scale;
         ImGuiKit.Label(new Rect(panel.x + 24 * s, panel.y + 70 * s, panel.width - 48 * s, 30 * s),
             "Choose a save slot", 24f, ImGuiKit.Muted);
@@ -58,6 +58,12 @@ public class TitleScreen : IRunScreen
                 if (armed) { director.DeleteSlot(i); pendingDelete = -1; }
                 else pendingDelete = i;
             }
+        }
+
+        if (ImGuiKit.Button(new Rect(panel.x + 24 * s, panel.yMax - 66 * s, 166 * s, 44 * s), "Back", true, 20f))
+        {
+            pendingDelete = -1;
+            director.ShowMainMenu();
         }
     }
 
