@@ -313,7 +313,7 @@ Transform:
   m_Children:
   - {fileID: 1258031175034230956}
   - {fileID: 5337002411668503484}
-  - {fileID: 7732870280658778349}
+  - {fileID: 139935224642287007}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!143 &6747502433386988215
@@ -358,7 +358,7 @@ MonoBehaviour:
   runSpeed: 5
   turnSpeed: 720
   gravity: -20
-  bodyVisual: {fileID: 7732870280658778349}
+  bodyVisual: {fileID: 139935224642287007}
 --- !u!114 &3459995263601437649
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -422,6 +422,7 @@ MonoBehaviour:
   minFlightTime: 0.5
   flightTimePerMeter: 0.06
   throwCooldown: 0.35
+  throwFaceSeconds: 0.55
   dragReach: 4.5
 --- !u!114 &8467146879156872787
 MonoBehaviour:
@@ -466,8 +467,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14bbd4e369c562740a91ba4c4ae41cd8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animator: {fileID: 4445193948627640983}
+  animator: {fileID: 6273807356226957285}
   speedDamp: 0.08
+  throwHoldSeconds: 0.75
+  holdFadeSeconds: 0.12
+  cancelFadeSeconds: 0.15
+  throwStartSeconds: 0.66
+  throwFadeSeconds: 0.05
 --- !u!114 &7962243925690045627
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -481,7 +487,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   library: {fileID: 11400000, guid: 570a165c234709d42877b75c5bb1b301, type: 2}
-  animator: {fileID: 4445193948627640983}
+  animator: {fileID: 6273807356226957285}
   controller: {fileID: 1682937889100934902}
   slotA: {fileID: 7400000, guid: bfd16f15b1035184baa2ce7cba52d7d1, type: 2}
   slotB: {fileID: 7400000, guid: cf9f3b735fc59c347848f6f3ac277da2, type: 2}
@@ -507,7 +513,7 @@ MonoBehaviour:
   clearHalfExtents: {x: 0.9, y: 0.4, z: 0.9}
   okColor: {r: 0.3, g: 1, b: 0.4, a: 0.55}
   badColor: {r: 1, g: 0.25, b: 0.25, a: 0.55}
---- !u!1001 &7843605829112176390
+--- !u!1001 &467141967942472308
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -584,13 +590,13 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b86e5286a1356aa469983b31e98383bd, type: 3}
---- !u!95 &4445193948627640983 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: b86e5286a1356aa469983b31e98383bd, type: 3}
-  m_PrefabInstance: {fileID: 7843605829112176390}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &7732870280658778349 stripped
+--- !u!4 &139935224642287007 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b86e5286a1356aa469983b31e98383bd, type: 3}
-  m_PrefabInstance: {fileID: 7843605829112176390}
+  m_PrefabInstance: {fileID: 467141967942472308}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &6273807356226957285 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: b86e5286a1356aa469983b31e98383bd, type: 3}
+  m_PrefabInstance: {fileID: 467141967942472308}
   m_PrefabAsset: {fileID: 0}

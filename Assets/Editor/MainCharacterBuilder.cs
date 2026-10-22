@@ -29,6 +29,21 @@ public static class MainCharacterBuilder
     // Playback speed of the Farm state, so planting and harvesting feel snappy.
     private const float FarmSpeed = 3f;
 
+    // Throwing is an upper-body layer over locomotion, so the dog can walk and throw at once. PlayerAnimator starts the
+    // "Throw" state by name on that layer; the layer's default "Empty" state lets the base layer show through.
+    private const string ThrowLayerName = "Throw";
+    private const string ThrowEmptyState = "Empty";
+    private const string ThrowState = "Throw";
+    private const string UpperBodyMaskPath = AnimDir + "/UpperBodyMask.mask";
+    // Drives the Throw state's normalized time: PlayerAnimator pins it at the aim pose while the button is down, then
+    // advances it to play the swing on release. (Freezing with speed 0 loses the start offset, so time is set directly.)
+    private const string ThrowTimeParam = "ThrowTime";
+    private const float ThrowSpeed = 1f;
+    // The clip is 2.2 s: the arm winds up until ~0.7 s, releases at ~0.78 s and settles slowly after ~1.0 s. PlayerAnimator
+    // starts it at ~0.66 s, so the layer lets go at ~55% (about 1.2 s) instead of holding the slow settle.
+    private const float ThrowExitTime = 0.55f;
+    private const float ThrowFadeOut = 0.2f;
+
     private const string DanceDir =AnimDir + "/Dances";
     private const string BreakdanceDir = DanceDir + "/Breakdance Pack";
     private const string DanceStateA = "DanceA"; // must match PlayerDance's state hashes
@@ -53,6 +68,7 @@ public static class MainCharacterBuilder
         new ClipSpec("Walking", "MainCharacter@Walk", "Walk", true),
         new ClipSpec("Running", "MainCharacter@Run", "Run", true),
         new ClipSpec("Farming", "MainCharacter@Farming", "Farming", false),
+        new ClipSpec("Throw", "MainCharacter@Throw", "Throw", false),
     };
 
     // Emote-wheel dances, in slice order (first slice at the top, then clockwise). The Animator state is named after the clip.
@@ -272,6 +288,7 @@ public static class MainCharacterBuilder
         AnimatorController ctrl = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
         ctrl.AddParameter("Speed", AnimatorControllerParameterType.Float);
         ctrl.AddParameter("Farm", AnimatorControllerParameterType.Trigger);
+        ctrl.AddParameter(new AnimatorControllerParameter { name = ThrowTimeParam, type = AnimatorControllerParameterType.Float, defaultFloat = 0f });
 
         AnimatorStateMachine sm = ctrl.layers[0].stateMachine;
 
@@ -323,8 +340,62 @@ public static class MainCharacterBuilder
             plant.AddCondition(AnimatorConditionMode.If, 0f, "Farm");
         }
 
+        AddThrowLayer(ctrl);
+
         EditorUtility.SetDirty(ctrl);
         return ctrl;
+    }
+
+    /// <summary>
+    /// A second, upper-body-only layer for throwing. The mask keeps the legs on the base layer (so the walk keeps cycling)
+    /// while the arms, head and torso follow the throw clip. It idles in an empty state, which lets the base layer through.
+    /// </summary>
+    private static void AddThrowLayer(AnimatorController ctrl)
+    {
+        ctrl.AddLayer(ThrowLayerName);
+        AnimatorControllerLayer[] layers = ctrl.layers; // a copy: edit it, then assign it back
+        int index = layers.Length - 1;
+        layers[index].avatarMask = EnsureUpperBodyMask();
+        layers[index].blendingMode = AnimatorLayerBlendingMode.Override;
+        layers[index].defaultWeight = 1f;
+        ctrl.layers = layers;
+
+        AnimatorStateMachine sm = ctrl.layers[index].stateMachine;
+        AnimatorState empty = sm.AddState(ThrowEmptyState);
+        sm.defaultState = empty;
+
+        AnimatorState throwing = sm.AddState(ThrowState);
+        throwing.motion = LoadClip("MainCharacter@Throw");
+        throwing.speed = ThrowSpeed;
+        throwing.timeParameterActive = true;
+        throwing.timeParameter = ThrowTimeParam;
+
+        // Leave when the ThrowTime parameter passes the exit point (not on the state's own clock, which keeps running while the
+        // aim pose is pinned): holding sits below it forever, releasing advances ThrowTime past it.
+        AnimatorStateTransition done = throwing.AddTransition(empty);
+        done.hasExitTime = false;
+        done.duration = ThrowFadeOut;
+        done.AddCondition(AnimatorConditionMode.Greater, ThrowExitTime, ThrowTimeParam);
+    }
+
+    /// <summary>Humanoid mask: torso, head, arms and hands on; root, legs and foot IK off. Created once, so Inspector edits survive re-runs.</summary>
+    private static AvatarMask EnsureUpperBodyMask()
+    {
+        AvatarMask mask = AssetDatabase.LoadAssetAtPath<AvatarMask>(UpperBodyMaskPath);
+        if (mask != null) return mask;
+
+        mask = new AvatarMask();
+        foreach (AvatarMaskBodyPart part in System.Enum.GetValues(typeof(AvatarMaskBodyPart)))
+        {
+            if (part == AvatarMaskBodyPart.LastBodyPart) continue;
+            bool upper = part == AvatarMaskBodyPart.Body || part == AvatarMaskBodyPart.Head
+                || part == AvatarMaskBodyPart.LeftArm || part == AvatarMaskBodyPart.RightArm
+                || part == AvatarMaskBodyPart.LeftFingers || part == AvatarMaskBodyPart.RightFingers
+                || part == AvatarMaskBodyPart.LeftHandIK || part == AvatarMaskBodyPart.RightHandIK;
+            mask.SetHumanoidBodyPartActive(part, upper);
+        }
+        AssetDatabase.CreateAsset(mask, UpperBodyMaskPath);
+        return mask;
     }
 
     private static void SwapPlayerBody(AnimatorController controller, Avatar avatar, DanceLibrary library)

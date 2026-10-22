@@ -29,6 +29,35 @@ public class PlayerController : MonoBehaviour
     /// <summary>Quick squash-and-stretch on the body, called when throwing.</summary>
     public void PlayThrowSquash() { squashTime = 0f; }
 
+    private Vector3 facingDir;
+    private float facingUntil;
+    private Vector3 aimPoint;
+    private float aimUntil;
+    private const float AimDeadZone = 0.3f; // a cursor this close to the dog gives no usable direction
+
+    /// <summary>
+    /// Keeps the dog looking at <paramref name="worldPoint"/> (the cursor) while the caller keeps calling it each frame (aiming a
+    /// throw or holding to fire). It lapses by itself 0.1 s after the last call. Beats the walk direction and the post-throw hold.
+    /// </summary>
+    public void AimAt(Vector3 worldPoint)
+    {
+        aimPoint = worldPoint;
+        aimUntil = Time.time + 0.1f;
+    }
+
+    /// <summary>
+    /// Faces <paramref name="direction"/> now and keeps facing it for <paramref name="seconds"/>, instead of turning toward the walk
+    /// direction. Lets the dog walk while its upper body throws without the throw swinging round to the side.
+    /// </summary>
+    public void FaceDirection(Vector3 direction, float seconds)
+    {
+        direction.y = 0f;
+        if (direction.sqrMagnitude < 0.01f) return;
+        facingDir = direction.normalized;
+        facingUntil = Time.time + Mathf.Max(0f, seconds);
+        transform.rotation = Quaternion.LookRotation(facingDir, Vector3.up);
+    }
+
     private void Awake()
     {
         if (bodyVisual == null) bodyVisual = transform.Find("Body");
@@ -53,7 +82,19 @@ public class PlayerController : MonoBehaviour
         Vector3 move = new Vector3(input.x, 0f, input.y);
         if (move.sqrMagnitude > 1f) move.Normalize();
 
-        if (move.sqrMagnitude > 0.01f)
+        if (Time.time < aimUntil)
+        {
+            // Aiming: look at the cursor while the legs carry on walking. Too close to it and we keep the current facing.
+            Vector3 toAim = aimPoint - transform.position; toAim.y = 0f;
+            if (toAim.sqrMagnitude > AimDeadZone * AimDeadZone)
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(toAim, Vector3.up), turnSpeed * Time.deltaTime);
+        }
+        else if (Time.time < facingUntil)
+        {
+            // Mid-throw: keep facing the throw while the legs carry on walking.
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(facingDir, Vector3.up), turnSpeed * Time.deltaTime);
+        }
+        else if (move.sqrMagnitude > 0.01f)
         {
             Quaternion look = Quaternion.LookRotation(move, Vector3.up);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, look, turnSpeed * Time.deltaTime);

@@ -11,12 +11,15 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float minFlightTime = 0.5f;
     [SerializeField] private float flightTimePerMeter = 0.06f;
     [SerializeField] private float throwCooldown = 0.35f;
+    [Tooltip("How long the dog keeps facing the throw (roughly the throw animation), even while walking.")]
+    [SerializeField] private float throwFaceSeconds = 0.55f;
     [Tooltip("How far from the player a dragged seed can be planted (metres).")]
     [SerializeField] private float dragReach = 4.5f;
 
     private PlayerInventory inventory;
     private PlayerInteractor interactor;
     private PlayerHealth health;
+    private PlayerController mover;
     private InputAction attackAction;
     private Camera cam;
     private float nextThrowTime;
@@ -35,6 +38,7 @@ public class PlayerCombat : MonoBehaviour
         inventory = GetComponent<PlayerInventory>();
         interactor = GetComponent<PlayerInteractor>();
         health = GetComponent<PlayerHealth>();
+        mover = GetComponent<PlayerController>();
         if (inputActions == null) inputActions = InputSystem.actions;
         attackAction = inputActions != null ? inputActions.FindAction("Player/Attack") : null;
     }
@@ -77,6 +81,7 @@ public class PlayerCombat : MonoBehaviour
             else
             {
                 trajectory?.Show(p0, v0, Physics.gravity, flight);
+                FaceCursor();
             }
         }
         else
@@ -91,14 +96,24 @@ public class PlayerCombat : MonoBehaviour
             TryEat(crop);
         }
 
-        // Shooters (peas, corn): hold left click to auto-fire toward the cursor.
+        // Shooters (peas, corn): hold left click to auto-fire toward the cursor, looking at it the whole time (even between shots).
         if (CanAct && !harvestClick && !HotbarView.PointerBusy && !PlayerDance.WheelOpen && crop != null && crop.type == CropType.Shooter
-            && attackAction != null && attackAction.IsPressed() && Time.time >= nextThrowTime
-            && magazine.CanFire(crop, inventory.ActiveCount)
-            && Mouse.current != null && TryGetGroundPoint(Mouse.current.position.ReadValue(), out Vector3 aimPoint))
+            && attackAction != null && attackAction.IsPressed())
         {
-            Shoot(crop, aimPoint);
+            FaceCursor();
+            if (Time.time >= nextThrowTime && magazine.CanFire(crop, inventory.ActiveCount)
+                && Mouse.current != null && TryGetGroundPoint(Mouse.current.position.ReadValue(), out Vector3 aimPoint))
+            {
+                Shoot(crop, aimPoint);
+            }
         }
+    }
+
+    /// <summary>Makes the dog look at the cursor's spot on the ground; call every frame while aiming or holding to fire.</summary>
+    private void FaceCursor()
+    {
+        if (mover != null && Mouse.current != null && TryGetGroundPoint(Mouse.current.position.ReadValue(), out Vector3 spot))
+            mover.AimAt(spot);
     }
 
     /// <summary>Rounds loaded from the current crop of this type, for the hotbar counter.</summary>
@@ -261,9 +276,14 @@ public class PlayerCombat : MonoBehaviour
         CropProjectile proj = go.GetComponent<CropProjectile>();
         if (proj != null) proj.Init(crop, v0, quality);
         Fired?.Invoke(crop);
-        GetComponent<PlayerController>()?.PlayThrowSquash();
+        mover?.PlayThrowSquash();
 
         Vector3 face = v0; face.y = 0f;
-        if (face.sqrMagnitude > 0.01f) transform.rotation = Quaternion.LookRotation(face);
+        if (face.sqrMagnitude > 0.01f)
+        {
+            // Hold the facing for the swing so walking at the same time doesn't turn the throw sideways.
+            if (mover != null) mover.FaceDirection(face, throwFaceSeconds);
+            else transform.rotation = Quaternion.LookRotation(face);
+        }
     }
 }
