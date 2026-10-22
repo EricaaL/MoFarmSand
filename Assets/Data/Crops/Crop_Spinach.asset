@@ -28,9 +28,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: ab542465d4b939747963e0085b7432a4, type: 3}
   color: {r: 0.2, g: 0.55, b: 0.3, a: 1}
   growthStages:
-  - {fileID: 2486392463609676552, guid: 296f60ce75c26b04d9c2ace848931548, type: 3}
-  - {fileID: 4452773279852914346, guid: a2b422447fe2abc4aad5544297ecc1df, type: 3}
-  - {fileID: 5956781816299370783, guid: b052b42402e4b1144af4a935fe6d19c9, type: 3}
+  - {fileID: 6584964853715854747, guid: 8d45492eeb818b94f9ba3247c7c9dd2d, type: 3}
+  - {fileID: 4181368451008094135, guid: f65ecf0a8aef6314188507d70f27cb31, type: 3}
+  - {fileID: 4396230979346288862, guid: fd1d82786a7e5e34d80c46f483e103a1, type: 3}
   growthStageScale: 1
   climate:
     idealTemp: 5

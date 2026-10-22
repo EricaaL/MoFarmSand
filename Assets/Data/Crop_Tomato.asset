@@ -24,13 +24,13 @@ MonoBehaviour:
   fireInterval: 0.15
   bulletSpeed: 22
   scareSeconds: 0
-  projectilePrefab: {fileID: 8603255046843703714, guid: 7dc24df7788cf334e8f19194f7cc5b5f, type: 3}
+  projectilePrefab: {fileID: 2952163905087145045, guid: 1c6e3e6cf3b00aa41b7746f7da30901f, type: 3}
   icon: {fileID: 21300000, guid: f80154bf31ad3fc4198bdf179db7298a, type: 3}
   color: {r: 0.9, g: 0.19999996, b: 0.14999998, a: 1}
   growthStages:
-  - {fileID: 6661492000042726658, guid: 509dd823e0cb0514499e5ed10df8e55f, type: 3}
-  - {fileID: 1497743814422521080, guid: e50a7cabfbcad094796454d80856adce, type: 3}
-  - {fileID: 3800334950264490308, guid: e4d37d2ab106859429398de844207d55, type: 3}
+  - {fileID: 516667614671257069, guid: b8eca82ea6a6095468c7b822f2119c5a, type: 3}
+  - {fileID: 5362610479648702233, guid: 347d40fbdd5736a4c999887f56ad77b1, type: 3}
+  - {fileID: 4656929283268103374, guid: c51fdd82841335246a6a955abe463612, type: 3}
   growthStageScale: 1
   climate:
     idealTemp: 24

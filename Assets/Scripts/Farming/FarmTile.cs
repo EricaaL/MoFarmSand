@@ -238,13 +238,10 @@ public class FarmTile : MonoBehaviour, IInteractable, IFarmPlot
             stageInstance.transform.localScale = Vector3.Scale(stageBaseScale, new Vector3(s, 2f - s, s));
         }
 
-        // A ripe model bobs and turns slowly so it reads as "ready" from across the field.
+        // A ripe model bobs gently so it reads as "ready" from across the field. No spin: the stage is a 3x3 grid of plants,
+        // and turning a square would swing its corners off the soil.
         if (stageInstance != null && state == TileState.Harvestable)
-        {
-            Transform t = stageInstance.transform;
-            t.position = stageBasePos + Vector3.up * (0.06f * Mathf.Sin(Time.time * 3f + stagePhase));
-            t.Rotate(Vector3.up, 25f * Time.deltaTime, Space.World);
-        }
+            stageInstance.transform.position = stageBasePos + Vector3.up * (0.06f * Mathf.Sin(Time.time * 3f + stagePhase));
 
         // Squash/pop feedback on plant and harvest.
         if (popTime < 1f)

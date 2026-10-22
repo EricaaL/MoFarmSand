@@ -25,6 +25,8 @@ public class CropProjectile : MonoBehaviour
         rb.useGravity = useGravity;
         if (!useGravity) lifetime = Mathf.Min(lifetime, 1.5f);
         rb.linearVelocity = velocity;
+        // Lobbed crops tumble through the air; gun-style bullets keep pointing along their flight.
+        if (useGravity) rb.angularVelocity = Random.onUnitSphere * 6f;
     }
 
     private void OnEnable() { ActiveCount++; }
