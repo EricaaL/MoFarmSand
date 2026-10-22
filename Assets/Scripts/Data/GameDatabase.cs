@@ -11,6 +11,7 @@ public class GameDatabase : ScriptableObject
     public RunModifierRegistry modifiers;
     public EventRegistry events;
     public UnlockRegistry unlocks;
+    public TipRegistry tips;
 
     [Header("Configs")]
     public CalendarConfig calendar;

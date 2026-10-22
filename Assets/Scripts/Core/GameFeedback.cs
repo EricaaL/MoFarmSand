@@ -18,6 +18,7 @@ public class GameFeedback : MonoBehaviour
 
     private CinemachineImpulseSource impulse;
     private MaterialPropertyBlock block;
+    private BossReactions reactions;
     private int lastHp = -1;
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
 
@@ -25,6 +26,7 @@ public class GameFeedback : MonoBehaviour
     {
         impulse = GetComponent<CinemachineImpulseSource>();
         block = new MaterialPropertyBlock();
+        if (hunger != null) reactions = hunger.GetComponent<BossReactions>();
     }
 
     private void OnEnable()
@@ -89,7 +91,9 @@ public class GameFeedback : MonoBehaviour
     {
         SetBossColor(Color.white);
         yield return new WaitForSeconds(0.08f);
-        foreach (Renderer r in bossRenderers) if (r != null) r.SetPropertyBlock(null);
+        // Hand the renderers back to the blush tint (BossReactions); with no tint this clears the block as before.
+        if (reactions != null) reactions.Reapply();
+        else foreach (Renderer r in bossRenderers) if (r != null) r.SetPropertyBlock(null);
     }
 
     private void SetBossColor(Color c)

@@ -102,7 +102,8 @@ public class CaterpillarBoss : MonoBehaviour
             Vector3 heading = scared ? -to : to;
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(heading), 8f * Time.deltaTime);
             // Chewing after a bite or rearing up to spit: stay put (fleeing from garlic still wins).
-            if (scared || (!Holding && !Winding)) transform.position += heading.normalized * chaseSpeed * Time.deltaTime;
+            bool staggered = hunger != null && hunger.IsStaggered;
+            if (scared || (!Holding && !Winding && !staggered)) transform.position += heading.normalized * chaseSpeed * Time.deltaTime;
         }
 
         if (scared)

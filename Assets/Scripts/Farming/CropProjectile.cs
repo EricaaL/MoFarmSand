@@ -5,6 +5,9 @@ public class CropProjectile : MonoBehaviour
 {
     public static int ActiveCount { get; private set; }
 
+    /// <summary>Raised when a projectile lands: where, and whether it hit the boss. Drives the splat sound.</summary>
+    public static event System.Action<Vector3, bool> Landed;
+
     [SerializeField] private GameObject splatPrefab;
     [SerializeField] private float lifetime = 6f;
 
@@ -41,6 +44,8 @@ public class CropProjectile : MonoBehaviour
             boss.Feed(crop.fullnessValue * quality);
             if (crop.scareSeconds > 0f) boss.Scare(crop.scareSeconds);
         }
+
+        Landed?.Invoke(transform.position, boss != null);
 
         if (splatPrefab != null)
         {

@@ -21,8 +21,13 @@ public class BellTrigger : MonoBehaviour, IInteractable
         return inv == null || inv.TotalCount() > 0;
     }
 
+    /// <summary>Raised when the bell is rung (before the day ends / night falls). Drives the bell sound.</summary>
+    public static event System.Action Rung;
+
     public void Interact(GameObject who)
     {
-        if (CanInteract(who)) GameManager.Instance.StartNight();
+        if (!CanInteract(who)) return;
+        Rung?.Invoke();
+        GameManager.Instance.StartNight();
     }
 }

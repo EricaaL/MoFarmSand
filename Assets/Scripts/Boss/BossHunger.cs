@@ -36,6 +36,8 @@ public class BossHunger : MonoBehaviour
     public event Action<float, float> OnBossFed;
     public event Action OnBossSatisfied;
     public event Action<BossData> OnBossEvolved;
+    /// <summary>Raised when a scare (garlic) starts; the argument is how many seconds it lasts.</summary>
+    public event Action<float> OnScared;
 
     private void Awake() { baseScale = transform.localScale; }
 
@@ -48,6 +50,7 @@ public class BossHunger : MonoBehaviour
         IsSatisfied = false;
         graceUntil = 0f;
         scaredUntil = 0f;
+        staggerUntil = 0f;
     }
 
     /// <summary>The boss only eats at night. By day it is asleep, so thrown crops do nothing (no daytime kills or evolutions).</summary>
@@ -64,6 +67,17 @@ public class BossHunger : MonoBehaviour
         if (IsSatisfied || data == null || !CanBeFed || seconds <= 0f) return;
         scaredUntil = Mathf.Max(scaredUntil, Time.time + seconds);
         wobble = 1f;
+        OnScared?.Invoke(seconds);
+    }
+
+    private float staggerUntil;
+
+    /// <summary>True during the brief pause after a big hit. The boss movers hold still while it is set (attacks are unaffected).</summary>
+    public bool IsStaggered => Time.time < staggerUntil;
+
+    public void Stagger(float seconds)
+    {
+        if (seconds > 0f) staggerUntil = Mathf.Max(staggerUntil, Time.time + seconds);
     }
 
     public void Feed(float fullness)

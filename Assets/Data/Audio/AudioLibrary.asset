@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6c1c7f57a0b8a543a1b5233eb3d775f, type: 3}
+  m_Name: AudioLibrary
+  m_EditorClassIdentifier: 
+  plant: {fileID: 11400000, guid: 353950996c675374dbc9afbb3cf4e856, type: 2}
+  ripe: {fileID: 11400000, guid: f207237c3aa9bbe489445ee4e4549fd0, type: 2}
+  harvest: {fileID: 11400000, guid: 3ed6843fc6cb58043999ba25e21950e3, type: 2}
+  coin: {fileID: 11400000, guid: 76e44a29895f0634f9ff45d932c8e65f, type: 2}
+  throwCrop: {fileID: 11400000, guid: 63409c124f2a7d8488794193196be6bf, type: 2}
+  shoot: {fileID: 11400000, guid: fc45abbd63c805b46bee7135bda65c2a, type: 2}
+  splat: {fileID: 11400000, guid: f2583ccfacb68e24ea1533cdf74b2993, type: 2}
+  shield: {fileID: 11400000, guid: 0094710d4e7d873499a49b0243a92a95, type: 2}
+  hurt: {fileID: 11400000, guid: d262611c96846894f81b2ee010d83366, type: 2}
+  bossGulp: {fileID: 11400000, guid: f62708904de4730418048b558649f45b, type: 2}
+  bossScare: {fileID: 11400000, guid: 097a6a7f8a2f9c44599469227dd2d5a0, type: 2}
+  burst: {fileID: 11400000, guid: d85fd286834bc694a93d32c38ea3d8ac, type: 2}
+  evolve: {fileID: 11400000, guid: 5503e230f3d7fa7499e6c74555a244cb, type: 2}
+  bell: {fileID: 11400000, guid: f129183c4b7cb8c46a7b47c93291e9ea, type: 2}
+  dayMusic: {fileID: 11400000, guid: 2f9d5d14b044a6b4b8a76bf94f9ac529, type: 2}
+  nightMusic: {fileID: 11400000, guid: b26cbca53644ec248a9157ce5729343e, type: 2}

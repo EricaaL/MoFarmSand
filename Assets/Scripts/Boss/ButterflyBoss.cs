@@ -64,7 +64,7 @@ public class ButterflyBoss : MonoBehaviour
         {
             Vector3 dir = scared ? -to.normalized : to.normalized;
             Vector3 side = new Vector3(-dir.z, 0f, dir.x) * (Mathf.Sin(Time.time * 2.5f) * weaveAmount);
-            groundPos += (dir * chaseSpeed + side) * Time.deltaTime;
+            if (!hunger.IsStaggered || scared) groundPos += (dir * chaseSpeed + side) * Time.deltaTime;
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), 8f * Time.deltaTime);
         }
         float y = hoverHeight + Mathf.Sin(Time.time * 3f) * bobAmount;

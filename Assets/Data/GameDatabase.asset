@@ -18,6 +18,7 @@ MonoBehaviour:
   modifiers: {fileID: 11400000, guid: 7896d5107d92c814cb1d54699801ca90, type: 2}
   events: {fileID: 11400000, guid: 27de8cc948b4e794585e5a88e4181cff, type: 2}
   unlocks: {fileID: 11400000, guid: 7128b0a47d1fd7d4c9df17691d1b50d5, type: 2}
+  tips: {fileID: 11400000, guid: 2bee9f3219af5ee4ea29ce9b12cd7945, type: 2}
   calendar: {fileID: 11400000, guid: 97d504b7d3caaa043906e2f825a8c3c3, type: 2}
   climate: {fileID: 11400000, guid: e10a3b5930f31c841979067f75d1b630, type: 2}
   mapGen: {fileID: 11400000, guid: e5cb0aa34fa778342aa8027ab560d760, type: 2}
