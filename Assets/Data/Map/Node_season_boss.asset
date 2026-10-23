@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Hungry Caterpillar
   glyph: B
   color: {r: 0.85, g: 0.35, b: 0.7, a: 1}
+  icon: {fileID: 2800000, guid: 135bb354478847e41b4377d61c704650, type: 3}
+  legendLabel: ???
   description: The season's mandatory night. Feed the caterpillar before dawn.
   farmingAllowed: 0
   encounter: {fileID: 11400000, guid: cd9f8ee38feba6f428b536d16d994639, type: 2}
@@ -26,9 +28,9 @@ MonoBehaviour:
   growthBonus: 1
   eventPool: {fileID: 0}
   coinReward: {x: 20, y: 35}
+  endsRun: 0
   survivableLoss: 1
   lossGrowthMultiplier: 0.65
-  endsRun: 0
   minLayer: 0
   maxPerPath: 0
   noConsecutive: 0

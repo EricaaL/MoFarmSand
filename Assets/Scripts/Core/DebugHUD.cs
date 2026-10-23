@@ -67,21 +67,31 @@ public class DebugHUD : MonoBehaviour
         if (hasEncounter)
         {
             Rect bar = new Rect(w / 2f - 200f, 16f, 400f, 28f);
-            Fill(bar, new Color(0f, 0f, 0f, 0.6f));
-            Fill(new Rect(bar.x + 2f, bar.y + 2f, (bar.width - 4f) * f, bar.height - 4f), new Color(0.3f, 0.85f, 0.35f));
+            ImGuiKit.Rounded(bar, new Color(0.3f, 0.2f, 0.12f, 0.75f));
+            if (f > 0.001f) ImGuiKit.Rounded(new Rect(bar.x + 3f, bar.y + 3f, Mathf.Max(bar.height - 6f, (bar.width - 6f) * f), bar.height - 6f), new Color(0.3f, 0.85f, 0.35f));
             string stronger = hunger != null && !hunger.Scale.IsIdentity ? " (stronger)" : string.Empty;
             ImGuiKit.HudLabel(bar, $"{bossName}{stronger} Fullness {Mathf.RoundToInt(f * 100f)}%", centered);
         }
-        ImGuiKit.HudLabel(new Rect(w / 2f - 200f, 46f, 400f, 24f), phase.ToString().ToUpper(), centered);
 
         // HP + shield (top left)
         if (health != null)
         {
-            string hearts = new string('♥', health.Hp) + new string('♡', Mathf.Max(0, health.MaxHp - health.Hp));
             float hs = ImGuiKit.Scale;
-            ImGuiKit.HudLabel(new Rect(16f * hs, 10f * hs, 520f * hs, 60f * hs), "HP " + hearts, 44f, TextAnchor.MiddleLeft, true);
+            UiTheme theme = ImGuiKit.Theme;
+            if (theme != null && theme.heartFull != null)
+            {
+                // One heart icon per max HP, full or bitten-out; the purse (RunHud) sits under them.
+                float size = 72f * hs, step = 80f * hs;
+                for (int i = 0; i < health.MaxHp; i++)
+                    ImGuiKit.Icon(new Rect(18f * hs + i * step, 14f * hs, size, size), i < health.Hp ? theme.heartFull : theme.heartGone);
+            }
+            else
+            {
+                string hearts = new string('♥', health.Hp) + new string('♡', Mathf.Max(0, health.MaxHp - health.Hp));
+                ImGuiKit.HudLabel(new Rect(16f * hs, 10f * hs, 520f * hs, 60f * hs), "HP " + hearts, 44f, TextAnchor.MiddleLeft, true);
+            }
             if (health.HasShield)
-                ImGuiKit.HudLabel(new Rect(16f * hs, 68f * hs, 420f * hs, 36f * hs), $"[BARK SHIELD x{health.ShieldCharges} - {Mathf.CeilToInt(health.ShieldTimeLeft)}s]", 24f, TextAnchor.MiddleLeft, true);
+                ImGuiKit.HudLabel(new Rect(18f * hs, 150f * hs, 420f * hs, 36f * hs), $"[BARK SHIELD x{health.ShieldCharges} - {Mathf.CeilToInt(health.ShieldTimeLeft)}s]", 24f, TextAnchor.MiddleLeft, true);
         }
 
         // Hotbar (bottom center): slots, hover tooltip, drag-to-use.
@@ -93,12 +103,14 @@ public class DebugHUD : MonoBehaviour
         if (heldItem != null) heldItem.Draw(w, h);
 
         // Interact prompt: wraps to the screen width instead of running past its box.
-        if (interactor != null && interactor.Current != null && (phase == GamePhase.Day || phase == GamePhase.Night))
+        if (interactor != null && interactor.Current != null && !HotbarView.TooltipOpen && (phase == GamePhase.Day || phase == GamePhase.Night))
         {
-            float promptW = Mathf.Min(w - 40f, 760f);
+            // Sits just above the hotbar (which is scaled with the HUD), not on top of it.
+            float ps = ImGuiKit.Scale;
+            float promptW = Mathf.Min(w - 40f, 760f * ps);
             string prompt = interactor.Current.Prompt;
-            float promptH = Mathf.Max(28f, ImGuiKit.TextHeight(prompt, 18f, promptW, true) + 6f);
-            ImGuiKit.HudLabel(new Rect(w / 2f - promptW / 2f, h - 150f - promptH + 28f, promptW, promptH), prompt, 18f, TextAnchor.LowerCenter, true);
+            float promptH = Mathf.Max(28f * ps, ImGuiKit.TextHeight(prompt, 18f, promptW, true) + 6f * ps);
+            ImGuiKit.HudLabel(new Rect(w / 2f - promptW / 2f, h - 140f * ps - promptH, promptW, promptH), prompt, 18f, TextAnchor.LowerCenter, true);
         }
 
         if (Time.unscaledTime < voidMessageUntil)

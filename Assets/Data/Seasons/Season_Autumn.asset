@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Autumn
   lengthInDays: 6
   uiColor: {r: 0.95, g: 0.55, b: 0.2, a: 1}
+  icon: {fileID: 2800000, guid: 4c134f0f4b0895c41badf62b0f5cf806, type: 3}
+  mapColor: {r: 0.88, g: 0.62, b: 0.44, a: 1}
   temperatureCurve:
     serializedVersion: 2
     m_Curve:

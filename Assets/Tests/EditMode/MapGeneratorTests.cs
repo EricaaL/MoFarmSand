@@ -23,6 +23,21 @@ public class MapGeneratorTests
     }
 
     [Test]
+    public void NewMapsNeverPlaceRestStopsOrElderCaterpillars()
+    {
+        for (int seed = 0; seed < 300; seed++)
+            foreach (MapNode n in Gen(seed).nodes)
+                Assert.IsFalse(n.nodeTypeId == "rest" || n.nodeTypeId == "elite", $"seed {seed}: node {n.id} is '{n.nodeTypeId}'");
+    }
+
+    [Test]
+    public void RestAndEliteStayRegisteredSoOldSavesStillValidate()
+    {
+        Assert.IsTrue(db.nodeTypes.TryGet("rest", out _));
+        Assert.IsTrue(db.nodeTypes.TryGet("elite", out _));
+    }
+
+    [Test]
     public void LayerCountMatchesCalendarPlusBossAndStructureIsSane()
     {
         for (int seed = 0; seed < 100; seed++)
@@ -40,7 +55,7 @@ public class MapGeneratorTests
                 Assert.IsTrue(g.IsReachable(n.id, g.bossId), "every start reaches the boss");
             }
             foreach (MapNode n in g.NodesInLayer(g.layerCount - 1))
-                Assert.AreEqual("rest", n.nodeTypeId, "the day before the boss is a rest stop");
+                Assert.AreEqual("farm", n.nodeTypeId, "the day before the boss is a farm day");
         }
     }
 

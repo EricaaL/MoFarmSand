@@ -8,6 +8,10 @@ public class SeasonData : ScriptableObject, IHasId
     public string displayName;
     [Min(1)] public int lengthInDays = 3;
     public Color uiColor = Color.white;
+    [Tooltip("Season icon shown on the date card, save slots and route map. Empty = no icon.")]
+    public Texture2D icon;
+    [Tooltip("Background colour of this season's band on the route map. Transparent = a washed-out uiColor.")]
+    public Color mapColor = Color.clear;
 
     [Header("Climate (x = progress through the season 0..1)")]
     [Tooltip("Mean temperature in Celsius.")]

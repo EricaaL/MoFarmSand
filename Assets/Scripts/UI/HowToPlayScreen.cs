@@ -1,9 +1,8 @@
 using UnityEngine;
 
-/// <summary>Main-menu primer: a tab per topic (goal, farming, crops, days, coins, controls).</summary>
-public class HowToPlayScreen : IRunScreen
+/// <summary>The How to Play tab of the Options page: a button per topic (goal, farming, crops, days, coins, controls) and its text.</summary>
+public class HowToPlayScreen
 {
-    private readonly RunDirector director;
     private int page;
 
     // Controls has no body: it draws the shared key list from ControlsScreen.
@@ -28,37 +27,31 @@ public class HowToPlayScreen : IRunScreen
         ("Controls", null),
     };
 
-    public HowToPlayScreen(RunDirector director) { this.director = director; }
-
     public void OnOpen() { page = 0; }
 
-    public void Draw()
+    /// <summary>Draws into <paramref name="area"/> (the cream inner panel).</summary>
+    public void DrawBody(Rect area)
     {
         float s = ImGuiKit.Scale;
-        Rect panel = ImGuiKit.Modal(1100f, 720f, "How to Play");
-        ImGuiKit.Label(new Rect(panel.xMax - 420 * s, panel.y + 26 * s, 396 * s, 30 * s), "Esc to go back", 18f, ImGuiKit.Muted, TextAnchor.MiddleRight);
 
-        // Left column: one tab per page.
-        float tabX = panel.x + 24 * s, tabW = 280 * s, tabH = 56 * s, tabGap = 10 * s;
-        float y = panel.y + 100 * s;
+        // Left: one button per page.
+        float bx = area.x + 36f * s, bw = 330f * s, bh = 72f * s, gap = 14f * s;
+        float y = area.y + 36f * s;
         for (int i = 0; i < Pages.Length; i++)
         {
-            Rect tab = new Rect(tabX, y, tabW, tabH);
-            if (ImGuiKit.Button(tab, Pages[i].title, i != page, 20f)) page = i;
-            if (i == page) ImGuiKit.Fill(new Rect(tab.x - 8 * s, tab.y, 6 * s, tab.height), ImGuiKit.Accent);
-            y += tabH + tabGap;
+            if (ImGuiKit.Pill(new Rect(bx, y, bw, bh), Pages[i].title, i == page ? ImGuiKit.PillKind.Primary : ImGuiKit.PillKind.Light, true, 26f, i == page)) page = i;
+            y += bh + gap;
         }
 
-        // Right column: the open page.
-        float x = tabX + tabW + 40 * s;
-        float w = panel.xMax - x - 32 * s;
-        float top = panel.y + 100 * s;
-        ImGuiKit.Label(new Rect(x, top, w, 40 * s), Pages[page].title, 30f, ImGuiKit.Accent, TextAnchor.MiddleLeft, true);
+        // Right: the open page.
+        float x = bx + bw + 60f * s;
+        float w = area.xMax - x - 50f * s;
+        float top = area.y + 30f * s;
+        ImGuiKit.Heading(new Rect(x, top, w, 80f * s), Pages[page].title, 56f, ImGuiKit.Text);
+        ImGuiKit.DashedRule(x, top + 86f * s, Mathf.Min(w, 560f * s));
 
         string body = Pages[page].body;
-        if (body == null) ControlsScreen.DrawGroups(x, top + 50 * s, w);
-        else ImGuiKit.Label(new Rect(x, top + 56 * s, w, panel.yMax - top - 56 * s - 90 * s), body, 22f, Color.white, TextAnchor.UpperLeft);
-
-        if (ImGuiKit.Button(new Rect(panel.xMax - 190 * s, panel.yMax - 66 * s, 166 * s, 44 * s), "Back", true, 20f)) director.CloseHowToPlay();
+        if (body == null) ControlsScreen.DrawGroups(x, top + 104f * s, w);
+        else ImGuiKit.Label(new Rect(x, top + 106f * s, w, area.yMax - top - 120f * s), body, 28f, ImGuiKit.Text, TextAnchor.UpperLeft);
     }
 }

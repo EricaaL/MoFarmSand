@@ -15,6 +15,11 @@ public class HotbarView
     /// <summary>Another clickable HUD control (e.g. the beta "Get Seeds" button) that the world should also ignore clicks on. Set each frame by its owner.</summary>
     public static Rect BlockRect { get; set; }
 
+    /// <summary>A second one (the tip card's close button).</summary>
+    public static Rect BlockRect2 { get; set; }
+    /// <summary>True while the hover preview is on screen (the interact prompt hides so it doesn't sit on top of it).</summary>
+    public static bool TooltipOpen { get; private set; }
+
     private readonly PlayerInventory inventory;
     private readonly PlayerCombat combat;
     private RunDirector director;
@@ -38,19 +43,20 @@ public class HotbarView
         combat = inventory != null ? inventory.GetComponent<PlayerCombat>() : null;
     }
 
-    public static void Reset() { PointerBusy = false; BlockRect = Rect.zero; }
+    public static void Reset() { PointerBusy = false; TooltipOpen = false; BlockRect = Rect.zero; BlockRect2 = Rect.zero; }
 
     public void Draw(float screenW, float screenH)
     {
         if (inventory == null) return;
         Event e = Event.current;
         float s = ImGuiKit.Scale;
-        float size = 72f * s, gap = 6f * s;
+        float size = 88f * s, gap = 12f * s;
         int count = PlayerInventory.SlotCount;
         float total = count * size + (count - 1) * gap;
         float left = screenW * 0.5f - total * 0.5f;
-        float top = screenH - size - 16f * s;
-        Rect bar = new Rect(left - 6f * s, top - 6f * s, total + 12f * s, size + 12f * s);
+        float top = screenH - size - 22f * s;
+        Rect bar = new Rect(left - 14f * s, top - 14f * s, total + 28f * s, size + 28f * s);
+        ImGuiKit.Rounded(bar, ImGuiKit.Brown);
 
         Vector2 mouse = e.mousePosition;
         int hover = -1;
@@ -58,10 +64,11 @@ public class HotbarView
             if (SlotRect(i, left, top, size, gap).Contains(mouse)) { hover = i; break; }
 
         HandleInput(e, hover, bar);
-        PointerBusy = dragging || dragSlot >= 0 || bar.Contains(mouse) || BlockRect.Contains(mouse);
+        PointerBusy = dragging || dragSlot >= 0 || bar.Contains(mouse) || BlockRect.Contains(mouse) || BlockRect2.Contains(mouse);
 
         for (int i = 0; i < count; i++) DrawSlot(i, SlotRect(i, left, top, size, gap), s, i == dragSlot && dragging);
 
+        TooltipOpen = !dragging && hover >= 0 && inventory.GetSlot(hover).item != null && inventory.GetSlot(hover).count > 0;
         if (!dragging && hover >= 0) DrawTooltip(hover, SlotRect(hover, left, top, size, gap), screenW, s);
         if (dragging) DrawDragGhost(mouse, s, bar);
 
@@ -131,27 +138,28 @@ public class HotbarView
     private void DrawSlot(int i, Rect r, float s, bool beingDragged)
     {
         bool active = i == inventory.ActiveIndex;
-        ImGuiKit.Fill(r, active ? new Color(1f, 0.9f, 0.3f, 0.9f) : new Color(0f, 0f, 0f, 0.6f));
-        ImGuiKit.Fill(new Rect(r.x + 3f * s, r.y + 3f * s, r.width - 6f * s, r.height - 6f * s), new Color(0.12f, 0.12f, 0.12f, 0.9f));
+        // Cream slot; the active one sits in an orange ring.
+        if (active) ImGuiKit.Rounded(new Rect(r.x - 6f * s, r.y - 6f * s, r.width + 12f * s, r.height + 12f * s), ImGuiKit.Orange);
+        ImGuiKit.Rounded(r, ImGuiKit.Cream);
 
         PlayerInventory.Slot slot = inventory.GetSlot(i);
         if (slot.item != null && slot.count > 0)
         {
             float fade = beingDragged ? 0.35f : 1f;
             // The icon fills the slot; the name is only shown in the hover tooltip.
-            float iconSize = r.width - 14f * s;
+            float iconSize = r.width - 18f * s;
             ItemIconDrawer.Draw(new Rect(r.center.x - iconSize * 0.5f, r.center.y - iconSize * 0.5f, iconSize, iconSize), slot.item, fade);
 
-            ImGuiKit.HudLabel(new Rect(r.xMax - 40f * s, r.yMax - 17f * s, 36f * s, 15f * s), "x" + slot.count, 12f, TextAnchor.LowerRight, true);
+            ImGuiKit.Label(new Rect(r.xMax - 80f * s, r.yMax - 36f * s, 74f * s, 32f * s), "x" + slot.count, 20f, ImGuiKit.Text, TextAnchor.LowerRight, false, false);
 
             // Crops grown out of season are weaker: show their strength so you know what you're throwing.
             float q = slot.EffectiveQuality;
             if (slot.item is CropData && Mathf.Abs(q - 1f) > 0.05f)
             {
-                ImGuiKit.HudLabel(new Rect(r.xMax - 38f * s, r.y + 1f * s, 36f * s, 16f * s), $"{Mathf.RoundToInt(q * 100f)}%", 11f, TextAnchor.UpperRight, true);
+                ImGuiKit.Label(new Rect(r.xMax - 80f * s, r.y + 4f * s, 74f * s, 26f * s), $"{Mathf.RoundToInt(q * 100f)}%", 15f, ImGuiKit.Accent, TextAnchor.UpperRight, true, false);
             }
         }
-        ImGuiKit.HudLabel(new Rect(r.x + 5f * s, r.y + 1f * s, 18f * s, 16f * s), (i + 1).ToString(), 11f, TextAnchor.UpperLeft, true);
+        ImGuiKit.Label(new Rect(r.x + 8f * s, r.y + 4f * s, 40f * s, 32f * s), (i + 1).ToString(), 20f, ImGuiKit.Text, TextAnchor.UpperLeft, false, false);
     }
 
     private void DrawDragGhost(Vector2 mouse, float s, Rect bar)
@@ -160,7 +168,7 @@ public class HotbarView
         if (slot.item == null) return;
         bool isSeed = slot.item is SeedData;
         Rect icon = new Rect(mouse.x - 16f * s, mouse.y - 16f * s, isSeed ? 24f * s : 32f * s, 32f * s);
-        ImGuiKit.Fill(new Rect(icon.x - 4f * s, icon.y - 4f * s, icon.width + 8f * s, icon.height + 8f * s), new Color(0f, 0f, 0f, 0.5f));
+        ImGuiKit.Rounded(new Rect(icon.x - 6f * s, icon.y - 6f * s, icon.width + 12f * s, icon.height + 12f * s), new Color(0.996f, 0.843f, 0.647f, 0.85f));
         ItemIconDrawer.Draw(icon, slot.item);
 
         string hint = bar.Contains(mouse) ? "Drop here to cancel"
@@ -172,60 +180,25 @@ public class HotbarView
         ImGuiKit.HudLabel(new Rect(mouse.x + 22f * s, mouse.y - 12f * s, 320f * s, 26f * s), hint, 18f, TextAnchor.MiddleLeft, true);
     }
 
+    /// <summary>Hover preview: the same description block as the inventory, on a small orange panel above the slot.</summary>
     private void DrawTooltip(int index, Rect slotRect, float screenW, float s)
     {
         PlayerInventory.Slot slot = inventory.GetSlot(index);
         if (slot.item == null || slot.count <= 0) return;
 
         ItemInfo info = InfoFor(slot);
-        float w = 400f * s, pad = 12f * s;
-        float inner = w - pad * 2f;
-        float labelW = inner * 0.38f;
+        const float k = 0.6f;   // the card is drawn at this fraction of its inventory size
+        float pad = 22f * s;
+        float w = 430f * s, inner = w - pad * 2f;
+        float contentH = ItemDetailCard.Measure(info, inner, k);
+        float h = contentH + pad * 2f - 8f * s;
 
-        float titleH = 30f * s;
-        float subH = ImGuiKit.TextHeight(info.subtitle, 15f, inner, true);
-        float summaryH = string.IsNullOrEmpty(info.summary) ? 0f : ImGuiKit.TextHeight(info.summary, 15f, inner);
-        float h = pad + titleH + subH + 4f * s + summaryH + 8f * s;
-
-        const int maxLines = 7;
-        int shown = Mathf.Min(maxLines, info.lines.Count);
-        float[] heights = new float[shown];
-        for (int i = 0; i < shown; i++)
-        {
-            InfoLine line = info.lines[i];
-            heights[i] = Mathf.Max(ImGuiKit.TextHeight(line.value, 15f, inner - labelW, true), ImGuiKit.TextHeight(line.label, 15f, labelW)) + 3f * s;
-            h += heights[i];
-        }
-        h += pad;
-        if (info.lines.Count > shown) h += 20f * s;
-
-        float x = Mathf.Clamp(slotRect.center.x - w * 0.5f, 8f * s, screenW - w - 8f * s);
-        float y = Mathf.Max(8f * s, slotRect.y - h - 14f * s);
+        float x = Mathf.Clamp(slotRect.center.x - w * 0.5f, 10f * s, screenW - w - 10f * s);
+        float y = Mathf.Max(10f * s, slotRect.y - h - 24f * s);
         Rect box = new Rect(x, y, w, h);
 
-        ImGuiKit.Fill(box, new Color(0.04f, 0.03f, 0.08f, 0.97f));
-        ImGuiKit.Fill(new Rect(box.x, box.y, 5f * s, box.height), info.color);
-
-        float cx = box.x + pad + 4f * s;
-        float cy = box.y + pad;
-        ImGuiKit.HudLabel(new Rect(cx, cy, inner - 4f * s, titleH), info.title, 22f, TextAnchor.MiddleLeft, true);
-        cy += titleH;
-        ImGuiKit.HudLabel(new Rect(cx, cy, inner - 4f * s, subH), info.subtitle, 15f, TextAnchor.UpperLeft, true);
-        cy += subH + 4f * s;
-        if (summaryH > 0f)
-        {
-            ImGuiKit.HudLabel(new Rect(cx, cy, inner - 4f * s, summaryH), info.summary, 15f, TextAnchor.UpperLeft);
-            cy += summaryH + 8f * s;
-        }
-        for (int i = 0; i < shown; i++)
-        {
-            InfoLine line = info.lines[i];
-            ImGuiKit.HudLabel(new Rect(cx, cy, labelW, heights[i]), line.label, 15f, TextAnchor.UpperLeft);
-            ImGuiKit.HudLabel(new Rect(cx + labelW, cy, inner - labelW - 4f * s, heights[i]), line.value, 15f, TextAnchor.UpperLeft, true);
-            cy += heights[i];
-        }
-        if (info.lines.Count > shown)
-            ImGuiKit.HudLabel(new Rect(cx, cy, inner, 18f * s), "Tab for the full description", 13f, TextAnchor.UpperLeft);
+        ImGuiKit.Rounded(box, ImGuiKit.Orange);
+        ItemDetailCard.Draw(new Rect(box.x + pad, box.y + pad * 0.7f, inner, contentH), info, inventory.CountOf(slot.item), k);
     }
 
     // ------------------------------------------------------------------ item info

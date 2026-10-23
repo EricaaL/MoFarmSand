@@ -35,7 +35,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     [SerializeField] private GameObject merchantStall;
     [SerializeField] private DayClock clock;
 
-    private enum View { None, MainMenu, HowToPlay, Options, Title, Map, Event, Bank, Shop, Summary, Items, Pause, Route, Controls, BetaSeeds }
+    private enum View { None, MainMenu, Options, Title, Map, Event, Bank, Shop, Summary, Items, Pause, Route, BetaSeeds }
 
     private View view;
     private IRunScreen screen;
@@ -47,7 +47,6 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     private IRunScreen optionsReturnScreen;
     private MainMenuScreen mainMenuScreen;
     private OptionsScreen optionsScreen;
-    private HowToPlayScreen howToPlayScreen;
     private TitleScreen titleScreen;
     private MapScreen mapScreen;
     private EventScreen eventScreen;
@@ -55,11 +54,12 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     private ShopScreen shopScreen;
     private SummaryScreen summaryScreen;
     private ItemInfoScreen itemInfoScreen;
-    private ControlsScreen controlsScreen;
+    private ItemInfoScreen itemListScreen;
     private BetaSeedsScreen betaSeedsScreen;
     private RunHud hud;
     private DayPlan plan;
     private bool dayRunning;
+    private bool dayEnding;   // the day just resolved: keep the HUD up until the scene reloads
     private bool resolving;
     private bool leaving; // the scene is about to reload: stop drawing and ignore input
 
@@ -76,7 +76,10 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     public MetaProgress Meta => RunSession.Current != null ? RunSession.Current.meta : null;
     public RunState Run => RunSession.Current != null ? RunSession.Current.run : null;
     public DayPlan Plan => plan;
+    /// <summary>The catalogue shown by the Item List tab of Options (separate selection from the Tab-key inventory).</summary>
+    public ItemInfoScreen ItemList => itemListScreen;
     public PlayerWallet Wallet => wallet;
+    public PlayerHealth Health => health;
     public PlayerInventory Inventory => inventory;
     public DisasterDirector Disaster => disaster;
     public DayClock Clock => clock;
@@ -98,11 +101,12 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     private void Awake()
     {
         ModalOpen = false;
+        ImGuiKit.PageMode = false;
         Time.timeScale = 1f; // a previous scene may have been left paused
+        ImGuiKit.Theme = db != null ? db.uiTheme : null;
         if (!IsRoguelike) return;
         mainMenuScreen = new MainMenuScreen(this);
         optionsScreen = new OptionsScreen(this);
-        howToPlayScreen = new HowToPlayScreen(this);
         titleScreen = new TitleScreen(this);
         mapScreen = new MapScreen(this);
         routeScreen = new MapScreen(this, readOnly: true);
@@ -112,7 +116,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         shopScreen = new ShopScreen(this);
         summaryScreen = new SummaryScreen(this);
         itemInfoScreen = new ItemInfoScreen(this);
-        controlsScreen = new ControlsScreen(this);
+        itemListScreen = new ItemInfoScreen(this);
         betaSeedsScreen = new BetaSeedsScreen(this);
         hud = new RunHud(this);
     }
@@ -131,18 +135,17 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         }
 
         // Esc opens the run menu (on a day or on the map) and backs out of its sub-screens.
-        // The shop handles its own Esc, so it is deliberately not listed here.
+        // The shop closes here too (one owner for Esc), so a single press can never close it and also open the pause menu.
         if (kb.escapeKey.wasPressedThisFrame)
         {
             switch (view)
             {
                 case View.Items: CloseItems(); break;
+                case View.Shop: CloseShop(); break;   // back to the game; a second Esc opens the pause menu
                 case View.BetaSeeds: CloseBetaSeeds(); break;
                 case View.Options: CloseOptions(); break;
-                case View.HowToPlay: CloseHowToPlay(); break;
-                case View.Title: if (!RunSession.HasActiveSlot) ShowMainMenu(); break;
+                case View.Title: if (RunSession.HasActiveSlot) titleScreen.BackToSlots(); else ShowMainMenu(); break;   // upgrades -> slots -> main menu
                 case View.Route: CloseRoute(); break;
-                case View.Controls: CloseControls(); break;
                 case View.Pause: ClosePause(); break;
                 case View.None: if (dayRunning) ShowPause(); break;
                 case View.Map: ShowPause(); break;
@@ -248,6 +251,9 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         view = v;
         screen = s;
         ModalOpen = s != null;
+        if (s != null) UiBackdrop.Invalidate(); // menus show the blurred world as it is right now
+        ImGuiKit.PageMode = s != null;
+        if (s != null) dayEnding = false;
         SetFrozen(s != null || !dayRunning);
         if (playerInteractor != null) playerInteractor.enabled = s == null && dayRunning;
 
@@ -264,22 +270,16 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     public void ShowMainMenu() { dayRunning = false; mainMenuScreen.OnOpen(); Show(View.MainMenu, mainMenuScreen); }
     public void ShowTitle() { dayRunning = false; Show(View.Title, titleScreen); }
 
-    public void ShowHowToPlay()
-    {
-        if (view != View.MainMenu) return;
-        howToPlayScreen.OnOpen();
-        Show(View.HowToPlay, howToPlayScreen);
-    }
-
-    public void CloseHowToPlay() { if (view == View.HowToPlay) ShowMainMenu(); }
+    /// <summary>How to Play is a tab of the Options page.</summary>
+    public void ShowHowToPlay() { ShowOptions(OptionsScreen.TabHowToPlay); }
 
     /// <summary>Options page, from the main menu or the Esc menu; Back returns to whichever opened it.</summary>
-    public void ShowOptions()
+    public void ShowOptions(int tab = OptionsScreen.TabOptions)
     {
         if (view != View.MainMenu && view != View.Pause) return;
         optionsReturnView = view;
         optionsReturnScreen = screen;
-        optionsScreen.OnOpen();
+        optionsScreen.OnOpen(tab);
         Show(View.Options, optionsScreen);
     }
 
@@ -346,15 +346,6 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
 
     public void CloseRoute() { if (view == View.Route) Show(View.Pause, pauseScreen); }
 
-    public void ShowControls()
-    {
-        if (view != View.Pause) return;
-        controlsScreen.OnOpen();
-        Show(View.Controls, controlsScreen);
-    }
-
-    public void CloseControls() { if (view == View.Controls) Show(View.Pause, pauseScreen); }
-
     public void ShowItemsFromPause()
     {
         if (view != View.Pause) return;
@@ -400,7 +391,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         };
     }
 
-    public void OpenShop() { if (dayRunning) Show(View.Shop, shopScreen); }
+    public void OpenShop() { if (!dayRunning) return; shopScreen.OnOpen(); Show(View.Shop, shopScreen); }
     public void CloseShop() { if (view == View.Shop) Show(View.None, null); }
 
     // ---------------------------------------------------------------- slots and runs
@@ -655,6 +646,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     private IEnumerator ResolveRoutine(GamePhase phase)
     {
         dayRunning = false;
+        dayEnding = true;
         if (clock != null) clock.Stop();
         RunState run = Run;
 
@@ -766,10 +758,18 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     {
         if (!IsRoguelike || leaving) return;
         // Between unloading the slot and the scene reload there can be one more frame: don't draw run screens with no run.
-        bool noRunScreen = view == View.Title || view == View.MainMenu || view == View.HowToPlay || (view == View.Options && optionsReturnView == View.MainMenu);
+        bool noRunScreen = view == View.Title || view == View.MainMenu || (view == View.Options && optionsReturnView == View.MainMenu);
         if (!noRunScreen && Run == null) return;
         GUI.depth = -10;
-        if (screen != null) screen.Draw();
-        else if (dayRunning) hud.Draw();
+        if (screen != null)
+        {
+            // Pages are laid out on a 1080p canvas that is centred in whatever shape the window is. The route map scrolls the whole window instead.
+            ImGuiKit.PageCentered = !(screen is MapScreen);
+            Matrix4x4 saved = GUI.matrix;
+            GUI.matrix = Matrix4x4.Translate(new Vector3(ImGuiKit.PageOffset.x, ImGuiKit.PageOffset.y, 0f));
+            screen.Draw();
+            GUI.matrix = saved;
+        }
+        else if (dayRunning || dayEnding) hud.Draw();   // the HUD stays up through the "DAY COMPLETE" wait
     }
 }

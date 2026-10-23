@@ -1,7 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>The Items tab (Tab key): every seed and crop on the left, what the selected one does on the right.</summary>
+/// <summary>
+/// The Inventory (Tab key): what you carry as a grid of cards on the right, the selected item's facts on the left.
+/// <see cref="DrawBody"/> is shared with the Item List tab of the Options page, which lists every seed and crop.
+/// </summary>
 public class ItemInfoScreen : IRunScreen
 {
     private readonly RunDirector director;
@@ -19,103 +22,94 @@ public class ItemInfoScreen : IRunScreen
 
     public void Draw()
     {
-        GameDatabase db = director.Db;
         float s = ImGuiKit.Scale;
-        Rect panel = ImGuiKit.Modal(1200f, 720f, "Items");
-        ImGuiKit.Label(new Rect(panel.xMax - 420 * s, panel.y + 26 * s, 396 * s, 30 * s), "Tab or Esc to close", 18f, ImGuiKit.Muted, TextAnchor.MiddleRight);
+        ImGuiKit.Backdrop(0f);
+        if (ImGuiKit.BackButton(new Rect(42f * s, 36f * s, 130f * s, 130f * s))) { director.CloseItems(); return; }
 
-        List<ItemData> seeds = new List<ItemData>(), crops = new List<ItemData>();
+        Rect panel = new Rect(209f * s, 119f * s, 1502f * s, 842f * s);
+        ImGuiKit.TabRight(panel, "Inventory");
+        ImGuiKit.Rounded(panel, ImGuiKit.Orange);
+        DrawBody(panel, true);
+    }
+
+    /// <summary>Detail on the left (drawn straight onto <paramref name="panel"/>), card grid on the right. <paramref name="ownedOnly"/> hides what you don't carry.</summary>
+    public void DrawBody(Rect panel, bool ownedOnly)
+    {
+        float s = ImGuiKit.Scale;
+        GameDatabase db = director.Db;
+
+        var items = new List<ItemData>();
         foreach (ItemData it in db.items.All)
         {
-            if (it is SeedData) seeds.Add(it);
-            else if (it is CropData) crops.Add(it);
+            if (!(it is SeedData) && !(it is CropData)) continue;
+            if (ownedOnly && (director.Inventory == null || director.Inventory.CountOf(it) <= 0)) continue;
+            items.Add(it);
         }
-        if (selected == null) selected = seeds.Count > 0 ? seeds[0] : crops.Count > 0 ? crops[0] : null;
+        if (selected == null || !items.Contains(selected)) selected = items.Count > 0 ? items[0] : null;
 
-        float listW = 330 * s;
-        float top = panel.y + 90 * s;
-        float bottom = panel.yMax - 24 * s;
-        Rect list = new Rect(panel.x + 24 * s, top, listW, bottom - top);
-        ImGuiKit.Fill(list, new Color(0.1f, 0.09f, 0.16f, 1f));
+        // Right: cream card grid.
+        float pad = 22f * s;
+        Rect grid = new Rect(panel.x + panel.width * 0.469f, panel.y + pad, panel.width * 0.515f, panel.height - pad * 2f);
+        ImGuiKit.Rounded(grid, ImGuiKit.Cream);
+        DrawGrid(grid, items, s);
 
-        // Mouse wheel scrolls the list if it ever outgrows the panel.
-        float rowH = 52 * s, headerH = 30 * s;
-        float contentH = headerH * 2 + (seeds.Count + crops.Count) * rowH;
-        float maxScroll = Mathf.Max(0f, contentH - list.height);
-        Event e = Event.current;
-        if (e.type == EventType.ScrollWheel && list.Contains(e.mousePosition)) { scroll = Mathf.Clamp(scroll + e.delta.y * 30f, 0f, maxScroll); e.Use(); }
-
-        GUI.BeginClip(list);
-        float y = -scroll;
-        y = DrawGroup("Seeds", seeds, list.width, y, headerH, rowH, list.position);
-        y = DrawGroup("Crops", crops, list.width, y, headerH, rowH, list.position);
-        GUI.EndClip();
-
-        // Details.
-        Rect detail = new Rect(list.xMax + 24 * s, top, panel.xMax - list.xMax - 48 * s, bottom - top);
-        if (selected != null) DrawDetail(selected, detail);
-
-        if (ImGuiKit.Button(new Rect(panel.xMax - 190 * s, panel.yMax - 66 * s, 166 * s, 44 * s), "Close", true, 20f)) director.CloseItems();
+        // Left: details.
+        Rect detail = new Rect(panel.x + 34f * s, panel.y + 26f * s, grid.x - panel.x - 70f * s, panel.height - 52f * s);
+        if (selected != null) DrawDetail(selected, detail, s);
+        else ImGuiKit.Label(detail, ownedOnly ? "Your pockets are empty.\nHarvest or buy something first." : "Nothing to show yet.", 34f, ImGuiKit.Text, TextAnchor.UpperLeft);
     }
 
-    private float DrawGroup(string name, List<ItemData> items, float width, float y, float headerH, float rowH, Vector2 origin)
+    private void DrawGrid(Rect grid, List<ItemData> items, float s)
     {
-        float s = ImGuiKit.Scale;
-        ImGuiKit.Label(new Rect(12 * s, y, width - 24 * s, headerH), name, 20f, ImGuiKit.Accent, TextAnchor.MiddleLeft, true);
-        y += headerH;
-        foreach (ItemData it in items)
+        const int cols = 3;
+        float cardW = 224f * s, cardH = 312f * s, gapX = 19f * s, gapY = 21f * s, inset = 24f * s;
+        float left = grid.x + (grid.width - (cols * cardW + (cols - 1) * gapX)) * 0.5f - 6f * s;
+        int rows = Mathf.CeilToInt(items.Count / (float)cols);
+        float contentH = inset + rows * (cardH + gapY);
+        float maxScroll = Mathf.Max(0f, contentH - grid.height);
+        Event e = Event.current;
+        if (e.type == EventType.ScrollWheel && grid.Contains(e.mousePosition)) { scroll = Mathf.Clamp(scroll + e.delta.y * 30f, 0f, maxScroll); e.Use(); }
+        scroll = Mathf.Clamp(scroll, 0f, maxScroll);
+
+        GUI.BeginClip(grid);
+        Vector2 mouse = e.mousePosition; // clip-relative inside BeginClip
+        for (int i = 0; i < items.Count; i++)
         {
-            Rect row = new Rect(6 * s, y, width - 12 * s, rowH - 4 * s);
+            ItemData it = items[i];
+            Rect card = new Rect(left - grid.x + (i % cols) * (cardW + gapX), inset - scroll + (i / cols) * (cardH + gapY), cardW, cardH);
+            if (card.yMax < 0f || card.y > grid.height) continue;
+
+            if (it == selected) ImGuiKit.Rounded(new Rect(card.x - 6f * s, card.y - 6f * s, card.width + 12f * s, card.height + 12f * s), ImGuiKit.Brown);
+            ImGuiKit.Rounded(card, ImGuiKit.Orange);
+            Rect art = new Rect(card.x + 11f * s, card.y + 18f * s, card.width - 22f * s, 232f * s);
+            ImGuiKit.Rounded(art, ImGuiKit.PanelLight);
+            ItemIconDrawer.Draw(new Rect(art.x + 8f * s, art.y + 8f * s, art.width - 16f * s, art.height - 16f * s), it);
+
             int owned = director.Inventory != null ? director.Inventory.CountOf(it) : 0;
-            bool isSel = it == selected;
             bool locked = CropAvailability.LockedBehind(it, director.Run.unlockedIds, director.Db) != null;
-            Vector2 mouseInList = Event.current.mousePosition; // inside BeginClip the mouse is already clip-relative
+            string tag = locked ? "locked" : owned > 0 ? "x" + owned : "-";
+            ImGuiKit.Label(new Rect(card.x + 10f * s, card.yMax - 56f * s, card.width - 26f * s, 46f * s), tag, 32f, ImGuiKit.Text, TextAnchor.MiddleRight);
 
-            ImGuiKit.Fill(row, isSel ? new Color(0.32f, 0.28f, 0.45f, 1f) : new Color(0.14f, 0.12f, 0.2f, 1f));
-            ItemIconDrawer.Draw(new Rect(row.x + 10 * s, row.y + 12 * s, 26 * s, 26 * s), it);
-            ImGuiKit.Label(new Rect(row.x + 48 * s, row.y, row.width - 110 * s, row.height), it.DisplayName, 20f, owned > 0 ? Color.white : ImGuiKit.Muted, TextAnchor.MiddleLeft, isSel);
-            ImGuiKit.Label(new Rect(row.xMax - 74 * s, row.y, 66 * s, row.height), locked ? "locked" : owned > 0 ? "x" + owned : "-", 16f,
-                locked ? new Color(1f, 0.55f, 0.5f) : owned > 0 ? ImGuiKit.Accent : ImGuiKit.Muted, TextAnchor.MiddleRight, true);
-
-            if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && row.Contains(mouseInList))
+            if (e.type == EventType.MouseDown && e.button == 0 && card.Contains(mouse))
             {
                 selected = it;
-                Event.current.Use();
+                e.Use();
             }
-            y += rowH;
         }
-        return y;
+        GUI.EndClip();
+
+        if (maxScroll > 0f)
+        {
+            Rect track = new Rect(grid.xMax - 30f * s, grid.y + 34f * s, 14f * s, grid.height - 68f * s);
+            float knobH = Mathf.Max(50f * s, track.height * grid.height / contentH);
+            ImGuiKit.Rounded(new Rect(track.x, track.y + (track.height - knobH) * (scroll / maxScroll), track.width, knobH), ImGuiKit.Orange);
+        }
     }
 
-    private void DrawDetail(ItemData item, Rect r)
+    private void DrawDetail(ItemData item, Rect r, float s)
     {
-        float s = ImGuiKit.Scale;
         ItemInfo info = ItemInfoBuilder.Build(item, director.BuildItemContext(item));
-
-        ImGuiKit.Fill(r, new Color(0.1f, 0.09f, 0.16f, 1f));
-        ImGuiKit.Fill(new Rect(r.x, r.y, 8 * s, r.height), info.color);
-
-        float x = r.x + 28 * s, w = r.width - 48 * s;
-        ImGuiKit.Label(new Rect(x, r.y + 12 * s, w, 44 * s), info.title, 36f, Color.white, TextAnchor.MiddleLeft, true);
-        ImGuiKit.Label(new Rect(x, r.y + 54 * s, w, 28 * s), info.subtitle, 20f, info.color, TextAnchor.MiddleLeft, true);
-        float summaryH = ImGuiKit.TextHeight(info.summary, 18f, w);
-        ImGuiKit.Label(new Rect(x, r.y + 88 * s, w, summaryH), info.summary, 18f, ImGuiKit.Muted, TextAnchor.UpperLeft);
-
-        float y = r.y + 96 * s + summaryH;
-        float lineH = 30 * s;
-        float labelW = w * 0.40f;
-        foreach (InfoLine line in info.lines)
-        {
-            Color c = line.tone == InfoTone.Good ? new Color(0.55f, 0.92f, 0.55f)
-                : line.tone == InfoTone.Bad ? new Color(1f, 0.55f, 0.5f)
-                : line.tone == InfoTone.Muted ? ImGuiKit.Muted : Color.white;
-
-            // Long values wrap onto more lines instead of running past the panel.
-            float h = Mathf.Max(lineH, ImGuiKit.TextHeight(line.value, 18f, w - labelW, true) + 4 * s, ImGuiKit.TextHeight(line.label, 18f, labelW) + 4 * s);
-            if (y + h > r.yMax) break;
-            ImGuiKit.Label(new Rect(x, y, labelW, h), line.label, 18f, ImGuiKit.Muted, TextAnchor.UpperLeft);
-            ImGuiKit.Label(new Rect(x + labelW, y, w - labelW, h), line.value, 18f, c, TextAnchor.UpperLeft, true);
-            y += h;
-        }
+        int owned = director.Inventory != null ? director.Inventory.CountOf(item) : 0;
+        ItemDetailCard.Draw(r, info, owned, 1f);
     }
 }

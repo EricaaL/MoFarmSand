@@ -18,6 +18,10 @@
 /Assets/Low Poly Trees Pack.meta
 /Packages/com.distantlands.cozy.core/
 
+# Personal-use-only font (license forbids redistribution): copy BeautifulMagic.ttf here yourself
+/Assets/Art/UI/Fonts/BeautifulMagic.ttf
+/Assets/Art/UI/Fonts/BeautifulMagic.ttf.meta
+
 # Addressables / StreamingAssets build output
 /[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
 /[Aa]ssets/[Ss]treamingAssets/aa.meta

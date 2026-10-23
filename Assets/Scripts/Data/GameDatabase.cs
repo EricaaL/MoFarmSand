@@ -27,6 +27,7 @@ public class GameDatabase : ScriptableObject
 
     [Header("Presentation")]
     public CozyWeatherMap cozyWeather;
+    public UiTheme uiTheme;
 
     private SeasonCalendar calendarModel;
 

@@ -19,6 +19,16 @@ public class ItemInfo
     public Color color = Color.white;
     public List<InfoLine> lines = new List<InfoLine>();
 
+    // Quick facts the inventory card shows beside an icon. Null / negative = not applicable.
+    /// <summary>Coins: what the merchant charges for a seed today, or what a crop sells for today. -1 = not sold.</summary>
+    public int price = -1;
+    /// <summary>Grow time today, e.g. "22s".</summary>
+    public string growTime;
+    /// <summary>Fullness it feeds the boss, e.g. "30" or "30 (3 per ammo)". Null for support crops.</summary>
+    public string fullness;
+    /// <summary>The season this crop grows best in; its icon sits beside the grow time on the item card.</summary>
+    public SeasonData bestSeason;
+
     public void Add(string label, string value, InfoTone tone = InfoTone.Normal)
         => lines.Add(new InfoLine { label = label, value = value, tone = tone });
 }
@@ -99,15 +109,18 @@ public static class ItemInfoBuilder
         // Grow time: typical for the current season, and what it will actually be today.
         float typicalMult = SeasonMultiplier(crop, current, ctx);
         float todayMult = ClimateModel.GrowthMultiplier(crop, ctx.date, ctx.weather, ctx.db.climate) * ctx.extraGrowth;
+        float quality = ClimateModel.Quality(crop, ctx.date, ctx.weather, ctx.db.climate);
+        info.growTime = Seconds(crop.growTime, todayMult, ctx);
+        info.fullness = FullnessText(crop, quality);
         info.Add($"Grow time in {seasonName}", $"about {Seconds(crop.growTime, typicalMult, ctx)}  (base {crop.growTime:0}s)", Tone(typicalMult));
         info.Add("Grow time today", $"about {Seconds(crop.growTime, todayMult, ctx)}  ({WeatherNote(ctx)}, speed x{todayMult:0.0#})", Tone(todayMult));
 
         // Out-of-season crops come out weaker: less damage, fewer shield charges.
-        float quality = ClimateModel.Quality(crop, ctx.date, ctx.weather, ctx.db.climate);
         info.Add("Crop strength if planted now", $"{Percent(quality)}  ({EffectText(crop, quality)})", QualityTone(quality));
 
         // Season guide, best first marked.
         SeasonData best = BestSeason(crop, ctx, out float bestMult);
+        info.bestSeason = best;
         SeasonData worst = WorstSeason(crop, ctx, out float worstMult);
         if (best != null) info.Add("Best season to plant", $"{best.displayName}  (speed x{bestMult:0.0#}, about {Seconds(crop.growTime, bestMult, ctx)})", InfoTone.Good);
 
@@ -133,7 +146,11 @@ public static class ItemInfoBuilder
         PriceTable.PriceRow row = ctx.db.prices != null ? ctx.db.prices.RowForSeed(seed.Id) : null;
         if (row != null)
         {
-            if (row.StockedIn(current)) info.Add("Merchant price", $"{EconomyModel.SeedPrice(row, current, ctx.db.economy, ctx.seedShock)} coins today");
+            if (row.StockedIn(current))
+            {
+                info.price = EconomyModel.SeedPrice(row, current, ctx.db.economy, ctx.seedShock);
+                info.Add("Merchant price", $"{info.price} coins today");
+            }
             else info.Add("Merchant price", $"not sold in {seasonName}", InfoTone.Muted);
         }
         return info;
@@ -188,6 +205,7 @@ public static class ItemInfoBuilder
         {
             float demand = ctx.market != null ? ctx.market.GetDemand(crop.Id) : 1f;
             int today = EconomyModel.SellPrice(row, current, demand, ctx.sellShock);
+            info.price = today;
             float seasonMult = row.SeasonMultFor(current);
             info.Add($"Sells for ({seasonName})", $"{today} coins each", InfoTone.Good);
             info.Add("  base price", $"{row.baseSell} coins, season x{seasonMult:0.0#}");
@@ -205,8 +223,11 @@ public static class ItemInfoBuilder
 
         // Growing it.
         float todayMult = ClimateModel.GrowthMultiplier(crop, ctx.date, ctx.weather, ctx.db.climate) * ctx.extraGrowth;
-        info.Add("Grows in", $"about {Seconds(crop.growTime, todayMult, ctx)} today  (base {crop.growTime:0}s)", Tone(todayMult));
+        info.growTime = Seconds(crop.growTime, todayMult, ctx);
+        info.fullness = FullnessText(crop, ctx.owned > 0 ? ctx.ownedQuality : 1f);
+        info.Add("Grows in",$"about {Seconds(crop.growTime, todayMult, ctx)} today  (base {crop.growTime:0}s)", Tone(todayMult));
         SeasonData bestGrow = BestSeason(crop, ctx, out _);
+        info.bestSeason = bestGrow;
         if (bestGrow != null) info.Add("Best season to grow", bestGrow.displayName);
         info.Add("Harvest", $"{crop.harvestYield} per plant");
         return info;
@@ -238,6 +259,19 @@ public static class ItemInfoBuilder
             precipitation = Mathf.Clamp01(season.precipitationCurve.Evaluate(0.5f))
         };
         return ClimateModel.Quality(crop, mid, typical, ctx.db.climate);
+    }
+
+    /// <summary>
+    /// What the crop feeds the boss at the given strength: per hit for lobbed crops, per crop (and per shot) for shooters, with the
+    /// strength in brackets when it is not full ("15 (75%)"). Null for support crops.
+    /// </summary>
+    private static string FullnessText(CropData crop, float quality)
+    {
+        string pct = Mathf.Abs(quality - 1f) > 0.05f ? $" ({Percent(quality)})" : string.Empty;
+        if (crop.type == CropType.Shooter)
+            return $"{crop.fullnessValue * crop.ammoPerCrop * quality:0.#} ({crop.fullnessValue * quality:0.#} per ammo){pct}";
+        if (crop.type == CropType.Projectile) return $"{crop.fullnessValue * quality:0.#}{pct}";
+        return null;
     }
 
     private static string Percent(float q) => $"{Mathf.RoundToInt(q * 100f)}%";

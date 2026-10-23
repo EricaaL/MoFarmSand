@@ -16,9 +16,12 @@ MonoBehaviour:
   displayName: Mystery
   glyph: '?'
   color: {r: 0.85, g: 0.85, b: 0.95, a: 1}
+  icon: {fileID: 2800000, guid: ae0fccab0f48c5045882bbf2f3d01b41, type: 3}
+  legendLabel: Random
   description: Something unusual is happening on the farm.
   farmingAllowed: 1
   encounter: {fileID: 0}
+  startsAtNight: 0
   merchantActive: 0
   disasterChance: 0.1
   healOnStart: 0
@@ -26,6 +29,8 @@ MonoBehaviour:
   eventPool: {fileID: 11400000, guid: 27de8cc948b4e794585e5a88e4181cff, type: 2}
   coinReward: {x: 0, y: 0}
   endsRun: 0
+  survivableLoss: 0
+  lossGrowthMultiplier: 0.65
   minLayer: 0
   maxPerPath: 0
   noConsecutive: 1

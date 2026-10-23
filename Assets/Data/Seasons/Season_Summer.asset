@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Summer
   lengthInDays: 6
   uiColor: {r: 1, g: 0.82, b: 0.3, a: 1}
+  icon: {fileID: 2800000, guid: 892b29c3640ef6e44a488d6394c0a2de, type: 3}
+  mapColor: {r: 0.92, g: 0.73, b: 0.49, a: 1}
   temperatureCurve:
     serializedVersion: 2
     m_Curve:

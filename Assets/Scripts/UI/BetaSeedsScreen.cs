@@ -51,10 +51,10 @@ public class BetaSeedsScreen : IRunScreen
 
     private void DrawRow(SeedData seed, Rect row, float s)
     {
-        ImGuiKit.Fill(row, new Color(1f, 1f, 1f, 0.06f));
-        ImGuiKit.Fill(new Rect(row.x, row.y, 8 * s, row.height), seed.ItemColor);
+        ImGuiKit.Rounded(row, ImGuiKit.PanelLight);
+        ImGuiKit.Rounded(new Rect(row.x + 4 * s, row.y + 4 * s, 8 * s, row.height - 8 * s), seed.ItemColor);
 
-        ImGuiKit.Label(new Rect(row.x + 20 * s, row.y, 300 * s, row.height), seed.DisplayName, 22f, Color.white, TextAnchor.MiddleLeft, true);
+        ImGuiKit.Label(new Rect(row.x + 24 * s, row.y, 300 * s, row.height), seed.DisplayName, 22f, ImGuiKit.Text, TextAnchor.MiddleLeft, true);
         int have = director.Inventory != null ? director.Inventory.CountOf(seed) : 0;
         ImGuiKit.Label(new Rect(row.x + 330 * s, row.y, 140 * s, row.height), have > 0 ? $"have {have}" : string.Empty, 18f, ImGuiKit.Muted, TextAnchor.MiddleLeft);
 

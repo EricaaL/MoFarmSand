@@ -90,7 +90,7 @@ public class FarmTile : MonoBehaviour, IInteractable, IFarmPlot
         {
             // Warn before planting out of season: the crop will be slow and weak.
             float q = conditions != null && seed.grows != null ? conditions.QualityFor(seed.grows) : 1f;
-            string warn = q < 0.9f ? $"  - wrong season: slow, {Mathf.RoundToInt(q * 100f)}% strength" : string.Empty;
+            string warn = q < 0.9f ? "  - wrong season" : string.Empty;
             return $"[E] Plant {seed.DisplayName} ({playerInventory.ActiveCount} left){warn}" + (CanPickUp ? "   " + pickUp : string.Empty);
         }
         // Not holding a seed: say nothing about planting. (The old "Need seeds" hint showed even with seeds elsewhere in the hotbar.)

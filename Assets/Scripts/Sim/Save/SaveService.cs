@@ -17,6 +17,8 @@ public struct SlotSummary
     public int dayIndex;
     public int coins;
     public int vaultCoins;
+    /// <summary>Bigger Vault level, so a slot card can show the limit (VaultLogic.CapFor).</summary>
+    public int vaultLevel;
     public int unlockCount;
     public int runsStarted;
     /// <summary>Year number of the run in this slot (0 if none or from an old save).</summary>
@@ -87,6 +89,7 @@ public sealed class SaveService
         if (r.status != LoadStatus.Ok) return s;
         s.hasRun = r.file.hasRun;
         s.vaultCoins = r.file.meta.vaultCoins;
+        s.vaultLevel = r.file.meta.vaultLevel;
         s.unlockCount = r.file.meta.unlockedIds.Count;
         s.runsStarted = r.file.meta.runsStarted;
         if (r.file.hasRun)

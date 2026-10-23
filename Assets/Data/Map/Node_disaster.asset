@@ -16,9 +16,12 @@ MonoBehaviour:
   displayName: Disaster
   glyph: '!'
   color: {r: 0.9, g: 0.3, b: 0.3, a: 1}
+  icon: {fileID: 2800000, guid: f5e5b62f15abbdc4fabfab08559fd178, type: 3}
+  legendLabel: Disaster
   description: Hazardous weather is certain. Big reward if you survive.
   farmingAllowed: 1
   encounter: {fileID: 0}
+  startsAtNight: 0
   merchantActive: 0
   disasterChance: 1
   healOnStart: 0
@@ -26,6 +29,8 @@ MonoBehaviour:
   eventPool: {fileID: 0}
   coinReward: {x: 15, y: 25}
   endsRun: 0
+  survivableLoss: 0
+  lossGrowthMultiplier: 0.65
   minLayer: 2
   maxPerPath: 0
   noConsecutive: 0

@@ -124,39 +124,41 @@ public class PlayerDance : MonoBehaviour
         bool compact = n > SmallLabelSlices;
         float inner = ImGuiKit.S(deadZone);
 
-        ImGuiKit.Circle(center, r + ImGuiKit.S(6f), new Color(0f, 0f, 0f, 0.55f));
-        ImGuiKit.Circle(center, r, ImGuiKit.Ink);
+        // Game palette: an orange ring around a cream wheel, the hovered slice in orange.
+        ImGuiKit.Circle(center, r + ImGuiKit.S(12f), ImGuiKit.Orange);
+        ImGuiKit.Circle(center, r, ImGuiKit.Cream);
 
-        if (hover >= 0) DrawWedge(hover, n, inner, r, playable[hover].color);
+        if (hover >= 0) DrawWedge(hover, n, inner, r, ImGuiKit.Orange);
 
         for (int i = 0; i < n; i++)
         {
             Vector2 edge = PieMenuMath.SliceDirection(i, n);
             float half = 180f / n * Mathf.Deg2Rad;
             Vector2 d = Rotate(edge, half);
-            ImGuiKit.Line(center + d * inner, center + d * r, ImGuiKit.S(3f), new Color(1f, 1f, 1f, 0.35f));
+            ImGuiKit.Line(center + d * inner, center + d * r, ImGuiKit.S(3f), new Color(ImGuiKit.Brown.r, ImGuiKit.Brown.g, ImGuiKit.Brown.b, 0.5f));
 
             Vector2 mid = center + edge * (r * 0.66f);
             float labelWidth = compact ? 110f : 160f;
             Rect label = new Rect(mid.x - ImGuiKit.S(labelWidth * 0.5f), mid.y - ImGuiKit.S(20f), ImGuiKit.S(labelWidth), ImGuiKit.S(40f));
-            ImGuiKit.HudLabel(label, playable[i].displayName, compact ? 18f : 22f, TextAnchor.MiddleCenter, true, i == hover ? 1f : 0.8f);
+            Color text = ImGuiKit.Text; text.a = i == hover ? 1f : 0.85f;
+            ImGuiKit.Label(label, playable[i].displayName, compact ? 18f : 22f, text, TextAnchor.MiddleCenter, true);
         }
 
-        ImGuiKit.Circle(center, inner, new Color(0.08f, 0.07f, 0.12f, 0.95f));
-        ImGuiKit.HudLabel(new Rect(center.x - inner, center.y - ImGuiKit.S(14f), inner * 2f, ImGuiKit.S(28f)),
-            hover >= 0 ? "Release" : "Cancel", 16f, TextAnchor.MiddleCenter, true);
+        ImGuiKit.Circle(center, inner, ImGuiKit.PanelLight);
+        ImGuiKit.Label(new Rect(center.x - inner, center.y - ImGuiKit.S(14f), inner * 2f, ImGuiKit.S(28f)),
+            hover >= 0 ? "Release" : "Cancel", 16f, ImGuiKit.Text, TextAnchor.MiddleCenter, true);
 
         Vector2 cursor = MouseGui();
         Vector2 toCursor = Vector2.ClampMagnitude(cursor - center, r);
         if (toCursor.magnitude > inner)
-            ImGuiKit.Line(center + toCursor.normalized * inner, center + toCursor, ImGuiKit.S(4f), ImGuiKit.Accent);
-        ImGuiKit.Circle(center + toCursor, ImGuiKit.S(7f), ImGuiKit.Accent);
+            ImGuiKit.Line(center + toCursor.normalized * inner, center + toCursor, ImGuiKit.S(4f), ImGuiKit.HoverOrange);
+        ImGuiKit.Circle(center + toCursor, ImGuiKit.S(7f), ImGuiKit.HoverOrange);
     }
 
     /// <summary>Fills a slice with thin radial strokes (IMGUI has no wedge primitive).</summary>
     private void DrawWedge(int index, int count, float inner, float outer, Color color)
     {
-        color.a = 0.85f;
+        color.a = 0.9f;
         float width = 360f / count;
         float start = PieMenuMath.SliceCenterAngle(index, count) - width * 0.5f;
         int steps = Mathf.Max(8, Mathf.CeilToInt(width / 3f));

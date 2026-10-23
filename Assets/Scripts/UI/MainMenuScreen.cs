@@ -1,6 +1,6 @@
 using UnityEngine;
 
-/// <summary>The first screen: Play (opens the save slots), Options, Quit Game.</summary>
+/// <summary>The first screen: Start Game (opens the save slots), Options, How to Play, Quit. Drawn over the live, blurred farm.</summary>
 public class MainMenuScreen : IRunScreen
 {
     private readonly RunDirector director;
@@ -12,28 +12,37 @@ public class MainMenuScreen : IRunScreen
 
     public void Draw()
     {
-        Rect panel = ImGuiKit.Modal(560f, 646f, "DOGSEND");
         float s = ImGuiKit.Scale;
-        float x = panel.x + 40 * s, w = panel.width - 80 * s;
-        float y = panel.y + 90 * s;
-        float bh = 68 * s, gap = 18 * s;
+        ImGuiKit.Backdrop(1.5f);
 
-        ImGuiKit.Label(new Rect(x, y, w, 30 * s), "A creepy-cute farming roguelike", 18f, ImGuiKit.Muted, TextAnchor.MiddleLeft);
-        y += 56 * s;
+        ImGuiKit.Heading(new Rect(110f * s, 110f * s, 1100f * s, 190f * s), "DOGSEND", 175f, ImGuiKit.Text);
 
-        if (ImGuiKit.Button(new Rect(x, y, w, bh), "Play", true, 30f)) { director.ShowTitle(); return; }
-        y += bh + gap;
+        // The first pill is lit until the pointer picks another, like the highlighted "Start Game" in the design.
+        string[] labels = { "Start Game", "Options", "How to Play", confirmQuit ? "Click again to quit" : "Quit" };
+        float x = 135f * s, w = 445f * s, h = 100f * s, step = 135f * s;
+        float y = 458f * s;
+        int hovered = -1;
+        for (int i = 0; i < labels.Length; i++)
+            if (new Rect(x, y + i * step, w, h).Contains(Event.current.mousePosition)) hovered = i;
 
-        if (ImGuiKit.Button(new Rect(x, y, w, bh), "How to Play", true, 26f)) { director.ShowHowToPlay(); return; }
-        y += bh + gap;
-
-        if (ImGuiKit.Button(new Rect(x, y, w, bh), "Options", true, 26f)) { director.ShowOptions(); return; }
-        y += bh + gap;
-
-        if (ImGuiKit.Button(new Rect(x, y, w, bh), confirmQuit ? "Click again to quit" : "Quit Game", true, 26f))
+        for (int i = 0; i < labels.Length; i++)
         {
-            if (confirmQuit) { director.QuitGame(); return; }
-            confirmQuit = true;
+            bool lit = hovered == i || (hovered < 0 && i == 0);
+            if (!ImGuiKit.Pill(new Rect(x, y + i * step, w, h), labels[i], ImGuiKit.PillKind.Light, true, 46f, lit, TextAnchor.MiddleLeft)) continue;
+            switch (i)
+            {
+                case 0: director.ShowTitle(); return;
+                case 1: director.ShowOptions(); return;
+                case 2: director.ShowHowToPlay(); return;
+                default:
+                    if (confirmQuit) { director.QuitGame(); return; }
+                    confirmQuit = true;
+                    break;
+            }
         }
+
+        Vector2 canvas = ImGuiKit.CanvasSize;
+        ImGuiKit.Label(new Rect(canvas.x - 420f * s, canvas.y - 110f * s, 390f * s, 90f * s),
+            $"MoFarmSand\nv{Application.version}", 24f, new Color(0.25f, 0.25f, 0.28f, 0.9f), TextAnchor.LowerRight);
     }
 }

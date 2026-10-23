@@ -1,6 +1,6 @@
 using UnityEngine;
 
-/// <summary>End of a year: what happened, then the upgrade shop pops up so you can spend your vault before the next year.</summary>
+/// <summary>End of a year: what happened, then the upgrade shop is right there so you can spend your vault before the next year.</summary>
 public class SummaryScreen : IRunScreen
 {
     private readonly RunDirector director;
@@ -14,17 +14,26 @@ public class SummaryScreen : IRunScreen
         bool won = run.phase == RunPhase.Won;
         int year = run.YearNumber(meta);
         float s = ImGuiKit.Scale;
+        UiTheme theme = ImGuiKit.Theme;
 
-        Rect panel = ImGuiKit.Modal(1240f, 760f, won ? $"Year {year} - The Miracle Berry Blooms!" : $"Year {year} - The Night Consumed You");
-        float x = panel.x + 24 * s;
-        float leftW = 480 * s;
+        ImGuiKit.Backdrop(0f);
 
-        // Left: what happened this year.
-        ImGuiKit.Label(new Rect(x, panel.y + 80 * s, leftW, 88 * s),
+        // Left: what happened this year, on a cream card in an orange frame.
+        Rect outer = new Rect(40f * s, 100f * s, 560f * s, 862f * s);
+        ImGuiKit.Rounded(outer, ImGuiKit.Orange);
+        Rect card = new Rect(outer.x + 16f * s, outer.y + 16f * s, outer.width - 32f * s, outer.height - 32f * s);
+        ImGuiKit.Rounded(card, ImGuiKit.Cream);
+        float x = card.x + 26f * s, w = card.width - 52f * s;
+
+        ImGuiKit.Heading(new Rect(x, card.y + 14f * s, w, 80f * s), $"Year {year}", 64f, ImGuiKit.Text);
+        ImGuiKit.Label(new Rect(x, card.y + 94f * s, w, 40f * s), won ? "The Miracle Berry Blooms!" : "The Night Consumed You", 28f, ImGuiKit.Accent, TextAnchor.MiddleLeft, true);
+        ImGuiKit.DashedRule(x, card.y + 142f * s, w);
+
+        ImGuiKit.Label(new Rect(x, card.y + 158f * s, w, 120f * s),
             won ? "The caterpillar burst into a butterfly and the farm is safe, for now."
                 : run.stats.daysSurvived == 0 ? "The year ended before it began."
                 : "The farm falls quiet. Next year, plant in season and bring crops to the night.",
-            20f, ImGuiKit.Muted, TextAnchor.UpperLeft);
+            24f, ImGuiKit.Muted, TextAnchor.UpperLeft);
 
         RunStats st = run.stats;
         string stats =
@@ -33,17 +42,19 @@ public class SummaryScreen : IRunScreen
             $"Coins earned: {st.coinsEarned}\n" +
             $"Banked to the vault: {run.depositsThisRun}\n" +
             $"Coins lost: {st.coinsLost}  (left in your purse)";
-        ImGuiKit.Label(new Rect(x, panel.y + 180 * s, leftW, 190 * s), stats, 24f, Color.white, TextAnchor.UpperLeft);
+        ImGuiKit.Label(new Rect(x, card.y + 292f * s, w, 230f * s), stats, 26f, ImGuiKit.Text, TextAnchor.UpperLeft);
 
-        ImGuiKit.Label(new Rect(x, panel.y + 390 * s, leftW, 40 * s), $"Vault: {meta.vaultCoins} coins", 34f, ImGuiKit.Accent, TextAnchor.MiddleLeft, true);
-        ImGuiKit.Label(new Rect(x, panel.y + 432 * s, leftW, 80 * s),
-            "Your purse always starts fresh. Spend the vault on upgrades here, before the next year begins.", 18f, ImGuiKit.Muted, TextAnchor.UpperLeft);
+        ImGuiKit.IconValue(new Rect(x, card.y + 540f * s, w, 72f * s), theme != null ? theme.piggyBank : null, $"{meta.vaultCoins} in the vault", 36f, ImGuiKit.Text, TextAnchor.MiddleLeft, true);
+        ImGuiKit.Label(new Rect(x, card.y + 624f * s, w, 130f * s),
+            "Your purse always starts fresh. Spend the vault on upgrades here, before the next year begins.", 22f, ImGuiKit.Muted, TextAnchor.UpperLeft);
 
         // Right: the upgrade shop.
-        UpgradeList.Draw(director, new Rect(x + leftW + 40 * s, panel.y + 80 * s, panel.width - leftW - 112 * s, panel.height - 200 * s));
+        Rect shop = new Rect(660f * s, 119f * s, 1220f * s, 842f * s);
+        UpgradeList.Draw(director, shop);
 
-        float bw = (panel.width - 48 * s - 16 * s) / 2f;
-        if (ImGuiKit.Button(new Rect(x, panel.yMax - 76 * s, bw, 56 * s), $"Start Year {meta.runsStarted + 1}", true, 24f)) director.StartNewRun();
-        if (ImGuiKit.Button(new Rect(x + bw + 16 * s, panel.yMax - 76 * s, bw, 56 * s), "Back to Title", true, 22f)) director.QuitToTitle();
+        // Next steps.
+        float y = 985f * s, h = 66f * s;
+        if (ImGuiKit.Pill(new Rect(shop.x, y, 440f * s, h), $"Start Year {meta.runsStarted + 1}", ImGuiKit.PillKind.Primary, true, 30f)) director.StartNewRun();
+        if (ImGuiKit.Pill(new Rect(shop.x + 480f * s, y, 340f * s, h), "Back to Title", ImGuiKit.PillKind.Cream, true, 28f)) director.QuitToTitle();
     }
 }

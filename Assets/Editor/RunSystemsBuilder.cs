@@ -310,6 +310,7 @@ public static class RunSystemsBuilder
         { n.merchantActive = true; n.disasterChance = 0.1f; n.coinReward = new Vector2Int(0, 0); });
         NodeTypeData nDisaster = NodeType("disaster", "Disaster", "!", new Color(0.9f, 0.3f, 0.3f), "Hazardous weather is certain. Big reward if you survive.", n =>
         { n.disasterChance = 1f; n.coinReward = new Vector2Int(15, 25); n.minLayer = 2; });
+        // Elder Caterpillar (elite) and Rest Stop stay registered so old saves still validate, but the generator no longer places them (see the bands below).
         NodeTypeData nElite = NodeType("elite", "Elder Caterpillar", "E", new Color(0.7f, 0.35f, 0.85f), "A tougher night fight with a bigger reward.", n =>
         { n.encounter = elite; n.disasterChance = 0.1f; n.coinReward = new Vector2Int(25, 40); n.minLayer = 4; n.maxPerPath = 2; n.noConsecutive = true; });
         NodeTypeData nRest = NodeType("rest", "Rest Stop", "R", new Color(0.4f, 0.75f, 0.95f), "Heal fully. Crops grow faster today.", n =>
@@ -332,14 +333,14 @@ public static class RunSystemsBuilder
             m.bands = new List<MapGenConfig.LayerBand>
             {
                 Band(0, 1, (nFarm, 5f), (nMerchant, 3f), (nEvent, 1f)),
-                Band(2, 5, (nFarm, 4f), (nMerchant, 2f), (nDisaster, 2f), (nEvent, 2f), (nTreasure, 1f), (nRest, 1f)),
-                Band(6, 10, (nFarm, 3f), (nMerchant, 2f), (nDisaster, 3f), (nElite, 2f), (nEvent, 2f), (nTreasure, 1f), (nRest, 1f)),
-                Band(11, 99, (nFarm, 3f), (nMerchant, 2f), (nDisaster, 2f), (nElite, 2f), (nEvent, 1f)),
+                Band(2, 5, (nFarm, 4f), (nMerchant, 2f), (nDisaster, 2f), (nEvent, 2f), (nTreasure, 1f)),
+                Band(6, 10, (nFarm, 3f), (nMerchant, 2f), (nDisaster, 3f), (nEvent, 2f), (nTreasure, 1f)),
+                Band(11, 99, (nFarm, 3f), (nMerchant, 2f), (nDisaster, 2f), (nEvent, 1f)),
             };
             m.forcedLayers = new List<MapGenConfig.ForcedLayer>
             {
                 new MapGenConfig.ForcedLayer { fromEnd = false, index = 0, type = nFarm },
-                new MapGenConfig.ForcedLayer { fromEnd = true, index = 0, type = nRest },
+                new MapGenConfig.ForcedLayer { fromEnd = true, index = 0, type = nFarm },
             };
         });
 

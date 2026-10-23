@@ -95,17 +95,12 @@ public class TipsView : MonoBehaviour
         if (book.Current == null) return;
         if (gapLeft > 0f) { gapLeft -= Time.unscaledDeltaTime; return; }
         shownFor += Time.unscaledDeltaTime;
-        if (shownFor >= showSeconds)
-        {
-            book.Dismiss();
-            GameSettings.SaveSeenTips(new List<string>(book.Seen));
-            shownFor = 0f;
-            gapLeft = gapSeconds;
-        }
+        if (shownFor >= showSeconds) DismissCurrent();
     }
 
     private void OnGUI()
     {
+        if (Event.current.type == EventType.Layout) HotbarView.BlockRect2 = Rect.zero; // set again below while a card is up
         if (!book.Enabled || book.Current == null || gapLeft > 0f || RunDirector.ModalOpen) return;
         GamePhase phase = GameManager.Instance != null ? GameManager.Instance.Phase : GamePhase.Day;
         if (phase != GamePhase.Day && phase != GamePhase.Night) return;
@@ -115,18 +110,37 @@ public class TipsView : MonoBehaviour
 
         float alpha = Mathf.Min(Mathf.Clamp01(shownFor / FadeIn), Mathf.Clamp01((showSeconds - shownFor) / FadeOut));
         float s = ImGuiKit.Scale;
-        float w = 400f * s, pad = 16f * s;
-        float bodyH = ImGuiKit.TextHeight(tip.body, 18f, w - pad * 2f);
-        float h = pad + 30f * s + bodyH + pad;
-        // Below RunHud's top-right stack (season chip, coins, disaster and soil warnings end around y = 190).
-        Rect card = new Rect(Screen.width - w - 20f * s, 204f * s, w, h);
+        float w = 360f * s, pad = 22f * s, frame = 10f * s;
+        float bodyH = ImGuiKit.TextHeight(tip.body, 20f, w - pad * 2f);
+        float h = pad * 0.5f + 56f * s + bodyH + pad;
+        // Top left, under the hearts and the purse.
+        Rect card = new Rect(26f * s, 206f * s, w, h);
 
-        Color ink = ImGuiKit.Ink; ink.a *= alpha;
-        Color accent = ImGuiKit.Accent; accent.a = alpha;
-        ImGuiKit.Fill(card, ink);
-        ImGuiKit.Fill(new Rect(card.x, card.y, 6f * s, card.height), accent);
-        ImGuiKit.Label(new Rect(card.x + pad + 6f * s, card.y + pad * 0.6f, w - pad * 2f, 30f * s), tip.title, 22f, accent, TextAnchor.MiddleLeft, true);
-        Color text = Color.white; text.a = alpha;
-        ImGuiKit.Label(new Rect(card.x + pad + 6f * s, card.y + pad * 0.6f + 32f * s, w - pad * 2f - 6f * s, bodyH + 4f * s), tip.body, 18f, text, TextAnchor.UpperLeft);
+        Color orange = ImGuiKit.Orange; orange.a = alpha;
+        Color cream = ImGuiKit.Cream; cream.a = alpha;
+        Color text = ImGuiKit.Text; text.a = alpha;
+        ImGuiKit.Rounded(new Rect(card.x - frame, card.y - frame, card.width + frame * 2f, card.height + frame * 2f), orange);
+        ImGuiKit.Rounded(card, cream);
+        // Shrink the title until it fits on one line beside the X button (never below 22).
+        float titleW = w - pad * 2f - 56f * s;
+        float titleSize = 36f;
+        while (titleSize > 22f && ImGuiKit.TextWidth(tip.title, titleSize, ImGuiKit.Face.Display) > titleW) titleSize -= 1f;
+        ImGuiKit.Heading(new Rect(card.x + pad, card.y + pad * 0.3f, titleW + 8f * s, 46f * s), tip.title, titleSize, text);
+        ImGuiKit.DashedRule(card.x + pad, card.y + pad * 0.3f + 48f * s, w - pad * 2f, text);
+        ImGuiKit.Label(new Rect(card.x + pad, card.y + pad * 0.3f + 58f * s, w - pad * 2f, bodyH + 4f * s), tip.body, 20f, text, TextAnchor.UpperLeft);
+
+        // The X: dismiss this tip now (it counts as seen).
+        Rect close = new Rect(card.xMax - 56f * s, card.y + 6f * s, 44f * s, 44f * s);
+        HotbarView.BlockRect2 = close;
+        if (ImGuiKit.CloseButton(close, false, alpha)) DismissCurrent();
+    }
+
+    private void DismissCurrent()
+    {
+        book.Dismiss();
+        GameSettings.SaveSeenTips(new List<string>(book.Seen));
+        shownFor = 0f;
+        gapLeft = gapSeconds;
+        HotbarView.BlockRect2 = Rect.zero;
     }
 }

@@ -28,8 +28,10 @@ public class BankScreen : IRunScreen
             "Coins left in your purse at the end of the year are lost. Bank a limited amount each season: it goes into the vault to buy permanent upgrades. The bank keeps a fee. You can also take vault coins back into your purse, for a bigger fee the more you take.",
             19f, ImGuiKit.Muted, TextAnchor.UpperLeft);
 
-        ImGuiKit.Label(new Rect(x, panel.y + 170 * s, w * 0.5f, 40 * s), $"Purse: {run.coins}", 34f, Color.white, TextAnchor.MiddleLeft, true);
-        ImGuiKit.Label(new Rect(x + w * 0.5f, panel.y + 170 * s, w * 0.5f, 40 * s), $"Vault: {meta.vaultCoins} / {VaultLogic.Cap(meta, cfg)}", 34f, ImGuiKit.Accent, TextAnchor.MiddleRight, true);
+        // Purse = the coin, vault = the piggy bank (same icons as the rest of the UI).
+        UiTheme theme = ImGuiKit.Theme;
+        ImGuiKit.IconValue(new Rect(x, panel.y + 164 * s, w * 0.5f, 48 * s), theme != null ? theme.coin : null, run.coins.ToString(), 34f, ImGuiKit.Text, TextAnchor.MiddleLeft, true);
+        ImGuiKit.IconValue(new Rect(x + w * 0.5f, panel.y + 164 * s, w * 0.5f, 48 * s), theme != null ? theme.piggyBank : null, $"{meta.vaultCoins} / {VaultLogic.Cap(meta, cfg)}", 34f, ImGuiKit.Accent, TextAnchor.MiddleRight, true);
 
         // How much you may still deposit this season (a hard limit, never your whole purse by default).
         int seasonLeft = cfg.maxDepositPerSeason > 0 ? Mathf.Max(0, cfg.maxDepositPerSeason - run.depositedThisSeason) : int.MaxValue;
@@ -37,7 +39,7 @@ public class BankScreen : IRunScreen
         string allowance = cfg.maxDepositPerSeason > 0
             ? $"Deposit limit this season: {seasonLeft} of {cfg.maxDepositPerSeason} left   ·   Fee: {cfg.depositFeePercent:0}%"
             : $"Fee: {cfg.depositFeePercent:0}%";
-        ImGuiKit.Label(new Rect(x, panel.y + 218 * s, w, 28 * s), allowance, 18f, seasonLeft == 0 ? new Color(1f, 0.55f, 0.5f) : ImGuiKit.Muted);
+        ImGuiKit.Label(new Rect(x, panel.y + 218 * s, w, 28 * s), allowance, 18f, seasonLeft == 0 ? new Color(0.7f, 0.15f, 0.1f) : ImGuiKit.Muted);
 
         bool vaultFull = meta.vaultCoins >= VaultLogic.Cap(meta, cfg);
         int[] amounts = { 1, 5, 10, -1 };
@@ -59,11 +61,11 @@ public class BankScreen : IRunScreen
 
         // Withdrawals: vault -> purse, for a fee that takes a bigger share the more you take.
         bool lastStop = run.endYearAfterBanking;
-        ImGuiKit.Label(new Rect(x, panel.y + 372 * s, w, 30 * s), "Withdraw from the vault", 24f, Color.white, TextAnchor.MiddleLeft, true);
+        ImGuiKit.Label(new Rect(x, panel.y + 372 * s, w, 30 * s), "Withdraw from the vault", 24f, ImGuiKit.Text, TextAnchor.MiddleLeft, true);
         string feeNote = lastStop
             ? "Coins in your purse are lost when the year ends, so withdrawing is closed on this last stop."
             : $"The more you take, the bigger the fee: {BankLogic.WithdrawFee(10, cfg)} coin(s) for 10, {BankLogic.WithdrawFee(50, cfg)} for 50, {BankLogic.WithdrawFee(100, cfg)} for 100.";
-        ImGuiKit.Label(new Rect(x, panel.y + 404 * s, w, 28 * s), feeNote, 18f, lastStop ? new Color(1f, 0.55f, 0.5f) : ImGuiKit.Muted);
+        ImGuiKit.Label(new Rect(x, panel.y + 404 * s, w, 28 * s), feeNote, 18f, lastStop ? new Color(0.7f, 0.15f, 0.1f) : ImGuiKit.Muted);
 
         int[] takes = { 10, 25, 50, -1 };
         for (int i = 0; i < takes.Length; i++)

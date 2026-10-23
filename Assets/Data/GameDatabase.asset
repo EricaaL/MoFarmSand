@@ -30,3 +30,4 @@ MonoBehaviour:
   farmland: {fileID: 11400000, guid: c4680e0b8e51a8147bb077aad85f6bc2, type: 2}
   stockroom: {fileID: 11400000, guid: d3fc85382229f6245ba70a220a525f70, type: 2}
   cozyWeather: {fileID: 11400000, guid: c51beba5280d4664fa3171b533ca459a, type: 2}
+  uiTheme: {fileID: 11400000, guid: 4ae065e2e3b710b48b6e05f4461385d0, type: 2}

@@ -16,9 +16,12 @@ MonoBehaviour:
   displayName: Farm Day
   glyph: F
   color: {r: 0.45, g: 0.8, b: 0.4, a: 1}
+  icon: {fileID: 2800000, guid: 76a611ffa5017944e8f1154eb48d26a3, type: 3}
+  legendLabel: Farm Day
   description: A quiet day of planting and harvesting.
   farmingAllowed: 1
   encounter: {fileID: 0}
+  startsAtNight: 0
   merchantActive: 0
   disasterChance: 0.15
   healOnStart: 0
@@ -26,6 +29,8 @@ MonoBehaviour:
   eventPool: {fileID: 0}
   coinReward: {x: 5, y: 10}
   endsRun: 0
+  survivableLoss: 0
+  lossGrowthMultiplier: 0.65
   minLayer: 0
   maxPerPath: 0
   noConsecutive: 0

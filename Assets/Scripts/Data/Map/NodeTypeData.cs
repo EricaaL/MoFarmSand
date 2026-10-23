@@ -9,6 +9,10 @@ public class NodeTypeData : ScriptableObject, IHasId
     [Tooltip("Short text drawn inside the node on the map.")]
     public string glyph = "?";
     public Color color = Color.white;
+    [Tooltip("Round node art for the route map. Empty = a coloured circle with the glyph.")]
+    public Texture2D icon;
+    [Tooltip("Name shown beside the icon in the route map legend. Empty = displayName.")]
+    public string legendLabel;
     [TextArea] public string description;
 
     [Header("Day shape")]
