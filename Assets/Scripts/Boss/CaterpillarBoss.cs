@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 public class CaterpillarBoss : MonoBehaviour
 {
@@ -10,6 +11,20 @@ public class CaterpillarBoss : MonoBehaviour
     [Tooltip("Seconds the caterpillar stays in place chewing after a bite, before it chases again.")]
     [SerializeField] private float biteRecoverSeconds = 1.5f;
     [SerializeField] private float knockbackForce = 14f;
+
+    [Header("Collision")]
+    [Tooltip("Radius of the sphere swept ahead of the head; a bit under the head collider so it clears the ground.")]
+    [SerializeField] private float bodyRadius = 0.4f;
+    [Tooltip("Raises the swept sphere so low obstacles (farm plots) pass under it and only taller scenery blocks.")]
+    [SerializeField] private float castLift = 0.3f;
+    [SerializeField] private float skin = 0.05f;
+
+    [Header("Pathfinding")]
+    [Tooltip("How often the route to the player is recalculated on the baked NavMesh (MoFarmSand > Bake Boss NavMesh).")]
+    [SerializeField] private float repathSeconds = 0.25f;
+    [SerializeField] private float cornerReachedDistance = 0.4f;
+    [Tooltip("How far off the NavMesh the boss or player may be and still be snapped onto it.")]
+    [SerializeField] private float sampleRange = 2f;
 
     [Header("Slime spit")]
     [SerializeField] private float spitCooldown = 6f;
@@ -32,12 +47,19 @@ public class CaterpillarBoss : MonoBehaviour
     private float nextSpitTime;
     private float windupUntil;
     private Vector3[] segBase;
+    private readonly RaycastHit[] moveHits = new RaycastHit[8];
+    private NavMeshPath path;
+    private readonly Vector3[] corners = new Vector3[32];
+    private int cornerCount;
+    private int cornerIndex;
+    private float nextRepathTime;
 
     public bool IsAwake => awake;
 
     private void Awake()
     {
         hunger = GetComponent<BossHunger>();
+        path = new NavMeshPath();
         if (segments != null)
         {
             segBase = new Vector3[segments.Length];
@@ -99,11 +121,11 @@ public class CaterpillarBoss : MonoBehaviour
         if (to.sqrMagnitude > 0.01f)
         {
             // Scared (garlic): run directly away from the player; chasing resumes when the timer ends.
-            Vector3 heading = scared ? -to : to;
+            Vector3 heading = scared ? -to : ChaseHeading(to);
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(heading), 8f * Time.deltaTime);
             // Chewing after a bite or rearing up to spit: stay put (fleeing from garlic still wins).
             bool staggered = hunger != null && hunger.IsStaggered;
-            if (scared || (!Holding && !Winding && !staggered)) transform.position += heading.normalized * chaseSpeed * Time.deltaTime;
+            if (scared || (!Holding && !Winding && !staggered)) Move(heading.normalized * chaseSpeed * Time.deltaTime);
         }
 
         if (scared)
@@ -121,6 +143,76 @@ public class CaterpillarBoss : MonoBehaviour
         }
 
         UpdateSpit(to.magnitude);
+    }
+
+    /// <summary>
+    /// Direction to walk toward the player: the next corner of the shortest NavMesh route, so it goes around the barn
+    /// instead of pushing into it. Falls back to straight at the player when there is no NavMesh, no route, or on the last leg.
+    /// </summary>
+    private Vector3 ChaseHeading(Vector3 toPlayer)
+    {
+        if (Time.time >= nextRepathTime)
+        {
+            nextRepathTime = Time.time + repathSeconds;
+            Repath();
+        }
+
+        while (cornerIndex < cornerCount)
+        {
+            Vector3 flat = corners[cornerIndex] - transform.position;
+            flat.y = 0f;
+            if (flat.magnitude > cornerReachedDistance) return flat;
+            cornerIndex++;
+        }
+        return toPlayer;
+    }
+
+    private void Repath()
+    {
+        cornerCount = 0;
+        cornerIndex = 0;
+        if (!NavMesh.SamplePosition(transform.position, out NavMeshHit from, sampleRange, NavMesh.AllAreas)) return;
+        if (!NavMesh.SamplePosition(player.position, out NavMeshHit to, sampleRange, NavMesh.AllAreas)) return;
+        if (!NavMesh.CalculatePath(from.position, to.position, NavMesh.AllAreas, path) || path.status == NavMeshPathStatus.PathInvalid) return;
+        cornerCount = path.GetCornersNonAlloc(corners);
+        cornerIndex = Mathf.Min(1, cornerCount); // corner 0 is where it stands now
+    }
+
+    /// <summary>Kinematic collide-and-slide: stops at solid scenery (barn, fences) and slides along it instead of passing through.</summary>
+    private void Move(Vector3 delta)
+    {
+        for (int pass = 0; pass < 2 && delta.sqrMagnitude > 0.000001f; pass++)
+        {
+            float dist = delta.magnitude;
+            int n = Physics.SphereCastNonAlloc(transform.position + Vector3.up * castLift, bodyRadius, delta / dist, moveHits, dist + skin,
+                ~0, QueryTriggerInteraction.Ignore);
+
+            int best = -1;
+            for (int i = 0; i < n; i++)
+            {
+                RaycastHit h = moveHits[i];
+                if (h.transform.IsChildOf(transform)) continue;
+                if (player != null && h.transform.IsChildOf(player)) continue;   // the bite logic owns player contact
+                if (h.rigidbody != null && !h.rigidbody.isKinematic) continue;   // thrown crops, loose props
+                if (h.normal.y > 0.5f) continue;                                 // floor and farm plots
+                if (best < 0 || h.distance < moveHits[best].distance) best = i;
+            }
+
+            if (best < 0)
+            {
+                transform.position += delta;
+                return;
+            }
+
+            RaycastHit hit = moveHits[best];
+            transform.position += delta / dist * Mathf.Max(0f, hit.distance - skin);
+            Vector3 normal = hit.normal;
+            normal.y = 0f;
+            if (normal.sqrMagnitude < 0.0001f) return;
+            Vector3 left = delta / dist * Mathf.Max(0f, dist - hit.distance);
+            delta = Vector3.ProjectOnPlane(left, normal.normalized);
+            delta.y = 0f;
+        }
     }
 
     private void UpdateSpit(float distance)

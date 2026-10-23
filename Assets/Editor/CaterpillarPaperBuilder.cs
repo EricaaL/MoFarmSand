@@ -3,7 +3,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 
 /// <summary>
-/// Additive, idempotent: swaps the primitive caterpillar's sphere meshes for flat paper cutouts cut from caterpillarNEWclip.psd.
+/// Additive, idempotent: swaps the primitive caterpillar's sphere meshes for flat paper cutouts cut from caterpillarupdated.psd.
 /// The sphere colliders stay (crop hits keep working); each gets a billboarded "Paper" pivot with a textured quad.
 /// A segment that already has a "Paper" child is left alone, so tuned values survive re-runs.
 /// </summary>
@@ -24,19 +24,42 @@ public static class CaterpillarPaperBuilder
         { this.texture = texture; this.anchorPx = anchorPx; this.scale = scale; this.sphereScale = sphereScale; }
     }
 
-    private static readonly CardSpec HeadCard = new CardSpec("Cat_Head", new Vector2(0f, -149f), 1f, 1.4f);
+    private static readonly CardSpec HeadCard = new CardSpec("Cat_Head", new Vector2(23f, -148f), 1f, 1.4f);
     // Mouth centre relative to the head card centre, in head-texture pixels (x right, y up).
-    private static readonly Vector2 MouthOffsetPx = new Vector2(39f, -305f);
+    private static readonly Vector2 MouthOffsetPx = new Vector2(40f, -310f);
 
     private static readonly CardSpec[] BodyCards =
     {
-        new CardSpec("Cat_SegYellowB", Vector2.zero, 0.95f, 1.2f),
-        new CardSpec("Cat_SegYellow", Vector2.zero, 0.95f, 1.1f),
-        new CardSpec("Cat_SegYellowB", Vector2.zero, 0.85f, 1.0f),
-        new CardSpec("Cat_SegOrange", Vector2.zero, 0.85f, 0.9f),
-        new CardSpec("Cat_SegOrange", Vector2.zero, 0.75f, 0.8f),
-        new CardSpec("Cat_Tail", new Vector2(-154f, -98f), 0.8f, 0.8f),
+        new CardSpec("Cat_Body1", new Vector2(0f, 48f), 0.9f, 1.2f),
+        new CardSpec("Cat_Body2", new Vector2(0f, 36f), 0.9f, 1.1f),
+        new CardSpec("Cat_Body3", new Vector2(0f, 42f), 0.9f, 1.0f),
+        new CardSpec("Cat_Body4", new Vector2(0f, 36f), 0.9f, 0.9f),
+        new CardSpec("Cat_Body5", new Vector2(0f, 43f), 0.9f, 0.8f),
+        new CardSpec("Cat_Body6", new Vector2(-178f, -78f), 0.9f, 0.8f),
     };
+
+    /// <summary>Drops every existing paper card first, so new artwork or tuned anchors replace the old cards.</summary>
+    [MenuItem("MoFarmSand/Rebuild Paper Caterpillar")]
+    public static void Rebuild()
+    {
+        AssetDatabase.Refresh();
+        GameObject root = PrefabUtility.LoadPrefabContents(BossPrefabPath);
+        try
+        {
+            foreach (string name in new[] { "Head", "Segment1", "Segment2", "Segment3", "Segment4", "Segment5", "Segment6" })
+            {
+                Transform t = root.transform.Find(name);
+                Transform paper = t != null ? t.Find("Paper") : null;
+                if (paper != null) Object.DestroyImmediate(paper.gameObject);
+            }
+            PrefabUtility.SaveAsPrefabAsset(root, BossPrefabPath);
+        }
+        finally
+        {
+            PrefabUtility.UnloadPrefabContents(root);
+        }
+        Apply();
+    }
 
     [MenuItem("MoFarmSand/Paper Caterpillar")]
     public static void Apply()
@@ -44,7 +67,7 @@ public static class CaterpillarPaperBuilder
         EditorSceneManager.SaveOpenScenes();
         AssetDatabase.SaveAssets();
 
-        foreach (string name in new[] { "Cat_Head", "Cat_Mouth", "Cat_SegYellow", "Cat_SegYellowB", "Cat_SegOrange", "Cat_Tail" })
+        foreach (string name in new[] { "Cat_Head", "Cat_Mouth", "Cat_Body1", "Cat_Body2", "Cat_Body3", "Cat_Body4", "Cat_Body5", "Cat_Body6" })
             ConfigureTexture($"{ArtDir}/{name}.png");
 
         GameObject root = PrefabUtility.LoadPrefabContents(BossPrefabPath);
@@ -78,7 +101,7 @@ public static class CaterpillarPaperBuilder
             Texture2D mouthTex = Tex("Cat_Mouth");
             mouth.localPosition = new Vector3(MouthOffsetPx.x / headTex.width, MouthOffsetPx.y / headTex.height, -0.02f);
             mouth.localScale = new Vector3((float)mouthTex.width / headTex.width, (float)mouthTex.height / headTex.height, 1f);
-            CaterpillarFace face = head.gameObject.AddComponent<CaterpillarFace>();
+            CaterpillarFace face = head.GetComponent<CaterpillarFace>() ?? head.gameObject.AddComponent<CaterpillarFace>();
             Set(face, "mouth", mouth);
         }
 
