@@ -47,7 +47,7 @@ public class MapScreen : IRunScreen
         Event e = Event.current;
         if (e.type == EventType.ScrollWheel)
         {
-            scroll = Mathf.Clamp(scroll + e.delta.y * 40f, 0f, Mathf.Max(0f, content - h));
+            scroll = Mathf.Clamp(scroll - e.delta.y * 40f, 0f, Mathf.Max(0f, content - h));
             e.Use();
         }
 

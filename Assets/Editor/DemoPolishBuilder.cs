@@ -42,16 +42,17 @@ public static class DemoPolishBuilder
     // One table is the single owner of which pack models each crop uses. Peas, turnip, spinach and garlic have no
     // exact match in the pack, so they use the closest-looking plant. heightCap keeps tall crops from hiding the dog;
     // scaleMultiplier is a hand-tuning knob applied on top of the auto-fit (1 = fit to the cell).
-    private static readonly (string cropId, string[] stages, float heightCap, float scaleMultiplier)[] StageTable =
+    // earlyStageScale multiplies every stage before the ripe one (sprout and growing), so young plants read bigger.
+    private static readonly (string cropId, string[] stages, float heightCap, float scaleMultiplier, float earlyStageScale)[] StageTable =
     {
-        ("tomato",  new[] { "Tomato_Sprout_A", "Tomato_Seedling_A", "Tomato_Ripe_Group_A" }, 1.3f, 1f),
-        ("corn",    new[] { "Corn_Sprout_A", "Corn_Young_A", "Corn_Ripe_Sweetcorn_A" }, 1.6f, 1f),
-        ("pumpkin", new[] { "Pumpkin_Sprout_A", "Pumpkin_Flowering_A", "Pumpkin_Ripe_A" }, 0.8f, 1f),
-        ("lettuce", new[] { "Salad_Sprout_A", "Salad_Young_A", "Salad_Mature_A" }, 0.6f, 1f),
-        ("peas",    new[] { "BellPepper_Sprout_A", "BellPepper_Seedling_A", "BellPepper_Mature" }, 1.0f, 1f),
-        ("turnip",  new[] { "Parsnip_Plant_Sapling_Root", "Parsnip_Plant_Young_Root", "Parsnip_Plant_Ripe_Root_A" }, 0.8f, 1f),
-        ("spinach", new[] { "Beetroot_Plant_Sapling", "Beetroot_Plant_Young", "Beetroot_Plant_Ripe_A" }, 0.8f, 1f),
-        ("garlic",  new[] { "Leek_Sprout_A", "Leek_Seedling_A", "Leek_Mature_A" }, 1.0f, 1f),
+        ("tomato",  new[] { "Tomato_Sprout_A", "Tomato_Seedling_A", "Tomato_Ripe_Group_A" }, 1.3f, 1f, 1f),
+        ("corn",    new[] { "Corn_Sprout_A", "Corn_Young_A", "Corn_Ripe_Sweetcorn_A" }, 1.6f, 1f, 1f),
+        ("pumpkin", new[] { "Pumpkin_Sprout_A", "Pumpkin_Flowering_A", "Pumpkin_Ripe_A" }, 0.8f, 1f, 1f),
+        ("lettuce", new[] { "Salad_Sprout_A", "Salad_Young_A", "Salad_Mature_A" }, 0.6f, 1f, 1f),
+        ("peas",    new[] { "BellPepper_Sprout_A", "BellPepper_Seedling_A", "BellPepper_Mature" }, 1.0f, 1f, 1f),
+        ("turnip",  new[] { "Parsnip_Plant_Sapling_Root", "Parsnip_Plant_Young_Root", "Parsnip_Plant_Ripe_Root_A" }, 0.8f, 1f, 1f),
+        ("spinach", new[] { "Beetroot_Plant_Sapling", "Beetroot_Plant_Young", "Beetroot_Plant_Ripe_A" }, 0.8f, 1f, 1f),
+        ("garlic",  new[] { "Leek_Sprout_A", "Leek_Seedling_A", "Leek_Mature_A" }, 1.0f, 1f, 1f),
     };
 
     private const string CropPrefabDir = "Assets/Prefabs/Crops";
@@ -59,6 +60,7 @@ public static class DemoPolishBuilder
     private const int Grid = 3;                 // plants across and down each plot
     private const float FitFraction = 0.9f;     // a plant's footprint fills at most this much of its cell
     private const float JitterFraction = 0.08f; // random nudge, as a fraction of a cell
+    private const float EarlyStageBoost = 1f;   // growth stages 1 and 2 only, on top of earlyStageScale
     private const float PlantSizeBoost = 1.25f; // every plant, on top of the auto-fit (so plants may nudge past the cell and height cap)
 
     /// <summary>Regenerates every 3x3 crop prefab in place (same paths and GUIDs), for when the table or sizes change.</summary>
@@ -88,7 +90,7 @@ public static class DemoPolishBuilder
 
         float cell = MeasureSoilSide() / Grid;
 
-        foreach ((string cropId, string[] stages, float heightCap, float scaleMultiplier) row in StageTable)
+        foreach ((string cropId, string[] stages, float heightCap, float scaleMultiplier, float earlyStageScale) row in StageTable)
         {
             if (!crops.TryGetValue(row.cropId, out CropData crop))
             {
@@ -113,7 +115,8 @@ public static class DemoPolishBuilder
             {
                 string path = $"{CropPrefabDir}/{Capitalize(row.cropId)}_Stage{i + 1}_3x3.prefab";
                 GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-                plots[i] = existing != null && !rebuild ? existing : BuildPlotPrefab(path, models[i], row.cropId, cell, fit);
+                float stageFit = i < models.Length - 1 ? fit * row.earlyStageScale * EarlyStageBoost : fit;
+                plots[i] = existing != null && !rebuild ? existing : BuildPlotPrefab(path, models[i], row.cropId, cell, stageFit);
             }
 
             bool same = crop.growthStages != null && crop.growthStages.Length == plots.Length;
