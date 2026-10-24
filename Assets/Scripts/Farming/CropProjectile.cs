@@ -52,6 +52,7 @@ public class CropProjectile : MonoBehaviour
         if (splatPrefab != null)
         {
             GameObject fx = Instantiate(splatPrefab, transform.position, Quaternion.identity);
+            if (crop != null) FxTint.Apply(fx, crop.color);
             Destroy(fx, 2f);
         }
         Destroy(gameObject);

@@ -38,6 +38,7 @@ public class FarmFx : MonoBehaviour
         if (ripeSparkle == null || tile == null) return;
         StopSparkle(tile);
         GameObject fx = Instantiate(ripeSparkle, tile.Position + Vector3.up * sparkleHeight, Quaternion.identity, tile.transform);
+        if (tile.Crop != null) FxTint.Apply(fx, Color.Lerp(tile.Crop.color, Color.white, 0.3f));   // lightened so it still reads as a glow
         sparkles[tile] = fx;
     }
 
@@ -60,15 +61,7 @@ public class FarmFx : MonoBehaviour
     {
         if (prefab == null) return;
         GameObject fx = Instantiate(prefab, position, Quaternion.identity);
-        if (tint.HasValue)
-        {
-            ParticleSystem ps = fx.GetComponent<ParticleSystem>();
-            if (ps != null)
-            {
-                ParticleSystem.MainModule main = ps.main;
-                main.startColor = tint.Value;
-            }
-        }
+        if (tint.HasValue) FxTint.Apply(fx, tint.Value);
         Destroy(fx, 2.5f);
     }
 }
