@@ -5,12 +5,18 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 
 /// <summary>
-/// Wires the winter tree swap into the open scene: pairs every tree under "--- ENVIRONMENT ---/Trees" with its snow twin
-/// (Pine_Tree_OneSided_m_01_LOD -> Pine_Tree_OneSided_m_Snow_01_LOD) and turns the winter season look on. Idempotent.
+/// Wires the winter swap into the open scene: pairs every tree, log and stump under "--- ENVIRONMENT ---/Trees" with its
+/// snow twin (Pine_Tree_OneSided_m_01_LOD -> Pine_Tree_OneSided_m_Snow_01_LOD, Pine_Log_06_LOD -> Pine_Log_Snow_06_LOD,
+/// Pine_Stump_01_LOD -> Pine_Stump_Snow_01_LOD) and turns the winter season look on. Idempotent.
 /// </summary>
 public static class SeasonTreesBuilder
 {
-    private const string SnowFolder = "Assets/Low Poly Trees Pack/Tree Assets/Prefabs/Trees_Snow/LOD/No_Bottoms/Pine_Trees/OneSided";
+    private static readonly string[] SnowRoots =
+    {
+        "Assets/Low Poly Trees Pack/Tree Assets/Prefabs/Trees_Snow/LOD/No_Bottoms/Pine_Trees/OneSided",
+        "Assets/Low Poly Trees Pack/Tree Assets/Prefabs/Logs_Snow/LOD",
+        "Assets/Low Poly Trees Pack/Tree Assets/Prefabs/Stumps_Snow/LOD",
+    };
     private const string TreesPath = "--- ENVIRONMENT ---/Trees";
     private const string WeatherMapPath = "Assets/Data/Presentation/CozyWeatherMap.asset";
 
@@ -26,19 +32,28 @@ public static class SeasonTreesBuilder
 
         List<(GameObject tree, GameObject snow)> pairs = new List<(GameObject, GameObject)>();
         List<string> missing = new List<string>();
-        // The "Trees" group plus any pine dropped loose at the scene root.
+        // The "Trees" group plus any pine tree, log or stump dropped loose at the scene root.
         List<Transform> candidates = new List<Transform>();
         foreach (Transform child in trees.transform) candidates.Add(child);
         foreach (GameObject root in bridge.gameObject.scene.GetRootGameObjects())
-            if (Regex.IsMatch(root.name, @"^Pine_Tree_OneSided_[a-z]+_\d+_LOD")) candidates.Add(root.transform);
+            if (Regex.IsMatch(root.name, @"^Pine_(Tree_OneSided_[a-z]+|Log|Stump)_\d+_LOD")) candidates.Add(root.transform);
+
+        // Snow prefabs by file name; the roots are searched recursively (e.g. the "Pine Logs" subfolder).
+        Dictionary<string, GameObject> snowPrefabs = new Dictionary<string, GameObject>();
+        foreach (string guid in AssetDatabase.FindAssets("t:Prefab", SnowRoots))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            string name = System.IO.Path.GetFileNameWithoutExtension(path);
+            if (!snowPrefabs.ContainsKey(name)) snowPrefabs[name] = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        }
 
         foreach (Transform child in candidates)
         {
             // Names like "Pine_Tree_OneSided_m_09_LOD (1)": drop the copy suffix, then add _Snow before the number.
-            string baseName = Regex.Replace(child.name, @"\s*\(\d+\)$", "");
+            GameObject source = PrefabUtility.GetCorrespondingObjectFromSource(child.gameObject);
+            string baseName = Regex.Replace(source != null ? source.name : child.name, @"\s*\(\d+\)$", "");
             string snowName = Regex.Replace(baseName, @"_(\d+)_LOD$", "_Snow_$1_LOD");
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{SnowFolder}/{snowName}.prefab");
-            if (prefab == null) { missing.Add(child.name); continue; }
+            if (!snowPrefabs.TryGetValue(snowName, out GameObject prefab)) { missing.Add(child.name); continue; }
             pairs.Add((child.gameObject, prefab));
         }
 
@@ -60,7 +75,7 @@ public static class SeasonTreesBuilder
 
         EnableWinterLook();
         EditorSceneManager.MarkSceneDirty(bridge.gameObject.scene);
-        Debug.Log($"SeasonTrees: wired {pairs.Count} tree swaps" + (missing.Count > 0 ? $", no snow twin for: {string.Join(", ", missing)}" : "."));
+        Debug.Log($"SeasonTrees: wired {pairs.Count} tree, log and stump swaps" + (missing.Count > 0 ? $", no snow twin for: {string.Join(", ", missing)}" : "."));
     }
 
     private static void EnableWinterLook()
