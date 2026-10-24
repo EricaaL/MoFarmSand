@@ -564,6 +564,16 @@ public static class ImGuiKit
         return true;
     }
 
+    /// <summary>Seam event for audio: the player picked a different card in the merchant's shop.</summary>
+    public static event System.Action ClickedShopSelect;
+
+    public static bool ConsumeShopSelectClick()
+    {
+        Event.current.Use();
+        ClickedShopSelect?.Invoke();
+        return true;
+    }
+
     /// <summary>Like <see cref="ConsumeClick"/> for small controls, which get their own sound.</summary>
     public static bool ConsumeSmallClick()
     {

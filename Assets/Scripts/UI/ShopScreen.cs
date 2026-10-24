@@ -104,8 +104,9 @@ public class ShopScreen : IRunScreen
 
             if (e.type == EventType.MouseDown && e.button == 0 && card.Contains(mouse))
             {
+                bool changed = selling ? selectedCrop != crops[i] : selectedOffer != i;
                 if (selling) selectedCrop = crops[i]; else selectedOffer = i;
-                ImGuiKit.ConsumeSmallClick();
+                if (changed) ImGuiKit.ConsumeShopSelectClick(); else e.Use();
             }
         }
         GUI.EndClip();
@@ -190,6 +191,7 @@ public class ShopScreen : IRunScreen
         Texture growIcon = theme != null ? theme.growIcon : null;
         string action = null;
         bool canAct = false;
+        string notice = null;
         System.Action act = null, actAll = null;
         float demand01 = -1f;
 
@@ -199,8 +201,10 @@ public class ShopScreen : IRunScreen
             {
                 ShopOffer o = plan.offers[selectedOffer];
                 int p = director.OfferPrice(o);
+                bool inventoryFull = false;
                 if (o.kind == OfferKind.Seed && director.Db.items.TryGet(o.id, out ItemData item))
                 {
+                    inventoryFull = !director.Inventory.CanFit(item);
                     ItemInfo info = ItemInfoBuilder.Build(item, director.BuildItemContext(item));
                     title = info.title; desc = info.summary; grow = info.growTime; fullness = info.fullness; growIcon = ItemDetailCard.GrowIcon(info, theme);
                     PriceTable.PriceRow row = director.Db.prices.RowForSeed(o.id);
@@ -212,7 +216,8 @@ public class ShopScreen : IRunScreen
                 sub = o.stock > 0 ? $"{o.stock} in stock" : "sold out";
                 price = p;
                 action = "BUY";
-                canAct = o.stock > 0 && director.Wallet.Coins >= p;
+                canAct = o.stock > 0 && director.Wallet.Coins >= p && !inventoryFull;
+                if (inventoryFull && o.stock > 0) notice = "Inventory full";
                 int index = selectedOffer;
                 act = () => director.Buy(index);
             }
@@ -280,6 +285,8 @@ public class ShopScreen : IRunScreen
 
         // Action button(s) at the bottom; Esc or Close leaves.
         float by = card.yMax - 160f * s;
+        if (action != null && notice != null)
+            ImGuiKit.Label(new Rect(card.x, by - 52f * s, card.width, 44f * s), notice, 30f, new Color(0.7f, 0.15f, 0.1f), TextAnchor.MiddleCenter);
         if (action != null)
         {
             if (actAll != null)

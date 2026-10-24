@@ -101,6 +101,8 @@ public class FarmTile : MonoBehaviour, IInteractable, IFarmPlot
 
     /// <summary>Raised after a seed is planted: the tile and who planted it (drives the farming animation).</summary>
     public static event System.Action<FarmTile, GameObject> Planted;
+    /// <summary>Raised when a growing crop visibly grows into its second stage (not when a plot is restored). Drives the growth chime.</summary>
+    public static event System.Action<FarmTile> GrewToSecondStage;
     /// <summary>Raised when a growing crop becomes ripe.</summary>
     public static event System.Action<FarmTile> Ripened;
     /// <summary>Raised after a ripe crop is picked (the crop that was harvested).</summary>
@@ -264,7 +266,9 @@ public class FarmTile : MonoBehaviour, IInteractable, IFarmPlot
         GameObject prefab = crop.growthStages[i];
         if (prefab == null) return;
         if (stageInstance != null) Destroy(stageInstance);
+        bool grew = stageIndex == 0 && i == 1;
         stageIndex = i;
+        if (grew) GrewToSecondStage?.Invoke(this);
         // The plot root can be scaled (the soil is a scaled mesh), so size and place the model in world units.
         Transform parent = cropVisual.parent;
         stageInstance = Instantiate(prefab, parent);

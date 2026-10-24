@@ -3,8 +3,8 @@ using UnityEngine;
 
 /// <summary>
 /// Plays the game's sounds from the events it already raises, and crossfades the day and night music. Presentation only:
-/// a cue with no clips is silent, so the game runs fine before any audio has been dropped in. Master volume comes from
-/// <see cref="GameSettings.MasterVolume"/> through the AudioListener.
+/// a cue with no clips is silent, so the game runs fine before any audio has been dropped in. Music and sound effects each have their own
+/// Options volume (<see cref="GameSettings.MusicVolume"/>, <see cref="GameSettings.SfxVolume"/>), applied live.
 /// </summary>
 public class AudioDirector : MonoBehaviour
 {
@@ -15,17 +15,24 @@ public class AudioDirector : MonoBehaviour
     [SerializeField] private int voices = 8;
     [SerializeField] private float musicFadeSeconds = 1.5f;
     [Range(0f, 1f)] [SerializeField] private float musicVolume = 0.6f;
+    [SerializeField] private float footstepFadeSeconds = 0.08f;
 
     private PlayerDeath death;
+    private CharacterController playerController;
+    private AudioSource footstepSource;
+    private float footstepTargetVolume;
     private const float TrimFadeSeconds = 0.1f;
     private AudioSource[] pool;
     private float[] voiceStopAt;
     private float[] voiceVolume;
     private int nextVoice;
+    private int aimVoice = -1; // voice playing the aim sound, so a throw can cut it short
     private readonly Dictionary<AudioCue, float> lastPlayed = new Dictionary<AudioCue, float>();
 
     private AudioSource[] music;
-    private readonly float[] musicTarget = new float[2];
+    private readonly float[] musicTarget = new float[2];   // loudness of each bed at full fade (cue volume x mix), 0 = fading out
+    private readonly float[] musicBase = new float[2];    // cue volume x the director's musicVolume mix
+    private readonly float[] musicLevel = new float[2];    // fade 0..1 toward in/out; the Options volume is applied on top, so the slider is instant
     private int activeMusic;
     private AudioCue currentMusic;
 
@@ -40,6 +47,7 @@ public class AudioDirector : MonoBehaviour
         for (int i = 0; i < voiceStopAt.Length; i++) voiceStopAt[i] = float.MaxValue;
         for (int i = 0; i < pool.Length; i++) pool[i] = NewSource("Voice " + i, false);
         music = new[] { NewSource("Music A", true), NewSource("Music B", true) };
+        footstepSource = NewSource("Footsteps", true);
     }
 
     private AudioSource NewSource(string sourceName, bool loop)
@@ -56,10 +64,14 @@ public class AudioDirector : MonoBehaviour
     private void OnEnable()
     {
         FarmTile.Planted += HandlePlanted;
+        FarmTile.GrewToSecondStage += HandleGrew;
         FarmTile.Ripened += HandleRipened;
         FarmTile.Harvested += HandleHarvested;
         PlayerCombat.Fired += HandleFired;
         PlayerCombat.AimStarted += HandleAimStarted;
+        PlayerCombat.Ate += HandleAte;
+        RunDirector.ShopOpened += HandleShopOpen;
+        TipsView.Shown += HandleTip;
         CropProjectile.Landed += HandleLanded;
         BellTrigger.Rung += HandleBell;
         FarmTile.Withered += HandleWithered;
@@ -67,6 +79,7 @@ public class AudioDirector : MonoBehaviour
         ImGuiKit.ClickedSmall += HandleButtonSmall;
         ImGuiKit.ClickedTab += HandleTab;
         ImGuiKit.ClickedSelect += HandleSelect;
+        ImGuiKit.ClickedShopSelect += HandleShopSelect;
         PlayerInventory.SlotSelected += HandleSelect;
         RunDirector.Bought += HandleBought;
         RunDirector.Sold += HandleSold;
@@ -91,6 +104,12 @@ public class AudioDirector : MonoBehaviour
 
     private void Start()
     {
+        if (health == null) health = Object.FindFirstObjectByType<PlayerHealth>();
+        if (health != null)
+        {
+            if (death == null) death = health.GetComponent<PlayerDeath>();
+            if (playerController == null) playerController = health.GetComponent<CharacterController>();
+        }
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnPhaseChanged += HandlePhase;
@@ -102,10 +121,14 @@ public class AudioDirector : MonoBehaviour
     private void OnDisable()
     {
         FarmTile.Planted -= HandlePlanted;
+        FarmTile.GrewToSecondStage -= HandleGrew;
         FarmTile.Ripened -= HandleRipened;
         FarmTile.Harvested -= HandleHarvested;
         PlayerCombat.Fired -= HandleFired;
         PlayerCombat.AimStarted -= HandleAimStarted;
+        PlayerCombat.Ate -= HandleAte;
+        RunDirector.ShopOpened -= HandleShopOpen;
+        TipsView.Shown -= HandleTip;
         CropProjectile.Landed -= HandleLanded;
         BellTrigger.Rung -= HandleBell;
         FarmTile.Withered -= HandleWithered;
@@ -113,6 +136,7 @@ public class AudioDirector : MonoBehaviour
         ImGuiKit.ClickedSmall -= HandleButtonSmall;
         ImGuiKit.ClickedTab -= HandleTab;
         ImGuiKit.ClickedSelect -= HandleSelect;
+        ImGuiKit.ClickedShopSelect -= HandleShopSelect;
         PlayerInventory.SlotSelected -= HandleSelect;
         RunDirector.Bought -= HandleBought;
         RunDirector.Sold -= HandleSold;
@@ -141,13 +165,18 @@ public class AudioDirector : MonoBehaviour
     // ---------------------------------------------------------------- handlers
 
     private void HandlePlanted(FarmTile tile, GameObject who) { Play(library != null ? library.plant : null); }
+    private void HandleGrew(FarmTile tile) { Play(library != null ? library.grow : null); }
     private void HandleRipened(FarmTile tile) { Play(library != null ? library.ripe : null); }
     private void HandleHarvested(FarmTile tile, CropData crop) { Play(library != null ? library.harvest : null); }
     private void HandleBell() { Play(library != null ? library.bell : null); }
     private void HandleButton() { Play(library != null ? library.button : null); }
     private void HandleButtonSmall() { Play(library != null ? library.buttonSmall : null); }
-    private void HandleAimStarted() { Play(library != null ? library.aimCrop : null); }
+    private void HandleAimStarted() { aimVoice = Play(library != null ? library.aimCrop : null); }
+    private void HandleAte() { Play(library != null ? library.eat : null); }
+    private void HandleShopOpen() { Play(library != null ? library.shopOpen : null); }
+    private void HandleTip() { Play(library != null ? library.tip : null); }
     private void HandleSelect() { Play(library != null ? library.inventorySelect : null); }
+    private void HandleShopSelect() { Play(library != null ? library.shopSelect : null); }
     private void HandleTab() { Play(library != null ? library.tabSwitch : null); }
     private void HandleWithered(FarmTile tile) { Play(library != null ? library.wither : null); }
     private void HandleDied() { Play(library != null ? library.death : null); }
@@ -164,6 +193,7 @@ public class AudioDirector : MonoBehaviour
     private void HandleFired(CropData crop)
     {
         if (library == null) return;
+        StopAimSound();
         Play(crop != null && crop.type == CropType.Shooter ? library.shoot : library.throwCrop);
     }
 
@@ -194,22 +224,33 @@ public class AudioDirector : MonoBehaviour
 
     // ---------------------------------------------------------------- playback
 
-    private void Play(AudioCue cue)
+    private void StopAimSound()
     {
-        if (cue == null || cue.IsEmpty) return;
+        if (aimVoice < 0) return;
+        // Only stop it if that voice still holds an aim clip (it may have been reused by another sound since).
+        if (library != null && library.aimCrop != null && pool[aimVoice].isPlaying && library.aimCrop.Contains(pool[aimVoice].clip)) { pool[aimVoice].Stop(); voiceStopAt[aimVoice] = float.MaxValue; }
+        aimVoice = -1;
+    }
+
+    /// <summary>Plays the cue on the next free voice. Returns the voice index, or -1 if nothing played.</summary>
+    private int Play(AudioCue cue)
+    {
+        if (cue == null || cue.IsEmpty) return -1;
         float now = Time.unscaledTime;
-        if (lastPlayed.TryGetValue(cue, out float last) && now - last < cue.minInterval) return;
+        if (lastPlayed.TryGetValue(cue, out float last) && now - last < cue.minInterval) return -1;
         lastPlayed[cue] = now;
 
         AudioSource src = pool[nextVoice];
         nextVoice = (nextVoice + 1) % pool.Length;
         src.clip = cue.Pick();
-        src.volume = cue.volume;
+        src.volume = cue.volume * GameSettings.SfxVolume;
         src.pitch = cue.RandomPitch();
         src.Play();
         int voice = (nextVoice + pool.Length - 1) % pool.Length;
         voiceStopAt[voice] = cue.maxSeconds > 0f ? now + cue.maxSeconds / src.pitch : float.MaxValue;
         voiceVolume[voice] = cue.volume;
+        src.volume = cue.volume * GameSettings.SfxVolume;
+        return voice;
     }
 
     private void SetMusic(AudioCue cue)
@@ -223,31 +264,105 @@ public class AudioDirector : MonoBehaviour
         AudioSource src = music[activeMusic];
         src.clip = cue.Pick();
         src.volume = 0f;
+        musicLevel[activeMusic] = 0f;
         src.pitch = 1f;
         src.loop = true;
         src.Play();
-        musicTarget[activeMusic] = cue.volume * musicVolume;
+        musicBase[activeMusic] = cue.volume * musicVolume;
+        musicTarget[activeMusic] = musicBase[activeMusic];
     }
 
     private void Update()
     {
-        // Trimmed cues (maxSeconds) fade out over their last moments, then stop.
+        // Trimmed cues (maxSeconds) fade out over their last moments, then stop. The SFX volume is applied live.
         float nowUnscaled = Time.unscaledTime;
+        float sfx = GameSettings.SfxVolume;
         for (int i = 0; i < pool.Length; i++)
         {
-            if (!pool[i].isPlaying || voiceStopAt[i] == float.MaxValue) continue;
-            float left = voiceStopAt[i] - nowUnscaled;
-            if (left <= 0f) { pool[i].Stop(); voiceStopAt[i] = float.MaxValue; }
-            else if (left < TrimFadeSeconds) pool[i].volume = voiceVolume[i] * (left / TrimFadeSeconds);
+            if (!pool[i].isPlaying) continue;
+            float fade = 1f;
+            if (voiceStopAt[i] != float.MaxValue)
+            {
+                float left = voiceStopAt[i] - nowUnscaled;
+                if (left <= 0f) { pool[i].Stop(); voiceStopAt[i] = float.MaxValue; continue; }
+                if (left < TrimFadeSeconds) fade = left / TrimFadeSeconds;
+            }
+            pool[i].volume = voiceVolume[i] * sfx * fade;
         }
 
         float step = Time.unscaledDeltaTime / Mathf.Max(0.05f, musicFadeSeconds);
+        float musicMix = GameSettings.MusicVolume;
         for (int i = 0; i < music.Length; i++)
         {
             AudioSource src = music[i];
             if (!src.isPlaying) continue;
-            src.volume = Mathf.MoveTowards(src.volume, musicTarget[i], step);
-            if (musicTarget[i] <= 0f && src.volume <= 0f) src.Stop();
+            musicLevel[i] = Mathf.MoveTowards(musicLevel[i], musicTarget[i] > 0f ? 1f : 0f, step);
+            src.volume = musicLevel[i] * musicBase[i] * musicMix;
+            if (musicTarget[i] <= 0f && musicLevel[i] <= 0f) src.Stop();
+        }
+
+        UpdateFootsteps();
+    }
+
+    private void UpdateFootsteps()
+    {
+        if (footstepSource == null || library == null || library.footstep == null || library.footstep.IsEmpty)
+        {
+            if (footstepSource != null && footstepSource.isPlaying) footstepSource.Stop();
+            return;
+        }
+
+        if (playerController == null)
+        {
+            if (health != null) playerController = health.GetComponent<CharacterController>();
+            else
+            {
+                PlayerController pc = Object.FindFirstObjectByType<PlayerController>();
+                if (pc != null)
+                {
+                    playerController = pc.GetComponent<CharacterController>();
+                    if (health == null) health = pc.GetComponent<PlayerHealth>();
+                    if (death == null) death = pc.GetComponent<PlayerDeath>();
+                }
+            }
+        }
+
+        bool isDead = death != null && death.IsDead;
+        bool isMoving = false;
+        float speed = 0f;
+
+        if (playerController != null && !isDead && Time.timeScale > 0f)
+        {
+            Vector3 v = playerController.velocity;
+            v.y = 0f;
+            speed = v.magnitude;
+            isMoving = playerController.isGrounded && speed > 0.3f;
+        }
+
+        if (isMoving)
+        {
+            AudioCue cue = library.footstep;
+            if (footstepSource.clip == null) footstepSource.clip = cue.Pick();
+            if (!footstepSource.isPlaying)
+            {
+                footstepSource.volume = 0f;
+                footstepSource.Play();
+            }
+
+            // Normal run is ~5 m/s, walk is ~2.5 m/s. Adjust pitch slightly with movement speed.
+            footstepSource.pitch = Mathf.Clamp(speed / 5f, 0.85f, 1.15f);
+            footstepTargetVolume = cue.volume * GameSettings.SfxVolume;
+        }
+        else
+        {
+            footstepTargetVolume = 0f;
+        }
+
+        float step = Time.unscaledDeltaTime / Mathf.Max(0.02f, footstepFadeSeconds);
+        footstepSource.volume = Mathf.MoveTowards(footstepSource.volume, footstepTargetVolume, step);
+        if (footstepTargetVolume <= 0f && footstepSource.volume <= 0f && footstepSource.isPlaying)
+        {
+            footstepSource.Stop();
         }
     }
 }

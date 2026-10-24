@@ -51,19 +51,19 @@ public class OptionsScreen : IRunScreen
         float x = inner.x + 55f * s, w = inner.width - 110f * s;
         float y = inner.y + 50f * s, row = 100f * s;
 
-        DrawVolume(x, y, w, s);
-        DrawHudSize(x, y + row, w, s);
-        DrawTips(x, y + row * 2f, w, s);
+        DrawVolume(x, y, w, s, "Music", GameSettings.MusicVolume, v => GameSettings.MusicVolume = v);
+        DrawVolume(x, y + row, w, s, "SFX", GameSettings.SfxVolume, v => GameSettings.SfxVolume = v);
+        DrawHudSize(x, y + row * 2f, w, s);
+        DrawTips(x, y + row * 3f, w, s);
     }
 
-    private static void DrawVolume(float x, float y, float w, float s)
+    private static void DrawVolume(float x, float y, float w, float s, string label, float volume, System.Action<float> set)
     {
-        float volume = GameSettings.MasterVolume;
-        ImGuiKit.Label(new Rect(x, y, 300f * s, 64f * s), "Sound", 40f, ImGuiKit.Text, TextAnchor.MiddleLeft);
+        ImGuiKit.Label(new Rect(x, y, 300f * s, 64f * s), label, 40f, ImGuiKit.Text, TextAnchor.MiddleLeft);
         float next = ImGuiKit.Slider(new Rect(x + 330f * s, y + 8f * s, w - 330f * s - 330f * s, 48f * s), volume, 0f, 1f);
-        if (!Mathf.Approximately(next, volume)) GameSettings.MasterVolume = next;
-        ImGuiKit.Label(new Rect(x + w - 310f * s, y, 120f * s, 64f * s), $"{Mathf.RoundToInt(GameSettings.MasterVolume * 100f)}%", 32f, ImGuiKit.Muted, TextAnchor.MiddleRight);
-        if (ImGuiKit.Pill(new Rect(x + w - 170f * s, y, 170f * s, 64f * s), "Reset", ImGuiKit.PillKind.Light, true, 26f)) GameSettings.MasterVolume = 1f;
+        if (!Mathf.Approximately(next, volume)) { set(next); volume = next; }
+        ImGuiKit.Label(new Rect(x + w - 310f * s, y, 120f * s, 64f * s), $"{Mathf.RoundToInt(volume * 100f)}%", 32f, ImGuiKit.Muted, TextAnchor.MiddleRight);
+        if (ImGuiKit.Pill(new Rect(x + w - 170f * s, y, 170f * s, 64f * s), "Reset", ImGuiKit.PillKind.Light, true, 26f)) set(1f);
     }
 
     private static void DrawHudSize(float x, float y, float w, float s)

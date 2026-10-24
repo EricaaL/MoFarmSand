@@ -26,6 +26,13 @@ public class AudioCue : ScriptableObject
         }
     }
 
+    public bool Contains(AudioClip clip)
+    {
+        if (clip == null || clips == null) return false;
+        for (int i = 0; i < clips.Length; i++) if (clips[i] == clip) return true;
+        return false;
+    }
+
     public AudioClip Pick()
     {
         if (IsEmpty) return null;

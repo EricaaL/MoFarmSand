@@ -11,16 +11,16 @@ public static class ItemDetailCard
     private static readonly string[] KeyLabels = { "Locked" };
 
     /// <summary>Height the card needs for <paramref name="info"/> in a column <paramref name="width"/> wide.</summary>
-    public static float Measure(ItemInfo info, float width, float k) => Layout(new Rect(0f, 0f, width, 100000f), info, 0, k, false);
+    public static float Measure(ItemInfo info, float width, float k, bool showSummary = true) => Layout(new Rect(0f, 0f, width, 100000f), info, 0, k, false, showSummary);
 
     /// <summary>Draws the card into <paramref name="r"/> (only the top-left and width matter). Returns the height used.</summary>
-    public static float Draw(Rect r, ItemInfo info, int owned, float k) => Layout(r, info, owned, k, true);
+    public static float Draw(Rect r, ItemInfo info, int owned, float k, bool showSummary = true) => Layout(r, info, owned, k, true, showSummary);
 
     /// <summary>The icon of the season the crop grows best in (flower, sun, leaf, snowflake); the plain sun if there is none.</summary>
     public static Texture GrowIcon(ItemInfo info, UiTheme theme)
         => info.bestSeason != null && info.bestSeason.icon != null ? info.bestSeason.icon : theme != null ? theme.growIcon : null;
 
-    private static float Layout(Rect r, ItemInfo info, int owned, float k, bool draw)
+    private static float Layout(Rect r, ItemInfo info, int owned, float k, bool draw, bool showSummary)
     {
         float s = ImGuiKit.Scale * k;   // every authored size below is multiplied by k through this scale
         UiTheme theme = ImGuiKit.Theme;
@@ -43,7 +43,7 @@ public static class ItemDetailCard
             if (draw) ImGuiKit.IconValue(new Rect(x, y, w, 62f * s), theme != null ? theme.coin : null, info.price.ToString(), 40f * k, ImGuiKit.Text);
             y += 70f * s;
         }
-        if (!string.IsNullOrEmpty(info.summary))
+        if (showSummary && !string.IsNullOrEmpty(info.summary))
         {
             float h = ImGuiKit.TextHeight(info.summary, 26f * k, w);
             if (draw) ImGuiKit.Label(new Rect(x, y, w, h + 4f * s), info.summary, 26f * k, ImGuiKit.Text, TextAnchor.UpperLeft);

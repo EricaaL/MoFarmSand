@@ -76,6 +76,18 @@ public class PlayerInventory : MonoBehaviour
         SlotSelected?.Invoke();
     }
 
+    /// <summary>A slot with nothing in it, or only the leftover of a used-up stack (crop slots keep their item at count 0).</summary>
+    private bool IsFree(int i) => slots[i].item == null || slots[i].count <= 0;
+
+    /// <summary>True if <see cref="AddItem"/> would succeed: the item already has a stack, or a slot is free.</summary>
+    public bool CanFit(ItemData item)
+    {
+        if (item == null) return false;
+        for (int i = 0; i < SlotCount; i++)
+            if (slots[i].item == item || IsFree(i)) return true;
+        return false;
+    }
+
     /// <summary>Adds items. Stacking blends quality by count, so a few weak crops weaken a strong stack proportionally.</summary>
     public bool AddItem(ItemData item, int amount, float quality = 1f)
     {
@@ -89,7 +101,7 @@ public class PlayerInventory : MonoBehaviour
         {
             for (int i = 0; i < SlotCount; i++)
             {
-                if (slots[i].item == null) { target = i; break; }
+                if (IsFree(i)) { target = i; break; }
             }
         }
         if (target < 0) return false;
@@ -99,7 +111,7 @@ public class PlayerInventory : MonoBehaviour
             ? (slots[target].EffectiveQuality * existing + quality * amount) / (existing + amount)
             : quality;
         slots[target].item = item;
-        slots[target].count += amount;
+        slots[target].count = existing + amount;
         slots[target].quality = blended;
         OnChanged?.Invoke();
         return true;

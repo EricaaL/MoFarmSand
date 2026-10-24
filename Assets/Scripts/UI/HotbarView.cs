@@ -190,7 +190,7 @@ public class HotbarView
         const float k = 0.6f;   // the card is drawn at this fraction of its inventory size
         float pad = 22f * s;
         float w = 430f * s, inner = w - pad * 2f;
-        float contentH = ItemDetailCard.Measure(info, inner, k);
+        float contentH = ItemDetailCard.Measure(info, inner, k, false);
         float h = contentH + pad * 2f - 8f * s;
 
         float x = Mathf.Clamp(slotRect.center.x - w * 0.5f, 10f * s, screenW - w - 10f * s);
@@ -198,7 +198,7 @@ public class HotbarView
         Rect box = new Rect(x, y, w, h);
 
         ImGuiKit.Rounded(box, ImGuiKit.Orange);
-        ItemDetailCard.Draw(new Rect(box.x + pad, box.y + pad * 0.7f, inner, contentH), info, inventory.CountOf(slot.item), k);
+        ItemDetailCard.Draw(new Rect(box.x + pad, box.y + pad * 0.7f, inner, contentH), info, inventory.CountOf(slot.item), k, false);
     }
 
     // ------------------------------------------------------------------ item info

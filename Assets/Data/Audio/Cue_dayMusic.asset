@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Cue_dayMusic
   m_EditorClassIdentifier: 
   clips: []
-  volume: 0.8
+  volume: 1
   pitchRange: {x: 0.95, y: 1.05}
   minInterval: 0.05
   loop: 1

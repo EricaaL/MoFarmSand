@@ -30,15 +30,19 @@ public class PlayerCombat : MonoBehaviour
     public static event System.Action<CropData> Fired;
     /// <summary>Raised when the throw button is first held and the arc appears. Drives the bow-draw sound.</summary>
     public static event System.Action AimStarted;
+    /// <summary>Raised when a support crop is eaten. Drives the eating sound.</summary>
+    public static event System.Action Ate;
     private bool wasAiming;
 
     private bool canAct = true;
+    private bool menuClickHeld; // the click that closed a menu is still down: it belongs to the menu, not the world
     private PlayerDeath death;
 
     /// <summary>Always false once the dog is dead, whatever the run director sets.</summary>
     public bool CanAct
     {
-        get => canAct && !(death != null && death.IsDead);
+        // A menu screen (shop, map, bank...) is up: clicks belong to its buttons, so a press there must never start a throw.
+        get => canAct && !RunDirector.ModalOpen && !menuClickHeld && !(death != null && death.IsDead);
         set => canAct = value;
     }
     /// <summary>True while the throw button is held and the arc is showing.</summary>
@@ -65,9 +69,17 @@ public class PlayerCombat : MonoBehaviour
 
     private void Start() { cam = Camera.main; }
 
+    private void UpdateMenuClickLatch()
+    {
+        bool down = Mouse.current != null && Mouse.current.leftButton.isPressed;
+        if (!down) menuClickHeld = false;
+        else if (Time.frameCount - RunDirector.ModalClosedFrame <= 2) menuClickHeld = true;
+    }
+
     private void Update()
     {
         if (cam == null) cam = Camera.main;
+        UpdateMenuClickLatch();
         CropData crop = inventory.ActiveCrop;
         bool harvestClick = interactor != null && interactor.PointerHarvestable() != null; // that click harvests, not throws
         bool canAim = CanAct && !harvestClick && !HotbarView.PointerBusy && !PlayerDance.WheelOpen && crop != null && crop.type == CropType.Projectile && inventory.ActiveCount > 0;
@@ -279,6 +291,7 @@ public class PlayerCombat : MonoBehaviour
         float quality = inventory.ActiveQuality;
         if (!inventory.TryConsume(crop, 1)) return false;
         health.GrantShield(ClimateModel.ShieldCharges(crop, quality), crop.shieldSeconds);
+        Ate?.Invoke();
         return true;
     }
 

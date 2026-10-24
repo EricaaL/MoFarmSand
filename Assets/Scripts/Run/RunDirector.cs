@@ -71,6 +71,8 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
 
     /// <summary>True while a full-screen run screen is up. DebugHUD hides itself then.</summary>
     public static bool ModalOpen { get; private set; }
+    /// <summary>Frame a menu screen last closed. The click that closed it can reach gameplay input a frame later, so it must not act on the world.</summary>
+    public static int ModalClosedFrame { get; private set; } = -100;
 
     public bool IsRoguelike => runMode == RunMode.Roguelike;
     public bool IsBeta => betaMode;
@@ -256,6 +258,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     {
         view = v;
         screen = s;
+        if (ModalOpen && s == null) ModalClosedFrame = Time.frameCount;
         ModalOpen = s != null;
         if (s != null) UiBackdrop.Invalidate(); // menus show the blurred world as it is right now
         ImGuiKit.PageMode = s != null;
@@ -452,7 +455,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         };
     }
 
-    public void OpenShop() { if (!dayRunning) return; shopScreen.OnOpen(); Show(View.Shop, shopScreen); }
+    public void OpenShop() { if (!dayRunning) return; shopScreen.OnOpen(); Show(View.Shop, shopScreen); ShopOpened?.Invoke(); }
     public void CloseShop() { if (view == View.Shop) Show(View.None, null); }
 
     // ---------------------------------------------------------------- slots and runs
@@ -770,6 +773,8 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     }
 
     /// <summary>Seam events for audio: the crow reacts to a purchase, a sale, or a refused purchase.</summary>
+    /// <summary>Raised when the shop screen opens. Drives the shop-open sound.</summary>
+    public static event System.Action ShopOpened;
     public static event System.Action Bought;
     public static event System.Action Sold;
     public static event System.Action BuyRefused;

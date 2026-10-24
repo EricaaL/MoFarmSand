@@ -14,12 +14,16 @@ public class TipsView : MonoBehaviour
     [SerializeField] private float showSeconds = 10f;
     [SerializeField] private float gapSeconds = 1.2f;
 
+    /// <summary>Raised when a tip card starts showing. Drives the tip sound.</summary>
+    public static event System.Action Shown;
+
     private const float FadeIn = 0.3f, FadeOut = 0.5f;
 
     private TipBook book;
     private float shownFor;
     private float gapLeft;
     private int resetSeen;
+    private string announced;
 
     private void Awake()
     {
@@ -94,6 +98,7 @@ public class TipsView : MonoBehaviour
 
         if (book.Current == null) return;
         if (gapLeft > 0f) { gapLeft -= Time.unscaledDeltaTime; return; }
+        if (announced != book.Current && TipsView.Visible(phase)) { announced = book.Current; Shown?.Invoke(); }
         shownFor += Time.unscaledDeltaTime;
         if (shownFor >= showSeconds) DismissCurrent();
     }
@@ -135,12 +140,15 @@ public class TipsView : MonoBehaviour
         if (ImGuiKit.CloseButton(close, false, alpha)) DismissCurrent();
     }
 
+    private static bool Visible(GamePhase phase) { return phase == GamePhase.Day || phase == GamePhase.Night; }
+
     private void DismissCurrent()
     {
         book.Dismiss();
         GameSettings.SaveSeenTips(new List<string>(book.Seen));
         shownFor = 0f;
         gapLeft = gapSeconds;
+        announced = null;
         HotbarView.BlockRect2 = Rect.zero;
     }
 }

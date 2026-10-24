@@ -6,6 +6,8 @@ public class AudioLibrary : ScriptableObject
 {
     [Header("Farming")]
     public AudioCue plant;
+    [Tooltip("Plays when a crop grows into its second growth stage.")]
+    public AudioCue grow;
     public AudioCue ripe;
     public AudioCue harvest;
     public AudioCue coin;
@@ -18,6 +20,8 @@ public class AudioLibrary : ScriptableObject
     public AudioCue splat;
     public AudioCue shield;
     public AudioCue hurt;
+    [Tooltip("Plays when you eat a support crop (lettuce, spinach, turnip).")]
+    public AudioCue eat;
 
     [Header("UI")]
     public AudioCue button;
@@ -27,9 +31,13 @@ public class AudioLibrary : ScriptableObject
     public AudioCue tabSwitch;
     [Tooltip("Picking a different item card in the inventory.")]
     public AudioCue inventorySelect;
+    [Tooltip("Picking a different item card in the merchant's shop.")]
+    public AudioCue shopSelect;
+    [Tooltip("Plays when an in-play tip card pops up.")]
+    public AudioCue tip;
 
     [Header("Dog")]
-    [Tooltip("Played from an animation event on the run clip (not wired yet).")]
+    [Tooltip("Played while the dog runs along the ground.")]
     public AudioCue footstep;
     public AudioCue wither;
     public AudioCue shieldBreak;
@@ -39,6 +47,8 @@ public class AudioLibrary : ScriptableObject
     [Header("Crow merchant")]
     [Tooltip("Not wired yet: needs a signal for walking up to the booth.")]
     public AudioCue crowGreet;
+    [Tooltip("Plays when the shop screen opens (one of several clips at random).")]
+    public AudioCue shopOpen;
     public AudioCue crowBuy;
     public AudioCue crowSell;
     public AudioCue crowNo;

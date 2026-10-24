@@ -37,6 +37,11 @@ MonoBehaviour:
   crowNo: {fileID: 11400000, guid: 269cb4da62d3a984aa733f28b41db139, type: 2}
   crowBye: {fileID: 11400000, guid: 6a4b98069ee33724aafc7e2ad5d76e2a, type: 2}
   bossGulp: {fileID: 11400000, guid: f62708904de4730418048b558649f45b, type: 2}
+  eat: {fileID: 11400000, guid: 7c1e5b0a9d3f4e2a8b6d1f0c2e4a9b37, type: 2}
+  shopSelect: {fileID: 11400000, guid: 1f7b3e9a2c6d4b5e8a0c4d9f3e7a1b52, type: 2}
+  grow: {fileID: 11400000, guid: 5e2a9c1d7b4f4d6a8e0b3c7f1a9d2e46, type: 2}
+  shopOpen: {fileID: 11400000, guid: 9d4a1c7e5b2f4a3e8c0d6f1b7a2e5c93, type: 2}
+  tip: {fileID: 11400000, guid: 3b8f2d6e41a74c0d9e5a7c1f60b2d8a4, type: 2}
   bossScare: {fileID: 11400000, guid: 097a6a7f8a2f9c44599469227dd2d5a0, type: 2}
   burst: {fileID: 11400000, guid: d85fd286834bc694a93d32c38ea3d8ac, type: 2}
   evolve: {fileID: 11400000, guid: 5503e230f3d7fa7499e6c74555a244cb, type: 2}
