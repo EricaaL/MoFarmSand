@@ -60,7 +60,7 @@ public class ItemInfoScreen : IRunScreen
         else ImGuiKit.Label(detail, ownedOnly ? "Your pockets are empty.\nHarvest or buy something first." : "Nothing to show yet.", 34f, ImGuiKit.Text, TextAnchor.UpperLeft);
     }
 
-    /// <summary>Groups by the crop's best season in calendar order; inside a season the crops come first, then their seeds.</summary>
+    /// <summary>Groups by the crop's best season in calendar order; inside a season each crop is followed by its seed.</summary>
     private void SortBySeason(List<ItemData> items)
     {
         var seasons = director.Db.calendar.seasons;
@@ -76,8 +76,15 @@ public class ItemInfoScreen : IRunScreen
                 int idx = best != null ? seasons.IndexOf(best) : -1;
                 if (idx >= 0) season = idx;
             }
+            // A seed sorts right after the crop it grows (crop, seed, crop, seed), keeping the crops' own order.
+            int cropPos = i;
+            if (it is SeedData seed && seed.grows != null)
+            {
+                int growsAt = items.IndexOf(seed.grows);
+                if (growsAt >= 0) cropPos = growsAt;
+            }
             int kind = it is CropData ? 0 : 1;
-            keyed.Add(new KeyValuePair<long, ItemData>((season * 2L + kind) * 10000L + i, it));
+            keyed.Add(new KeyValuePair<long, ItemData>(((season * 10000L + cropPos) * 2L + kind) * 10000L + i, it));
         }
         keyed.Sort((a, b) => a.Key.CompareTo(b.Key));
         for (int i = 0; i < items.Count; i++) items[i] = keyed[i].Value;
