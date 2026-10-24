@@ -13,6 +13,8 @@ public class EventData : ScriptableObject, IHasId
         [Tooltip("Coins the player must pay to pick this option.")]
         public int coinCost;
         public List<RunEffect> effects;
+        [Tooltip("Leave the effects' descriptions off the button, for labels that already say it (\"Take 10 coins\").")]
+        public bool hideEffects;
     }
 
     public string eventId;

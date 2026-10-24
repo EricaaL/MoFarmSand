@@ -180,10 +180,10 @@ public class ShopScreen : IRunScreen
 
         // Purse, top right of the card.
         string purse = director.Wallet.Coins.ToString();
-        float purseW = ImGuiKit.TextWidth(purse, 30f) + 4f * s;
-        float purseRowW = 46f * s + 10f * s + purseW + 24f * s;   // icon + gap + number + slack
-        Rect purseRow = new Rect(card.xMax - 24f * s - purseRowW, card.y + 22f * s, purseRowW, 46f * s);
-        ImGuiKit.IconValue(purseRow, theme != null ? theme.coin : null, purse, 30f, ImGuiKit.Muted);
+        float purseW = ImGuiKit.TextWidth(purse, 60f) + 4f * s;
+        float purseRowW = 92f * s + 10f * s + purseW + 24f * s;   // icon + gap + number + slack
+        Rect purseRow = new Rect(card.xMax - 24f * s - purseRowW, card.y + 22f * s, purseRowW, 92f * s);
+        ImGuiKit.IconValue(purseRow, theme != null ? theme.coin : null, purse, 60f, ImGuiKit.Muted);
 
         string title = null, sub = null, desc = null;
         int price = -1;
@@ -248,7 +248,7 @@ public class ShopScreen : IRunScreen
             desc = "Harvest some crops first, then come back to sell.";
         }
 
-        ImGuiKit.Heading(new Rect(x, card.y + 24f * s, w - 200f * s, 110f * s), title, 76f, ImGuiKit.Text);
+        ImGuiKit.Heading(new Rect(x, card.y + 24f * s, Mathf.Min(w - 200f * s, 677f * s - purseRowW), 110f * s), title, 76f, ImGuiKit.Text);
         if (sub != null) ImGuiKit.Italic(new Rect(x, card.y + 128f * s, w, 40f * s), sub, 30f, ImGuiKit.Muted);
         ImGuiKit.DashedRule(x, card.y + 168f * s, 480f * s);
 

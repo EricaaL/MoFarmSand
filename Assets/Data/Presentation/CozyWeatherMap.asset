@@ -74,6 +74,7 @@ MonoBehaviour:
     ambientFx: {fileID: 0}
     groundLeaves: 0
     snowyTrees: 0
+    groundFlowers: 1
     snowStart01: 0
     snowEnd01: 0
   - season: {fileID: 11400000, guid: cc74ed0b11b6962469f72414350069e2, type: 2}
@@ -92,6 +93,7 @@ MonoBehaviour:
     ambientFx: {fileID: 0}
     groundLeaves: 0
     snowyTrees: 0
+    groundFlowers: 0
     snowStart01: 0
     snowEnd01: 0
   - season: {fileID: 11400000, guid: e86be3641e5dfff48a2987ea6cb996ac, type: 2}
@@ -110,6 +112,7 @@ MonoBehaviour:
     ambientFx: {fileID: 4649747619991348713, guid: db49ed2f1046fcc42b34e7eb6f31040c, type: 3}
     groundLeaves: 320
     snowyTrees: 0
+    groundFlowers: 0
     snowStart01: 0
     snowEnd01: 0
   - season: {fileID: 11400000, guid: 5bc8feee265739b4a9788711bdfbe020, type: 2}
@@ -128,5 +131,6 @@ MonoBehaviour:
     ambientFx: {fileID: 6253494971272436131, guid: 330a450316a5daa44ba6385561619011, type: 3}
     groundLeaves: 0
     snowyTrees: 1
+    groundFlowers: 0
     snowStart01: 0.35
     snowEnd01: 1

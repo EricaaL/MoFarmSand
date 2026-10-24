@@ -12,7 +12,15 @@ public class MapScreen : IRunScreen
     private const float LayerHeight = 150f;
     private const float LaneWidth = 150f;
     private const float NodeRadius = 44f;
-    private const float MapShiftLeft = 170f;   // the whole graph sits a little left of centre, clear of the legend
+    /// <summary>How many boss-node diameters tall the final boss silhouette is drawn.</summary>
+    private const float BossArtScale = 3.2f;
+    /// <summary>Clear space between the path lines (which end at the node centre) and the bottom of the silhouette.</summary>
+    private const float BossArtGap = 14f;
+    /// <summary>Extra map above the last layer, so the big boss silhouette (which floats above its node) stays on screen.</summary>
+    private const float TopRoom = 400f;
+    /// <summary>Night at the end of the map: the background fades from the last season to this, around the boss layer.</summary>
+    private static readonly Color NightPurple = new Color(0.17f, 0.08f, 0.31f);
+    private const float MapShiftLeft = 170f;  // the whole graph sits a little left of centre, clear of the legend
 
     // Order of the legend rows (node type ids); rows without an icon or label are skipped.
     private static readonly string[] LegendOrder = { "farm", "merchant", "event", "disaster", "boss" };
@@ -36,7 +44,7 @@ public class MapScreen : IRunScreen
         float w = Screen.width, h = Screen.height;
 
         int maxLayer = map.layerCount;
-        float content = (maxLayer + 2) * LayerHeight * s;
+        float content = ((maxLayer + 2) * LayerHeight + TopRoom) * s;
         if (!scrollInit)
         {
             // Start with today's (or the next) layer near the bottom third of the screen.
@@ -87,20 +95,24 @@ public class MapScreen : IRunScreen
             bool available = RunLogic.CanEnter(run, n.id);
             bool visited = run.visited.Contains(n.id);
             float r = NodeRadius * s * (n.id == map.bossId ? 1.3f : 1f);
-            bool hover = (mouse - p).sqrMagnitude <= r * r * 1.4f;
+            // The boss silhouette floats above the node centre (where the path lines end), so hovering it counts too.
+            float bossLift = n.id == map.bossId ? r * BossArtScale + BossArtGap * s : 0f;
+            Vector2 ic = new Vector2(p.x, p.y - bossLift);   // where the node is drawn and hit-tested
+            float ir = bossLift > 0f ? r * BossArtScale : r;
+            bool hover = (mouse - ic).sqrMagnitude <= ir * ir * 1.4f;
             if (hover) hovered = n;
 
             // "You are here": the day in progress.
             if (run.phase == RunPhase.InDay && n.id == run.pendingNodeId)
             {
                 float pulseT = 0.5f + 0.5f * Mathf.Sin(Time.realtimeSinceStartup * 3f);
-                ImGuiKit.Circle(p, r + (12f + 7f * pulseT) * s, new Color(0.35f, 0.85f, 0.4f, 0.75f));
-                youAreHere = new Vector2(p.x - r - 18 * s, p.y);
+                ImGuiKit.Circle(ic, ir + (12f + 7f * pulseT) * s, new Color(0.35f, 0.85f, 0.4f, 0.75f));
+                youAreHere = new Vector2(ic.x - ir - 18 * s, ic.y);
             }
             if (available)
             {
                 float pulse = 0.5f + 0.5f * Mathf.Sin(Time.realtimeSinceStartup * 4f);
-                ImGuiKit.Circle(p, r + (7f + 7f * pulse) * s, new Color(1f, 0.95f, 0.5f, 0.85f));
+                ImGuiKit.Circle(ic, ir + (7f + 7f * pulse) * s, new Color(1f, 0.95f, 0.5f, 0.85f));
             }
 
             Color tint = visited ? new Color(1f, 1f, 1f, 0.55f) : available ? Color.white : new Color(0.62f, 0.62f, 0.62f, 0.8f);
@@ -108,10 +120,19 @@ public class MapScreen : IRunScreen
             if (type != null && type.icon != null)
             {
                 // Dimmed icons are see-through: put the background colour under them so the edges don't show through.
-                if (tint.a < 1f) ImGuiKit.Circle(p, r, BandColor(db, n.layer));
+                bool boss = n.id == map.bossId;
+                if (tint.a < 1f && !boss) ImGuiKit.Circle(p, r, BandColor(db, n.layer));
                 Color old = GUI.color;
                 GUI.color = tint;
-                GUI.DrawTexture(new Rect(p.x - r, p.y - r, r * 2f, r * 2f), type.icon, ScaleMode.StretchToFill, true);
+                // The final boss shows its silhouette large and un-squashed instead of a round node icon.
+                Rect art = new Rect(p.x - r, p.y - r, r * 2f, r * 2f);
+                if (boss)
+                {
+                    float artH = r * 2f * BossArtScale;
+                    float artW = artH * type.icon.width / Mathf.Max(1f, type.icon.height);
+                    art = new Rect(p.x - artW * 0.5f, p.y - bossLift - artH * 0.5f, artW, artH);
+                }
+                GUI.DrawTexture(art, type.icon, ScaleMode.StretchToFill, true);
                 GUI.color = old;
             }
             else
@@ -122,7 +143,7 @@ public class MapScreen : IRunScreen
                 ImGuiKit.Circle(p, r, Color.Lerp(baseColor, Color.white, hover && available ? 0.35f : 0f) * tint);
                 ImGuiKit.Label(new Rect(p.x - r, p.y - r, r * 2f, r * 2f), type != null ? type.glyph : "?", n.id == map.bossId ? 34f : 30f, Color.white, TextAnchor.MiddleCenter, true);
             }
-            if (visited) DrawTick(new Vector2(p.x + r * 0.7f, p.y + r * 0.7f), 16f * s);
+            if (visited) DrawTick(new Vector2(ic.x + ir * 0.7f, ic.y + ir * 0.7f), 16f * s);
 
             if (!readOnly && available && hover && e.type == EventType.MouseDown && e.button == 0)
             {
@@ -174,6 +195,8 @@ public class MapScreen : IRunScreen
             int lo = Mathf.FloorToInt(layerF);
             float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(layerF - lo));
             Color c = Color.Lerp(BandColor(db, Mathf.Clamp(lo, 0, maxLayer)), BandColor(db, Mathf.Clamp(lo + 1, 0, maxLayer)), t);
+            // The boss night: darken into purple towards the final layer and beyond.
+            c = Color.Lerp(c, NightPurple, Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(maxLayer - 1.2f, maxLayer + 1f, layerF)));
             ImGuiKit.Fill(new Rect(0f, y, Screen.width, step + 1f), c);
         }
     }

@@ -38,7 +38,7 @@ public class EventScreen : IRunScreen
         {
             EventData.EventOption o = evt.options[i];
             string effects = "";
-            if (o.effects != null)
+            if (o.effects != null && !o.hideEffects)
                 foreach (RunEffect e in o.effects) if (e != null) effects += (effects.Length > 0 ? ", " : "") + e.Describe();
             string label = o.label + (o.coinCost > 0 ? $"  (costs {o.coinCost})" : "") + (effects.Length > 0 ? $"  —  {effects}" : "");
             bool afford = director.Run.coins >= o.coinCost;

@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: The Caterpillar
   glyph: B
   color: {r: 0.95, g: 0.4, b: 0.55, a: 1}
-  icon: {fileID: 2800000, guid: 135bb354478847e41b4377d61c704650, type: 3}
+  icon: {fileID: 2800000, guid: 1a4e54f4cea46e44eb12d352129ca118, type: 3}
   legendLabel: ???
   description: The final night. Feed the caterpillar until it bursts.
   farmingAllowed: 0

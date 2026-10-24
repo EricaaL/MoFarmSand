@@ -35,8 +35,6 @@ MonoBehaviour:
       weight: 2
     - type: {fileID: 11400000, guid: 4da8ec1eed9e13547bd7a06682a03d07, type: 2}
       weight: 2
-    - type: {fileID: 11400000, guid: f2e2dff8b3c2a98498473c292b350369, type: 2}
-      weight: 1
   - fromLayer: 6
     toLayer: 10
     weights:
@@ -48,8 +46,6 @@ MonoBehaviour:
       weight: 3
     - type: {fileID: 11400000, guid: 4da8ec1eed9e13547bd7a06682a03d07, type: 2}
       weight: 2
-    - type: {fileID: 11400000, guid: f2e2dff8b3c2a98498473c292b350369, type: 2}
-      weight: 1
   - fromLayer: 11
     toLayer: 99
     weights:

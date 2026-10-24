@@ -240,7 +240,8 @@ public static class RunSystemsBuilder
         MaxHpEffect maxHp1 = A<MaxHpEffect>($"{Data}/Run/Effects/Effect_MaxHp1.asset", e => e.delta = 1);
         DamageEffect damage1 = A<DamageEffect>($"{Data}/Run/Effects/Effect_Damage1.asset", e => e.amount = 1);
         AddCoinsEffect coins25 = A<AddCoinsEffect>($"{Data}/Run/Effects/Effect_Coins25.asset", e => e.amount = 25);
-        AddItemEffect turnipSeeds3 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_TurnipSeeds3.asset", e => { e.item = seedTurnip; e.count = 3; });
+        AddCoinsEffect coins10 = A<AddCoinsEffect>($"{Data}/Run/Effects/Effect_Coins10.asset", e => e.amount = 10);
+        AddItemEffect turnipSeeds3 =A<AddItemEffect>($"{Data}/Run/Effects/Effect_TurnipSeeds3.asset", e => { e.item = seedTurnip; e.count = 3; });
         AddItemEffect pumpkinSeeds3 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_PumpkinSeeds3.asset", e => { e.item = seedPumpkin; e.count = 3; });
         AddItemEffect pumpkinSeeds4 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_PumpkinSeeds4.asset", e => { e.item = seedPumpkin; e.count = 4; });
         AddCoinsEffect nestEgg = A<AddCoinsEffect>($"{Data}/Run/Effects/Effect_NestEgg25.asset", e => e.amount = 25);
@@ -276,7 +277,17 @@ public static class RunSystemsBuilder
                 new EventData.EventOption { label = "Shoo the crow away", coinCost = 0, effects = new List<RunEffect>() },
             };
         });
-        EventRegistry events = Registry<EventRegistry, EventData>($"{Data}/Registries/EventRegistry.asset", evPup, evWell, evCrow);
+        // The old Treasure map node is folded into the random events: a chest on the ground with one button.
+        EventData evTreasure = A<EventData>($"{Data}/Events/Event_TreasureChest.asset", e =>
+        {
+            e.eventId = "treasure_chest"; e.title = "A Treasure Chest";
+            e.body = "You found a treasure chest lying on the ground. It is full of shiny coins.";
+            e.options = new List<EventData.EventOption>
+            {
+                new EventData.EventOption { label = "Take 10 coins", coinCost = 0, effects = new List<RunEffect> { coins10 }, hideEffects = true },
+            };
+        });
+        EventRegistry events = Registry<EventRegistry, EventData>($"{Data}/Registries/EventRegistry.asset", evPup, evWell, evCrow, evTreasure);
 
         RunModifierData scarecrow = Modifier("scarecrow", "Scarecrow", "Halves the severity of Locust Swarms.", 25, new[] { "locust" }, 0.5f, 1f, 0);
         RunModifierData rainBarrel = Modifier("rain_barrel", "Rain Barrel", "Halves the severity of Drought and Heatwave.", 25, new[] { "drought", "heatwave" }, 0.5f, 1f, 0);
@@ -333,8 +344,9 @@ public static class RunSystemsBuilder
             m.bands = new List<MapGenConfig.LayerBand>
             {
                 Band(0, 1, (nFarm, 5f), (nMerchant, 3f), (nEvent, 1f)),
-                Band(2, 5, (nFarm, 4f), (nMerchant, 2f), (nDisaster, 2f), (nEvent, 2f), (nTreasure, 1f)),
-                Band(6, 10, (nFarm, 3f), (nMerchant, 2f), (nDisaster, 3f), (nEvent, 2f), (nTreasure, 1f)),
+                // No Treasure nodes any more: treasure is one of the random events (Event_TreasureChest).
+                Band(2, 5, (nFarm, 4f), (nMerchant, 2f), (nDisaster, 2f), (nEvent, 2f)),
+                Band(6, 10, (nFarm, 3f), (nMerchant, 2f), (nDisaster, 3f), (nEvent, 2f)),
                 Band(11, 99, (nFarm, 3f), (nMerchant, 2f), (nDisaster, 2f), (nEvent, 1f)),
             };
             m.forcedLayers = new List<MapGenConfig.ForcedLayer>

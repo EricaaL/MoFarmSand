@@ -14,6 +14,7 @@ public class DebugHUD : MonoBehaviour
     private HeldItemView heldItem;
     private string voidMessage = string.Empty;
     private float voidMessageUntil;
+    private string wonText = "You Survived Another Year...";
 
     // Death screen: red title plus black creeping in from the frame.
     private const float DefaultDeathSeconds = 4.5f;
@@ -51,9 +52,17 @@ public class DebugHUD : MonoBehaviour
 
     private void HandlePhaseChanged(GamePhase phase)
     {
+        RunDirector director = FindFirstObjectByType<RunDirector>();
+        if (phase == GamePhase.Won)
+        {
+            // Only the final boss ends the year; a season boss just closes the season. The single-day golden slice has no plan.
+            bool seasonBoss = director != null && director.IsRoguelike && director.Plan != null
+                && director.Plan.node != null && !director.Plan.node.endsRun;
+            wonText = seasonBoss ? "Season Complete!" : "You Survived Another Year...";
+            return;
+        }
         if (phase != GamePhase.Lost) return;
         lostAt = Time.unscaledTime;
-        RunDirector director = FindFirstObjectByType<RunDirector>();
         deathSeconds = director != null && director.Db != null && director.Db.run != null ? director.Db.run.deathScreenSeconds : DefaultDeathSeconds;
         // Only the roguelike loop reloads into a screen that can carry the blur on.
         if (director != null && director.IsRoguelike) DeathReveal.Begin(deathSeconds);
@@ -192,7 +201,7 @@ public class DebugHUD : MonoBehaviour
             ImGuiKit.HudLabel(new Rect(0f, h * 0.3f, w, 60f), voidMessage, new GUIStyle(big) { fontSize = 36 });
 
         // Banner
-        if (phase == GamePhase.Won) ImGuiKit.HudLabel(new Rect(0f, h / 2f - 40f, w, 80f), "You Survived Another Year...", big);
+        if (phase == GamePhase.Won) ImGuiKit.HudLabel(new Rect(0f, h / 2f - 40f, w, 80f), wonText, big);
         else if (phase == GamePhase.DayEnd) ImGuiKit.HudLabel(new Rect(0f, h / 2f - 40f, w, 80f), "DAY COMPLETE!", big);
 
         if (phase == GamePhase.Lost) DrawDeathScreen(w, h);
