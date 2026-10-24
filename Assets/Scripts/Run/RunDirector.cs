@@ -424,6 +424,18 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     /// <summary>Today's conditions for the item descriptions (grow times, prices, demand).</summary>
     public ItemInfoContext BuildItemContext(ItemData item)
     {
+        // No run in progress (title screen): describe the items on the first day of year 1 with its typical weather.
+        if (Run == null || plan == null)
+        {
+            CalendarDate first = db.Calendar.DateOf(0);
+            return new ItemInfoContext
+            {
+                db = db,
+                date = first,
+                weather = ClimateModel.SampleDay(first, db.climate, SeededRng.Derive(0, 0, RngStreams.Weather)),
+                bossScale = BossScaling.ForYear(1, db.difficulty)
+            };
+        }
         return new ItemInfoContext
         {
             db = db,
@@ -715,7 +727,8 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         RunLogic.CompleteNode(run, Meta, outcome, plan, db);
         RunSession.Commit();
 
-        yield return new WaitForSecondsRealtime(db.run.dayEndDelay);
+        yield return new WaitForSecondsRealtime(phase == GamePhase.Lost ? db.run.deathScreenSeconds : db.run.dayEndDelay);
+        if (phase == GamePhase.Lost) DeathReveal.Arm();   // the next screen comes up blurred and sharpens
         ReloadScene();
     }
 

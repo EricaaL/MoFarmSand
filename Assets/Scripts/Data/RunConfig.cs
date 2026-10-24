@@ -34,4 +34,6 @@ public class RunConfig : ScriptableObject
 
     [Header("Flow")]
     public float dayEndDelay = 2.5f;
+    [Tooltip("How long the YOU DIED screen plays (red title, black creeping in from the edges) before a lost day reloads.")]
+    public float deathScreenSeconds = 4.5f;
 }
