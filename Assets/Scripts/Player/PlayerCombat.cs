@@ -28,6 +28,9 @@ public class PlayerCombat : MonoBehaviour
 
     /// <summary>Raised when a crop leaves the player's hands (thrown or fired). Drives the throw/shoot sounds.</summary>
     public static event System.Action<CropData> Fired;
+    /// <summary>Raised when the throw button is first held and the arc appears. Drives the bow-draw sound.</summary>
+    public static event System.Action AimStarted;
+    private bool wasAiming;
 
     private bool canAct = true;
     private PlayerDeath death;
@@ -79,6 +82,10 @@ public class PlayerCombat : MonoBehaviour
             cancelPressed = Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame,
             cooldownReady = Time.time >= nextThrowTime
         });
+
+        bool aimingNow = throwAim.IsAiming;
+        if (aimingNow && !wasAiming) AimStarted?.Invoke();
+        wasAiming = aimingNow;
 
         if ((aim == ThrowAimResult.Aiming || aim == ThrowAimResult.Throw) && TryGetAim(out Vector3 p0, out Vector3 v0, out float flight))
         {

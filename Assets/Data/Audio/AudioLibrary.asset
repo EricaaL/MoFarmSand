@@ -16,11 +16,26 @@ MonoBehaviour:
   ripe: {fileID: 11400000, guid: f207237c3aa9bbe489445ee4e4549fd0, type: 2}
   harvest: {fileID: 11400000, guid: 3ed6843fc6cb58043999ba25e21950e3, type: 2}
   coin: {fileID: 11400000, guid: 76e44a29895f0634f9ff45d932c8e65f, type: 2}
+  aimCrop: {fileID: 11400000, guid: e4e921b57269a1d4abb063695084d55d, type: 2}
   throwCrop: {fileID: 11400000, guid: 63409c124f2a7d8488794193196be6bf, type: 2}
   shoot: {fileID: 11400000, guid: fc45abbd63c805b46bee7135bda65c2a, type: 2}
   splat: {fileID: 11400000, guid: f2583ccfacb68e24ea1533cdf74b2993, type: 2}
   shield: {fileID: 11400000, guid: 0094710d4e7d873499a49b0243a92a95, type: 2}
   hurt: {fileID: 11400000, guid: d262611c96846894f81b2ee010d83366, type: 2}
+  button: {fileID: 11400000, guid: 2f0048ad5209bbc4196eba6048fc44cf, type: 2}
+  buttonSmall: {fileID: 11400000, guid: 50f2a5615d9508a4d9aef4a7ef3d9f04, type: 2}
+  tabSwitch: {fileID: 11400000, guid: 62d5be90c9f85f44f8580e7d78fac4e9, type: 2}
+  inventorySelect: {fileID: 11400000, guid: 5907de8523f8a9e43bba2033eff21a02, type: 2}
+  footstep: {fileID: 11400000, guid: 205ad49d677f8ae4ba89787b79f9ba1f, type: 2}
+  wither: {fileID: 11400000, guid: 890fa1a37f8a4d44399fd99f8e27cfb3, type: 2}
+  shieldBreak: {fileID: 11400000, guid: dd6c112527b9c324c97c98be81e4f2b6, type: 2}
+  death: {fileID: 11400000, guid: 62ab1091614cf394aa4ab35fbe666d1a, type: 2}
+  fall: {fileID: 11400000, guid: 3a0e6b04f2a71454d803cb6100e6899b, type: 2}
+  crowGreet: {fileID: 11400000, guid: 1247177e3c30b14468c2a7e70d149e5a, type: 2}
+  crowBuy: {fileID: 11400000, guid: f1c548461538b64449d7faf961ca3396, type: 2}
+  crowSell: {fileID: 11400000, guid: c078d5dc0e53eff4f8f8239831e9a156, type: 2}
+  crowNo: {fileID: 11400000, guid: 269cb4da62d3a984aa733f28b41db139, type: 2}
+  crowBye: {fileID: 11400000, guid: 6a4b98069ee33724aafc7e2ad5d76e2a, type: 2}
   bossGulp: {fileID: 11400000, guid: f62708904de4730418048b558649f45b, type: 2}
   bossScare: {fileID: 11400000, guid: 097a6a7f8a2f9c44599469227dd2d5a0, type: 2}
   burst: {fileID: 11400000, guid: d85fd286834bc694a93d32c38ea3d8ac, type: 2}

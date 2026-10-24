@@ -126,7 +126,7 @@ public class MapScreen : IRunScreen
 
             if (!readOnly && available && hover && e.type == EventType.MouseDown && e.button == 0)
             {
-                e.Use();
+                ImGuiKit.ConsumeSmallClick();
                 director.ChooseNode(n.id);
                 return;
             }

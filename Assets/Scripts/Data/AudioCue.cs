@@ -11,6 +11,8 @@ public class AudioCue : ScriptableObject
     public Vector2 pitchRange = new Vector2(0.95f, 1.05f);
     [Tooltip("The cue can't replay faster than this (stops rapid-fire peas from turning into a buzz).")]
     public float minInterval = 0.05f;
+    [Tooltip("Plays only the first N seconds of the clip (0 = the whole clip).")]
+    public float maxSeconds;
     [Tooltip("Looping cues are music beds.")]
     public bool loop;
 
@@ -37,6 +39,7 @@ public class AudioCue : ScriptableObject
     private void OnValidate()
     {
         minInterval = Mathf.Max(0f, minInterval);
+        maxSeconds = Mathf.Max(0f, maxSeconds);
         pitchRange = new Vector2(Mathf.Max(0.1f, pitchRange.x), Mathf.Max(0.1f, pitchRange.y));
     }
 }

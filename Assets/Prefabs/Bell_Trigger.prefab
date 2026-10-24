@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8047617883129796489}
   - component: {fileID: 3668199818928647676}
   - component: {fileID: 8997111072929782999}
+  - component: {fileID: 6933691855843410167}
   m_Layer: 0
   m_Name: Bell_Trigger
   m_TagString: Untagged
@@ -67,6 +68,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 499009889167a574da63f191e3be6acf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &6933691855843410167
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5268343354911932748}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2e3ac373ff34c846968af040afb51ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  swingParts:
+  - {fileID: 5710986802397320515}
+  - {fileID: 1083740970565734032}
+  - {fileID: 1577308790679224711}
+  swingAngle: 25
+  swingFrequency: 2.2
+  damping: 3.5
+  punchScale: 0.06
+  punchSeconds: 0.18
 --- !u!1001 &5149884772268799786
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -136,8 +158,23 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6a9a7c13d91387444bd3b4c5c7b9e473, type: 3}
+--- !u!4 &1083740970565734032 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -4003092854873392710, guid: 6a9a7c13d91387444bd3b4c5c7b9e473, type: 3}
+  m_PrefabInstance: {fileID: 5149884772268799786}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1577308790679224711 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -3270834789232462163, guid: 6a9a7c13d91387444bd3b4c5c7b9e473, type: 3}
+  m_PrefabInstance: {fileID: 5149884772268799786}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &4679989429802832065 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 6a9a7c13d91387444bd3b4c5c7b9e473, type: 3}
+  m_PrefabInstance: {fileID: 5149884772268799786}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &5710986802397320515 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 592664080621265513, guid: 6a9a7c13d91387444bd3b4c5c7b9e473, type: 3}
   m_PrefabInstance: {fileID: 5149884772268799786}
   m_PrefabAsset: {fileID: 0}

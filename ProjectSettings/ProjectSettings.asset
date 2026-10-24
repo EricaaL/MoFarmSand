@@ -817,7 +817,9 @@ PlayerSettings:
   webGLCloseOnQuit: 0
   webWasm2023: 0
   scriptingDefineSymbols:
+    Android: COZY_WEATHER;COZY_3_AND_UP;COZY_URP
     Standalone: COZY_WEATHER;COZY_3_AND_UP;COZY_URP
+    WebGL: COZY_WEATHER;COZY_3_AND_UP;COZY_URP
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

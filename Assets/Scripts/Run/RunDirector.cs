@@ -564,8 +564,10 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         if (run.coins < option.coinCost) return;
 
         run.coins -= option.coinCost;
+        int coinsBefore = run.coins;
         if (option.effects != null)
             foreach (RunEffect e in option.effects) if (e != null) e.Apply(run, db);
+        if (run.coins > coinsBefore) CoinsMoved?.Invoke();
         run.eventResolvedNodeId = plan.nodeId;
         RunSession.Commit();
         StartCoroutine(BeginDayRoutine());
@@ -739,14 +741,14 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     public DepositResult Deposit(int amount)
     {
         DepositResult r = BankLogic.Deposit(Run, Meta, amount, db.bank);
-        if (r.spent > 0) { wallet.Set(Run.coins); RunSession.Commit(); }
+        if (r.spent > 0) { wallet.Set(Run.coins); RunSession.Commit(); CoinsMoved?.Invoke(); }
         return r;
     }
 
     public WithdrawResult Withdraw(int amount)
     {
         WithdrawResult r = BankLogic.Withdraw(Run, Meta, amount, db.bank);
-        if (r.taken > 0) { wallet.Set(Run.coins); RunSession.Commit(); }
+        if (r.taken > 0) { wallet.Set(Run.coins); RunSession.Commit(); CoinsMoved?.Invoke(); }
         return r;
     }
 
@@ -767,13 +769,23 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         return EconomyModel.SeedPrice(row, plan.date.season, db.economy, shock);
     }
 
+    /// <summary>Seam events for audio: the crow reacts to a purchase, a sale, or a refused purchase.</summary>
+    public static event System.Action Bought;
+    public static event System.Action Sold;
+    public static event System.Action BuyRefused;
+    /// <summary>Coins moved outside the shop: a bank deposit or withdrawal, or an event reward.</summary>
+    public static event System.Action CoinsMoved;
+
     public bool Buy(int offerIndex)
     {
         if (plan == null || offerIndex < 0 || offerIndex >= plan.offers.Count) return false;
         ShopOffer offer = plan.offers[offerIndex];
-        if (offer.stock <= 0) return false;
         int price = OfferPrice(offer);
-        if (wallet.Coins < price) return false;
+        if (offer.stock <= 0 || wallet.Coins < price)
+        {
+            BuyRefused?.Invoke();
+            return false;
+        }
 
         if (offer.kind == OfferKind.Seed)
         {
@@ -789,6 +801,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         wallet.TrySpend(price);
         offer.stock--;
         plan.offers[offerIndex] = offer;
+        Bought?.Invoke();
         return true;
     }
 
@@ -811,6 +824,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
             earned += price;
             EconomyModel.ApplySale(Run.market, crop.Id, 1, db.economy);
         }
+        if (earned > 0) Sold?.Invoke();
         return earned;
     }
 

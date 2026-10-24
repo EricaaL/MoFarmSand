@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78f05f6e5eb2f1141ab0d09089c7ad37, type: 3}
   m_Name: Cue_bell
   m_EditorClassIdentifier: 
-  clips: []
-  volume: 1
+  clips:
+  - {fileID: 8300000, guid: bd4960ee682fa0743935d3528377d001, type: 3}
+  volume: 0.4
   pitchRange: {x: 0.95, y: 1.05}
   minInterval: 0.05
   loop: 0

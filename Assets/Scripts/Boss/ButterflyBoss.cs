@@ -13,6 +13,8 @@ public class ButterflyBoss : MonoBehaviour
     [Tooltip("Swing 0..flapDegrees instead of +/-flapDegrees, so paper wings only tip back and never fold away from the body.")]
     [SerializeField] private bool flapBackOnly;
     [SerializeField] private float contactRange = 1.4f;
+    [Tooltip("How close the farmer must get to the butterfly's body collider to be hit (contactRange is the fallback without colliders).")]
+    [SerializeField] private float contactGap = 0.3f;
     [SerializeField] private float contactCooldown = 1.2f;
     [SerializeField] private float knockbackForce = 14f;
 
@@ -20,13 +22,19 @@ public class ButterflyBoss : MonoBehaviour
     private PlayerHealth playerHealth;
     private PlayerController playerController;
     private BossHunger hunger;
+    private Collider bodyCollider;
+    private Collider playerCollider;
     private bool awake;
     private float nextHitTime;
     private Vector3 groundPos;
 
     public bool IsAwake => awake;
 
-    private void Awake() { hunger = GetComponentInParent<BossHunger>(); }
+    private void Awake()
+    {
+        hunger = GetComponentInParent<BossHunger>();
+        bodyCollider = body != null ? body.GetComponent<Collider>() : null;
+    }
 
     private void Start()
     {
@@ -36,6 +44,7 @@ public class ButterflyBoss : MonoBehaviour
             player = p.transform;
             playerHealth = p.GetComponent<PlayerHealth>();
             playerController = p.GetComponent<PlayerController>();
+            playerCollider = p.GetComponent<Collider>();
         }
         if (GameManager.Instance != null) GameManager.Instance.OnPhaseChanged += HandlePhase;
     }
@@ -73,12 +82,24 @@ public class ButterflyBoss : MonoBehaviour
         float y = hoverHeight + Mathf.Sin(Time.time * 3f) * bobAmount;
         transform.position = new Vector3(groundPos.x, y, groundPos.z);
 
-        if (!scared && to.magnitude <= contactRange && Time.time >= nextHitTime)
+        if (!scared && Touching(to) && Time.time >= nextHitTime)
         {
             nextHitTime = Time.time + contactCooldown;
             if (playerHealth != null) playerHealth.TakeDamage(hitDamage);
             if (playerController != null) playerController.ApplyKnockback(to.normalized * knockbackForce);
         }
+    }
+
+    /// <summary>
+    /// Contact is measured from the body collider's surface: its sphere is big (and grows with fullness), so the solid
+    /// collider keeps the farmer farther away than contactRange from the centre.
+    /// </summary>
+    private bool Touching(Vector3 flatTo)
+    {
+        if (bodyCollider == null || playerCollider == null) return flatTo.magnitude <= contactRange;
+        Vector3 a = bodyCollider.ClosestPoint(playerCollider.bounds.center);
+        Vector3 b = playerCollider.bounds.ClosestPoint(a);
+        return (a - b).sqrMagnitude <= contactGap * contactGap;
     }
 
     private void AnimateWings()

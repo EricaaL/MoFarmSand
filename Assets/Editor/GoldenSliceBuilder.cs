@@ -230,6 +230,12 @@ public static class GoldenSliceBuilder
             bell.GetComponent<Renderer>().sharedMaterial = bellMat;
 
             root.AddComponent<BellTrigger>();
+            BellSwing bellSwing = root.AddComponent<BellSwing>();
+            SerializedObject swingSo = new SerializedObject(bellSwing);
+            SerializedProperty parts = swingSo.FindProperty("swingParts");
+            parts.arraySize = 1;
+            parts.GetArrayElementAtIndex(0).objectReferenceValue = bell.transform;
+            swingSo.ApplyModifiedPropertiesWithoutUndo();
             return root;
         });
 

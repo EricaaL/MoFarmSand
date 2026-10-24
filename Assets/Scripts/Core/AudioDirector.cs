@@ -16,7 +16,11 @@ public class AudioDirector : MonoBehaviour
     [SerializeField] private float musicFadeSeconds = 1.5f;
     [Range(0f, 1f)] [SerializeField] private float musicVolume = 0.6f;
 
+    private PlayerDeath death;
+    private const float TrimFadeSeconds = 0.1f;
     private AudioSource[] pool;
+    private float[] voiceStopAt;
+    private float[] voiceVolume;
     private int nextVoice;
     private readonly Dictionary<AudioCue, float> lastPlayed = new Dictionary<AudioCue, float>();
 
@@ -27,11 +31,13 @@ public class AudioDirector : MonoBehaviour
 
     private int lastHp = -1;
     private int lastShield;
-    private int lastCoins = -1;
 
     private void Awake()
     {
         pool = new AudioSource[Mathf.Max(1, voices)];
+        voiceStopAt = new float[pool.Length];
+        voiceVolume = new float[pool.Length];
+        for (int i = 0; i < voiceStopAt.Length; i++) voiceStopAt[i] = float.MaxValue;
         for (int i = 0; i < pool.Length; i++) pool[i] = NewSource("Voice " + i, false);
         music = new[] { NewSource("Music A", true), NewSource("Music B", true) };
     }
@@ -53,8 +59,19 @@ public class AudioDirector : MonoBehaviour
         FarmTile.Ripened += HandleRipened;
         FarmTile.Harvested += HandleHarvested;
         PlayerCombat.Fired += HandleFired;
+        PlayerCombat.AimStarted += HandleAimStarted;
         CropProjectile.Landed += HandleLanded;
         BellTrigger.Rung += HandleBell;
+        FarmTile.Withered += HandleWithered;
+        ImGuiKit.Clicked += HandleButton;
+        ImGuiKit.ClickedSmall += HandleButtonSmall;
+        ImGuiKit.ClickedTab += HandleTab;
+        ImGuiKit.ClickedSelect += HandleSelect;
+        PlayerInventory.SlotSelected += HandleSelect;
+        RunDirector.Bought += HandleBought;
+        RunDirector.Sold += HandleSold;
+        RunDirector.BuyRefused += HandleBuyRefused;
+        RunDirector.CoinsMoved += HandleCoinsMoved;
         if (hunger != null)
         {
             hunger.OnBossFed += HandleFed;
@@ -67,13 +84,18 @@ public class AudioDirector : MonoBehaviour
             lastHp = health.Hp;
             lastShield = health.ShieldCharges;
             health.OnChanged += HandleHealth;
+            death = health.GetComponent<PlayerDeath>();
+            if (death != null) death.Died += HandleDied;
         }
-        if (wallet != null) wallet.OnChanged += HandleCoins;
     }
 
     private void Start()
     {
-        if (GameManager.Instance != null) GameManager.Instance.OnPhaseChanged += HandlePhase;
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnPhaseChanged += HandlePhase;
+            GameManager.Instance.OnVoidFall += HandleVoidFall;
+        }
         if (library != null) SetMusic(library.dayMusic);
     }
 
@@ -83,8 +105,20 @@ public class AudioDirector : MonoBehaviour
         FarmTile.Ripened -= HandleRipened;
         FarmTile.Harvested -= HandleHarvested;
         PlayerCombat.Fired -= HandleFired;
+        PlayerCombat.AimStarted -= HandleAimStarted;
         CropProjectile.Landed -= HandleLanded;
         BellTrigger.Rung -= HandleBell;
+        FarmTile.Withered -= HandleWithered;
+        ImGuiKit.Clicked -= HandleButton;
+        ImGuiKit.ClickedSmall -= HandleButtonSmall;
+        ImGuiKit.ClickedTab -= HandleTab;
+        ImGuiKit.ClickedSelect -= HandleSelect;
+        PlayerInventory.SlotSelected -= HandleSelect;
+        RunDirector.Bought -= HandleBought;
+        RunDirector.Sold -= HandleSold;
+        RunDirector.BuyRefused -= HandleBuyRefused;
+        RunDirector.CoinsMoved -= HandleCoinsMoved;
+        if (death != null) death.Died -= HandleDied;
         if (hunger != null)
         {
             hunger.OnBossFed -= HandleFed;
@@ -93,12 +127,15 @@ public class AudioDirector : MonoBehaviour
             hunger.OnBossEvolved -= HandleEvolved;
         }
         if (health != null) health.OnChanged -= HandleHealth;
-        if (wallet != null) wallet.OnChanged -= HandleCoins;
     }
 
     private void OnDestroy()
     {
-        if (GameManager.Instance != null) GameManager.Instance.OnPhaseChanged -= HandlePhase;
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnPhaseChanged -= HandlePhase;
+            GameManager.Instance.OnVoidFall -= HandleVoidFall;
+        }
     }
 
     // ---------------------------------------------------------------- handlers
@@ -107,6 +144,17 @@ public class AudioDirector : MonoBehaviour
     private void HandleRipened(FarmTile tile) { Play(library != null ? library.ripe : null); }
     private void HandleHarvested(FarmTile tile, CropData crop) { Play(library != null ? library.harvest : null); }
     private void HandleBell() { Play(library != null ? library.bell : null); }
+    private void HandleButton() { Play(library != null ? library.button : null); }
+    private void HandleButtonSmall() { Play(library != null ? library.buttonSmall : null); }
+    private void HandleAimStarted() { Play(library != null ? library.aimCrop : null); }
+    private void HandleSelect() { Play(library != null ? library.inventorySelect : null); }
+    private void HandleTab() { Play(library != null ? library.tabSwitch : null); }
+    private void HandleWithered(FarmTile tile) { Play(library != null ? library.wither : null); }
+    private void HandleDied() { Play(library != null ? library.death : null); }
+    private void HandleVoidFall(bool endsDay) { Play(library != null ? library.fall : null); }
+    private void HandleBought() { Play(library != null ? library.crowBuy : null); }
+    private void HandleSold() { Play(library != null ? library.crowSell : null); }
+    private void HandleBuyRefused() { Play(library != null ? library.crowNo : null); }
     private void HandleLanded(Vector3 position, bool hitBoss) { Play(library != null ? library.splat : null); }
     private void HandleFed(float current, float max) { Play(library != null ? library.bossGulp : null); }
     private void HandleScared(float seconds) { Play(library != null ? library.bossScare : null); }
@@ -125,16 +173,13 @@ public class AudioDirector : MonoBehaviour
         {
             if (health.Hp < lastHp) Play(library.hurt);
             else if (health.ShieldCharges > lastShield) Play(library.shield);
+            else if (health.ShieldCharges < lastShield) Play(library.shieldBreak);
         }
         lastHp = health.Hp;
         lastShield = health.ShieldCharges;
     }
 
-    private void HandleCoins(int coins)
-    {
-        if (library != null && lastCoins >= 0 && coins > lastCoins) Play(library.coin);
-        lastCoins = coins;
-    }
+    private void HandleCoinsMoved() { Play(library != null ? library.coin : null); }
 
     private void HandlePhase(GamePhase phase)
     {
@@ -162,6 +207,9 @@ public class AudioDirector : MonoBehaviour
         src.volume = cue.volume;
         src.pitch = cue.RandomPitch();
         src.Play();
+        int voice = (nextVoice + pool.Length - 1) % pool.Length;
+        voiceStopAt[voice] = cue.maxSeconds > 0f ? now + cue.maxSeconds / src.pitch : float.MaxValue;
+        voiceVolume[voice] = cue.volume;
     }
 
     private void SetMusic(AudioCue cue)
@@ -183,6 +231,16 @@ public class AudioDirector : MonoBehaviour
 
     private void Update()
     {
+        // Trimmed cues (maxSeconds) fade out over their last moments, then stop.
+        float nowUnscaled = Time.unscaledTime;
+        for (int i = 0; i < pool.Length; i++)
+        {
+            if (!pool[i].isPlaying || voiceStopAt[i] == float.MaxValue) continue;
+            float left = voiceStopAt[i] - nowUnscaled;
+            if (left <= 0f) { pool[i].Stop(); voiceStopAt[i] = float.MaxValue; }
+            else if (left < TrimFadeSeconds) pool[i].volume = voiceVolume[i] * (left / TrimFadeSeconds);
+        }
+
         float step = Time.unscaledDeltaTime / Mathf.Max(0.05f, musicFadeSeconds);
         for (int i = 0; i < music.Length; i++)
         {

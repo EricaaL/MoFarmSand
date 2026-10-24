@@ -23,6 +23,8 @@ public class PlayerInventory : MonoBehaviour
     [SerializeField] private CropData[] starterCrops;
 
     public event Action OnChanged;
+    /// <summary>Seam event for audio: the player picked a different hotbar slot (keys, scroll wheel or click).</summary>
+    public static event Action SlotSelected;
     public int ActiveIndex { get; private set; }
     public ItemData ActiveItem => slots[ActiveIndex].item;
     /// <summary>Active slot as a crop (throwable / edible), or null if it holds a seed or nothing.</summary>
@@ -71,6 +73,7 @@ public class PlayerInventory : MonoBehaviour
         if (index == ActiveIndex) return;
         ActiveIndex = index;
         OnChanged?.Invoke();
+        SlotSelected?.Invoke();
     }
 
     /// <summary>Adds items. Stacking blends quality by count, so a few weak crops weaken a strong stack proportionally.</summary>

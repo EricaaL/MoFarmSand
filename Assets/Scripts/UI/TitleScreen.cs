@@ -119,7 +119,7 @@ public class TitleScreen : IRunScreen
         // The tab opens the upgrade page for this slot.
         if (ok && Event.current.type == EventType.MouseDown && Event.current.button == 0 && tab.Contains(Event.current.mousePosition) && !card.Contains(Event.current.mousePosition))
         {
-            Event.current.Use();
+            ImGuiKit.ConsumeTabClick();
             director.OpenSlot(i);
             return true;
         }

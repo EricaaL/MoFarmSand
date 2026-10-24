@@ -56,7 +56,7 @@ public class ShopScreen : IRunScreen
         ImGuiKit.Heading(toggle, selling ? "BUY" : "SELL", 56f, hover ? Color.white : dim, TextAnchor.MiddleRight);
         if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && hover)
         {
-            Event.current.Use();
+            ImGuiKit.ConsumeSmallClick();
             selling = !selling;
             scroll = 0f;
         }
@@ -105,7 +105,7 @@ public class ShopScreen : IRunScreen
             if (e.type == EventType.MouseDown && e.button == 0 && card.Contains(mouse))
             {
                 if (selling) selectedCrop = crops[i]; else selectedOffer = i;
-                e.Use();
+                ImGuiKit.ConsumeSmallClick();
             }
         }
         GUI.EndClip();

@@ -39050,7 +39050,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 163.38986, y: 163.38986, z: 163.38986}
+  m_LocalScale: {x: 50.02923, y: 50.02923, z: 50.02923}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1951142305}
@@ -42926,6 +42926,10 @@ PrefabInstance:
     - target: {fileID: 5268343354911932748, guid: 073377d3b3960ce43bc09f6ff7344d7a, type: 3}
       propertyPath: m_Name
       value: Bell_Trigger
+      objectReference: {fileID: 0}
+    - target: {fileID: 6933691855843410167, guid: 073377d3b3960ce43bc09f6ff7344d7a, type: 3}
+      propertyPath: swingAngle
+      value: 45
       objectReference: {fileID: 0}
     - target: {fileID: 8047617883129796489, guid: 073377d3b3960ce43bc09f6ff7344d7a, type: 3}
       propertyPath: m_LocalScale.x
@@ -97929,7 +97933,7 @@ Transform:
   m_GameObject: {fileID: 2108974556}
   serializedVersion: 2
   m_LocalRotation: {x: 0.0000000037252899, y: -0, z: -0.0000000074505797, w: 1}
-  m_LocalPosition: {x: 42.04527, y: 99.65921, z: -81.92363}
+  m_LocalPosition: {x: -1.2158766, y: 9.669374, z: -10.150513}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

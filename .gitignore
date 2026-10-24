@@ -72,3 +72,11 @@ crashlytics-build.properties
 /Assets/CartoonGrass.meta
 /Assets/LowPolyFantasyBundle/
 /Assets/LowPolyFantasyBundle.meta
+
+# Asset Store audio packs (import from your own account)
+/Assets/Fantasy UI SFX - Lite Edition/
+/Assets/Fantasy UI SFX - Lite Edition.meta
+/Assets/Footsteps Pack Expanded/
+/Assets/Footsteps Pack Expanded.meta
+/Assets/Game UI & Puzzle Sound Effects Pack/
+/Assets/Game UI & Puzzle Sound Effects Pack.meta

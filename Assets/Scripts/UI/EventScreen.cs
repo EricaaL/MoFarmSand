@@ -60,5 +60,5 @@ public class EventScreen : IRunScreen
         return enabled && Event.current.type == EventType.MouseDown && Event.current.button == 0 && hover && Consume();
     }
 
-    private static bool Consume() { Event.current.Use(); return true; }
+    private static bool Consume() => ImGuiKit.ConsumeClick();
 }

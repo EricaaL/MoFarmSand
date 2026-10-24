@@ -437,7 +437,7 @@ public static class ImGuiKit
         Line(head, head + new Vector2(rad * 0.26f, -rad * 0.26f), t, ink);
         Line(head, head + new Vector2(rad * 0.26f, rad * 0.26f), t, ink);
         Circle(tail, t * 0.5f, ink); Circle(down, t * 0.5f, ink); Circle(back, t * 0.5f, ink); Circle(head, t * 0.5f, ink);
-        return Event.current.type == EventType.MouseDown && Event.current.button == 0 && hover && ConsumeClick();
+        return Event.current.type == EventType.MouseDown && Event.current.button == 0 && hover && ConsumeSmallClick();
     }
 
     /// <summary>Width every key cap in a group should share, so their words line up.</summary>
@@ -473,7 +473,7 @@ public static class ImGuiKit
         Line(r.center + new Vector2(-a, a), r.center + new Vector2(a, -a), t, ink);
         Circle(r.center + new Vector2(-a, -a), t * 0.5f, ink); Circle(r.center + new Vector2(a, a), t * 0.5f, ink);
         Circle(r.center + new Vector2(-a, a), t * 0.5f, ink); Circle(r.center + new Vector2(a, -a), t * 0.5f, ink);
-        return alpha > 0.5f && Event.current.type == EventType.MouseDown && Event.current.button == 0 && hover && ConsumeClick();
+        return alpha > 0.5f && Event.current.type == EventType.MouseDown && Event.current.button == 0 && hover && ConsumeSmallClick();
     }
 
     /// <summary>Folder tabs sitting on top of a panel's top edge. Returns the (possibly new) selected index.</summary>
@@ -493,7 +493,7 @@ public static class ImGuiKit
             if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && tab.Contains(Event.current.mousePosition))
             {
                 result = i;
-                Event.current.Use();
+                if (i != selected) ConsumeTabClick(); else Event.current.Use();
             }
             x += w + gap;
         }
@@ -530,7 +530,47 @@ public static class ImGuiKit
         return value;
     }
 
-    private static bool ConsumeClick() { Event.current.Use(); return true; }
+    /// <summary>Seam event for audio: a menu button was pressed.</summary>
+    public static event System.Action Clicked;
+
+    /// <summary>Marks the current mouse-down as used and raises <see cref="Clicked"/>. Every button path goes through here.</summary>
+    public static bool ConsumeClick()
+    {
+        Event.current.Use();
+        Clicked?.Invoke();
+        return true;
+    }
+
+    /// <summary>Seam event for audio: a small control was pressed (back, close, tabs, cards, map nodes).</summary>
+    public static event System.Action ClickedSmall;
+
+    /// <summary>Seam event for audio: the player switched to another tab or page.</summary>
+    public static event System.Action ClickedTab;
+
+    public static bool ConsumeTabClick()
+    {
+        Event.current.Use();
+        ClickedTab?.Invoke();
+        return true;
+    }
+
+    /// <summary>Seam event for audio: the player picked a different item in the inventory.</summary>
+    public static event System.Action ClickedSelect;
+
+    public static bool ConsumeSelectClick()
+    {
+        Event.current.Use();
+        ClickedSelect?.Invoke();
+        return true;
+    }
+
+    /// <summary>Like <see cref="ConsumeClick"/> for small controls, which get their own sound.</summary>
+    public static bool ConsumeSmallClick()
+    {
+        Event.current.Use();
+        ClickedSmall?.Invoke();
+        return true;
+    }
 
     // ------------------------------------------------------------------ frames
 

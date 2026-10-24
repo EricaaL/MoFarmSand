@@ -116,8 +116,8 @@ public class ItemInfoScreen : IRunScreen
 
             if (e.type == EventType.MouseDown && e.button == 0 && card.Contains(mouse))
             {
+                if (selected != it) ImGuiKit.ConsumeSelectClick(); else e.Use();
                 selected = it;
-                e.Use();
             }
         }
         GUI.EndClip();
