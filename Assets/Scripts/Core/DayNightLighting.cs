@@ -32,6 +32,8 @@ public class DayNightLighting : MonoBehaviour
     private float blend;
     private float target;
     private float dayProgress = -1f;
+    private bool scrubbing;
+    private float scrubTime;
     private Light glow;
 
     /// <summary>Daytime COZY clock value: fixed unless a DayClock is moving the sun from morning to dusk.</summary>
@@ -73,8 +75,51 @@ public class DayNightLighting : MonoBehaviour
     }
     public void TransitionToDay() { target = 0f; }
 
+    /// <summary>
+    /// Holds the sun at a point of the whole day, 0 = morning to 1 = night, ignoring the day clock (trailer timelapse).
+    /// The night look fades in between dusk and night time. Stays in charge until <see cref="EndScrub"/>.
+    /// </summary>
+    public void Scrub(float day01)
+    {
+        scrubbing = true;
+        scrubTime = Mathf.Lerp(morningTime, nightTime, Mathf.Clamp01(day01));
+        ApplyScrub();
+    }
+
+    public void EndScrub() { scrubbing = false; }
+
+    /// <summary>
+    /// Runs the clock on from night through to the next morning (0 = night, 1 = morning), so a night flows into the next
+    /// day instead of jumping. The night look holds, then fades out over the last stretch before dawn.
+    /// </summary>
+    public void ScrubDawn(float t01)
+    {
+        scrubbing = true;
+        scrubTime = Mathf.Lerp(nightTime, 1f + morningTime, Mathf.Clamp01(t01));
+        ApplyScrub();
+    }
+
+    private const float DawnFadeSpan = 0.12f;
+
+    /// <summary>Night look for a clock time; times past 1 are the small hours of the next day.</summary>
+    private float NightWeight(float time)
+    {
+        if (time <= nightTime) return Mathf.InverseLerp(duskTime, nightTime, time);
+        float morning = 1f + morningTime;
+        return 1f - Mathf.InverseLerp(morning - DawnFadeSpan, morning, time);
+    }
+
+    private void ApplyScrub()
+    {
+        blend = target = NightWeight(scrubTime);
+        Apply(blend);
+        CozyWeather cozy = CozyWeather.instance;
+        if (cozy != null && cozy.timeModule != null) cozy.timeModule.currentTime = Mathf.Repeat(scrubTime, 1f);
+    }
+
     private void Update()
     {
+        if (scrubbing) { ApplyScrub(); return; }
         // COZY advances its own clock, so re-pin the time every frame to hold day/night.
         bool usingCozy = CozyWeather.instance != null && CozyWeather.instance.timeModule != null;
         if (Mathf.Approximately(blend, target) && !usingCozy) return;

@@ -16,6 +16,8 @@ public class TrailerDirector : MonoBehaviour
 
     [SerializeField] private Shot[] sequence;
     [SerializeField] private CinemachineCamera burstCamera;
+    [Tooltip("Optional ending, played after the last shot.")]
+    [SerializeField] private TrailerEpilogue epilogue;
     [SerializeField] private float orbitDegreesPerSecond = 12f;
     [SerializeField] private int liveShotPriority = 20;
 
@@ -44,6 +46,11 @@ public class TrailerDirector : MonoBehaviour
         foreach (Shot s in sequence)
         {
             if (s.camera != null) yield return Hold(s.camera, s.seconds);
+        }
+        if (epilogue != null)
+        {
+            epilogue.Play();
+            while (epilogue.IsPlaying) yield return null;
         }
         running = null;
     }

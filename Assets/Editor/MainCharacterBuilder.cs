@@ -72,6 +72,7 @@ public static class MainCharacterBuilder
         new ClipSpec("Farming", "MainCharacter@Farming", "Farming", false),
         new ClipSpec("Throw", "MainCharacter@Throw", "Throw", false),
         new ClipSpec("Death", "MainCharacter@Death", "Death", false),
+        new ClipSpec("Getting Up", "MainCharacter@GettingUp", "GettingUp", false),
     };
 
     // Emote-wheel dances, in slice order (first slice at the top, then clockwise). The Animator state is named after the clip.
@@ -346,6 +347,19 @@ public static class MainCharacterBuilder
         // Death: entered by PlayerAnimator with a CrossFade and never left (the scene reloads after a loss).
         AnimatorState dying = sm.AddState("Death");
         dying.motion = LoadClip("MainCharacter@Death");
+
+        // Getting up: entered by TrailerEpilogue with a CrossFade, then settles back into locomotion (idle).
+        AnimatorState gettingUp = sm.AddState("GettingUp");
+        gettingUp.motion = LoadClip("MainCharacter@GettingUp");
+        AnimatorStateTransition stood = gettingUp.AddTransition(locomotion);
+        stood.hasExitTime = true;
+        stood.exitTime = 0.8f;    // starts early so the long blend into idle finishes before the clip does
+        stood.duration = 0.6f;
+
+        // IK pass on the base layer so SkyLookIK can tilt the head up at the sky.
+        AnimatorControllerLayer[] layers = ctrl.layers;
+        layers[0].iKPass = true;
+        ctrl.layers = layers;
 
         AddThrowLayer(ctrl);
 
