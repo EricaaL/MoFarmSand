@@ -26,22 +26,22 @@ public class HeldItemView
 
         const float k = 1.45f;   // the card is drawn 45% larger than its base size
         float s = ImGuiKit.Scale * k;
-        float w = 200f * s, h = 104f * s, margin = 16f * s;
+        float w = 200f * s, h = 112f * s, margin = 16f * s;
         Rect card = new Rect(screenW - w - margin, screenH - h - margin, w, h);
 
         ImGuiKit.Rounded(card, ImGuiKit.Orange);
         ImGuiKit.Rounded(new Rect(card.x + 5f * s, card.y + 5f * s, card.width - 10f * s, card.height - 10f * s), ImGuiKit.Cream);
 
         // Icon on the left with the item name under it.
-        float iconSize = 44f * s;
-        Rect icon = new Rect(card.x + 14f * s, card.y + 12f * s, iconSize, iconSize);
+        float iconSize = 64f * s;
+        Rect icon = new Rect(card.x + 5f * s + (84f * s - iconSize) * 0.5f, card.y + 8f * s, iconSize, iconSize);
         ItemIconDrawer.Draw(icon, item);
         float nameW = 84f * s;
-        ImGuiKit.Label(new Rect(card.x + 6f * s, card.y + 60f * s, nameW, 38f * s), ImGuiKit.Fit(item.DisplayName, 12f * k, nameW, 2), 12f * k, ImGuiKit.Text, TextAnchor.UpperCenter, true);
+        ImGuiKit.Label(new Rect(card.x + 6f * s, card.y + 72f * s, nameW, 30f * s),ImGuiKit.Fit(item.DisplayName, 12f * k, nameW, 2), 12f * k, ImGuiKit.Text, TextAnchor.UpperCenter, true);
         // Crops grown out of season are weaker; same cue as the hotbar slot.
         float q = inventory.ActiveQuality;
         if (crop != null && Mathf.Abs(q - 1f) > 0.05f)
-            ImGuiKit.Label(new Rect(icon.xMax + 2f * s, icon.y, 34f * s, 16f * s), $"{Mathf.RoundToInt(q * 100f)}%", 11f * k, ImGuiKit.Accent, TextAnchor.UpperLeft, true);
+            ImGuiKit.Label(new Rect(icon.xMax - 6f * s, icon.y, 34f * s, 16f * s), $"{Mathf.RoundToInt(q * 100f)}%", 11f * k, ImGuiKit.Accent, TextAnchor.UpperLeft, true);
 
         // The count, big, on the right.
         float alpha = label.outOfAmmo ? 0.6f + 0.4f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 4f)) : 1f;
