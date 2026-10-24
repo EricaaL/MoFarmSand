@@ -29,7 +29,15 @@ public class PlayerCombat : MonoBehaviour
     /// <summary>Raised when a crop leaves the player's hands (thrown or fired). Drives the throw/shoot sounds.</summary>
     public static event System.Action<CropData> Fired;
 
-    public bool CanAct { get; set; } = true;
+    private bool canAct = true;
+    private PlayerDeath death;
+
+    /// <summary>Always false once the dog is dead, whatever the run director sets.</summary>
+    public bool CanAct
+    {
+        get => canAct && !(death != null && death.IsDead);
+        set => canAct = value;
+    }
     /// <summary>True while the throw button is held and the arc is showing.</summary>
     public bool IsAiming => throwAim.IsAiming;
 
@@ -39,6 +47,7 @@ public class PlayerCombat : MonoBehaviour
         interactor = GetComponent<PlayerInteractor>();
         health = GetComponent<PlayerHealth>();
         mover = GetComponent<PlayerController>();
+        death = GetComponent<PlayerDeath>();
         if (inputActions == null) inputActions = InputSystem.actions;
         attackAction = inputActions != null ? inputActions.FindAction("Player/Attack") : null;
     }

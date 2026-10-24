@@ -18,7 +18,15 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] private Transform bodyVisual;
 
-    public bool CanMove { get; set; } = true;
+    private bool canMove = true;
+    private PlayerDeath death;
+
+    /// <summary>Always false once the dog is dead, whatever the run director sets.</summary>
+    public bool CanMove
+    {
+        get => canMove && !(death != null && death.IsDead);
+        set => canMove = value;
+    }
 
     /// <summary>Multiplicative speed modifiers keyed by source (e.g. disasters). Empty = full speed.</summary>
     public ModifierStack SpeedModifiers { get; } = new ModifierStack();
@@ -63,6 +71,7 @@ public class PlayerController : MonoBehaviour
         if (bodyVisual == null) bodyVisual = transform.Find("Body");
         if (bodyVisual != null) bodyBaseScale = bodyVisual.localScale;
         controller = GetComponent<CharacterController>();
+        death = GetComponent<PlayerDeath>();
         if (inputActions == null) inputActions = InputSystem.actions;
         moveAction = inputActions != null ? inputActions.FindAction("Player/Move") : null;
         sprintAction = inputActions != null ? inputActions.FindAction("Player/Sprint") : null;
@@ -78,6 +87,7 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (death != null && death.IsDead) knockback = Vector3.zero;
         Vector2 input = (CanMove && moveAction != null) ? moveAction.ReadValue<Vector2>() : Vector2.zero;
         Vector3 move = new Vector3(input.x, 0f, input.y);
         if (move.sqrMagnitude > 1f) move.Normalize();

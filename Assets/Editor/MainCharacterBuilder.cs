@@ -16,7 +16,9 @@ public static class MainCharacterBuilder
     private const string RiggedPath = CharDir + "/MainCharacter_Rigged.fbx";
     private const string UnriggedOld = "Assets/Art/Meshes/MainCharacter.fbx";
     private const string UnriggedNew = CharDir + "/Source/MainCharacter_Unrigged.fbx";
-    private const string ControllerPath = AnimDir + "/MainCharacter.controller";
+    private const string NewBodyMeshPath = "Assets/Art/Meshes/Farmer_Unwrapped.fbx";
+    private const string SkinnedMeshPath = CharDir + "/MainCharacter_Skinned.asset";
+    private const string ControllerPath =AnimDir + "/MainCharacter.controller";
     private const string PlayerPrefabPath = "Assets/Prefabs/Player_Primitive.prefab";
 
     // Target height matches the CharacterController (1.4) in GoldenSliceBuilder.
@@ -69,6 +71,7 @@ public static class MainCharacterBuilder
         new ClipSpec("Running", "MainCharacter@Run", "Run", true),
         new ClipSpec("Farming", "MainCharacter@Farming", "Farming", false),
         new ClipSpec("Throw", "MainCharacter@Throw", "Throw", false),
+        new ClipSpec("Death", "MainCharacter@Death", "Death", false),
     };
 
     // Emote-wheel dances, in slice order (first slice at the top, then clockwise). The Animator state is named after the clip.
@@ -340,6 +343,10 @@ public static class MainCharacterBuilder
             plant.AddCondition(AnimatorConditionMode.If, 0f, "Farm");
         }
 
+        // Death: entered by PlayerAnimator with a CrossFade and never left (the scene reloads after a loss).
+        AnimatorState dying = sm.AddState("Death");
+        dying.motion = LoadClip("MainCharacter@Death");
+
         AddThrowLayer(ctrl);
 
         EditorUtility.SetDirty(ctrl);
@@ -417,10 +424,12 @@ public static class MainCharacterBuilder
             body.transform.localRotation = Quaternion.identity;
             body.transform.localScale = Vector3.one;
 
-            Bounds b = CombinedBounds(body);
+            ApplyNewBodyMesh(body);
+
+            Bounds b = BodyBounds(body);
             float scale = b.size.y > 0.0001f ? TargetHeight / b.size.y : 1f;
             body.transform.localScale = Vector3.one * scale;
-            b = CombinedBounds(body);
+            b = BodyBounds(body);
             body.transform.localPosition = new Vector3(0f, root.transform.position.y - b.min.y, 0f);
 
             Animator anim = body.GetComponent<Animator>();
@@ -434,6 +443,8 @@ public static class MainCharacterBuilder
             SerializedObject so = new SerializedObject(pa);
             so.FindProperty("animator").objectReferenceValue = anim;
             so.ApplyModifiedPropertiesWithoutUndo();
+
+            if (root.GetComponent<PlayerDeath>() == null) root.AddComponent<PlayerDeath>();
 
             PlayerDance pd = root.GetComponent<PlayerDance>();
             if (pd == null) pd = root.AddComponent<PlayerDance>();
@@ -461,6 +472,91 @@ public static class MainCharacterBuilder
         {
             PrefabUtility.UnloadPrefabContents(root);
         }
+    }
+
+    /// <summary>
+    /// Swaps the rigged dog's mesh for the new unwrapped one and gives it the FarmerMAT material. The new mesh has no
+    /// skeleton, so it borrows the rigged mesh's bones: every vertex takes the bone weights of the nearest rigged vertex.
+    /// </summary>
+    private static void ApplyNewBodyMesh(GameObject body)
+    {
+        GameObject source = AssetDatabase.LoadAssetAtPath<GameObject>(NewBodyMeshPath);
+        Material material = AssetDatabase.LoadAssetAtPath<Material>(CharacterArtBuilder.FarmerMaterialPath);
+        SkinnedMeshRenderer smr = body.GetComponentInChildren<SkinnedMeshRenderer>();
+        MeshFilter newFilter = source != null ? source.GetComponentInChildren<MeshFilter>() : null;
+        if (smr == null || newFilter == null) { Debug.LogWarning("[MainCharacterBuilder] New dog mesh not found; keeping the old body."); return; }
+
+        Mesh skinned = BuildSkinnedBody(smr.sharedMesh, newFilter.sharedMesh);
+        smr.sharedMesh = skinned;
+        if (material != null) smr.sharedMaterials = new[] { material };
+    }
+
+    private static Mesh BuildSkinnedBody(Mesh rigged, Mesh fresh)
+    {
+        Vector3[] rv = rigged.vertices;
+        BoneWeight[] rw = rigged.boneWeights;
+        Vector3[] nv = fresh.vertices;
+
+        // Line the new mesh up with the rigged one (the new pivot is the centre, the rigged one stands on the ground).
+        Vector3 shift = rigged.bounds.center - fresh.bounds.center;
+        BoneWeight[] weights = new BoneWeight[nv.Length];
+        Vector3[] moved = new Vector3[nv.Length];
+        float worst = 0f;
+        for (int i = 0; i < nv.Length; i++)
+        {
+            moved[i] = nv[i] + shift;
+            int best = 0;
+            float bestSqr = float.MaxValue;
+            for (int j = 0; j < rv.Length; j++)
+            {
+                float d = (rv[j] - moved[i]).sqrMagnitude;
+                if (d < bestSqr) { bestSqr = d; best = j; }
+            }
+            weights[i] = rw[best];
+            worst = Mathf.Max(worst, bestSqr);
+        }
+        Debug.Log($"[MainCharacterBuilder] Skin weights copied onto {nv.Length} vertices; furthest match {Mathf.Sqrt(worst) * 100f:F2} cm (mesh height {fresh.bounds.size.y * 100f:F1} cm).");
+
+        Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(SkinnedMeshPath);
+        bool isNew = mesh == null;
+        if (isNew) mesh = new Mesh();
+        mesh.Clear();
+        mesh.name = "MainCharacter_Skinned";
+        mesh.indexFormat = fresh.indexFormat;
+        mesh.vertices = moved;
+        mesh.normals = fresh.normals;
+        mesh.tangents = fresh.tangents;
+        mesh.uv = fresh.uv;
+        mesh.subMeshCount = fresh.subMeshCount;
+        for (int s = 0; s < fresh.subMeshCount; s++) mesh.SetTriangles(fresh.GetTriangles(s), s);
+        mesh.bindposes = rigged.bindposes;
+        mesh.boneWeights = weights;
+        mesh.RecalculateBounds();
+        if (mesh.tangents.Length == 0) mesh.RecalculateTangents();
+
+        if (isNew) AssetDatabase.CreateAsset(mesh, SkinnedMeshPath);
+        else EditorUtility.SetDirty(mesh);
+        return mesh;
+    }
+
+    /// <summary>
+    /// World bounds of the posed skinned mesh. A SkinnedMeshRenderer's own bounds are measured from its root bone and can be
+    /// stale or off, which would sink or float the dog; baking the vertices measures what is really drawn.
+    /// </summary>
+    private static Bounds BodyBounds(GameObject go)
+    {
+        SkinnedMeshRenderer smr = go.GetComponentInChildren<SkinnedMeshRenderer>();
+        if (smr == null) return CombinedBounds(go);
+
+        Mesh baked = new Mesh();
+        smr.BakeMesh(baked, true);
+        Vector3[] verts = baked.vertices;
+        Object.DestroyImmediate(baked);
+        if (verts.Length == 0) return CombinedBounds(go);
+
+        Bounds b = new Bounds(smr.transform.TransformPoint(verts[0]), Vector3.zero);
+        for (int i = 1; i < verts.Length; i++) b.Encapsulate(smr.transform.TransformPoint(verts[i]));
+        return b;
     }
 
     private static Bounds CombinedBounds(GameObject go)
