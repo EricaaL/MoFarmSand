@@ -33,6 +33,7 @@ public class AudioDirector : MonoBehaviour
     private readonly float[] musicTarget = new float[2];   // loudness of each bed at full fade (cue volume x mix), 0 = fading out
     private readonly float[] musicBase = new float[2];    // cue volume x the director's musicVolume mix
     private readonly float[] musicLevel = new float[2];    // fade 0..1 toward in/out; the Options volume is applied on top, so the slider is instant
+    private readonly float[] musicFade = new float[2];     // seconds each bed takes to fade in or out (a cue's fadeInSeconds overrides the default)
     private int activeMusic;
     private AudioCue currentMusic;
 
@@ -47,6 +48,7 @@ public class AudioDirector : MonoBehaviour
         for (int i = 0; i < voiceStopAt.Length; i++) voiceStopAt[i] = float.MaxValue;
         for (int i = 0; i < pool.Length; i++) pool[i] = NewSource("Voice " + i, false);
         music = new[] { NewSource("Music A", true), NewSource("Music B", true) };
+        musicFade[0] = musicFade[1] = musicFadeSeconds;
         footstepSource = NewSource("Footsteps", true);
     }
 
@@ -187,8 +189,19 @@ public class AudioDirector : MonoBehaviour
     private void HandleLanded(Vector3 position, bool hitBoss) { Play(library != null ? library.splat : null); }
     private void HandleFed(float current, float max) { Play(library != null ? library.bossGulp : null); }
     private void HandleScared(float seconds) { Play(library != null ? library.bossScare : null); }
-    private void HandleSatisfied() { Play(library != null ? library.burst : null); }
-    private void HandleEvolved(BossData next) { Play(library != null ? library.evolve : null); }
+    private void HandleSatisfied()
+    {
+        if (library == null) return;
+        Play(library.burst);
+        Play(library.victory);
+    }
+    private void HandleEvolved(BossData next)
+    {
+        if (library == null) return;
+        Play(library.evolve);
+        // Slowly bring in the butterfly theme over the night music (stays on the night music if none is set).
+        if (library.butterflyMusic != null && !library.butterflyMusic.IsEmpty) SetMusic(library.butterflyMusic);
+    }
 
     private void HandleFired(CropData crop)
     {
@@ -257,10 +270,13 @@ public class AudioDirector : MonoBehaviour
     {
         if (cue == currentMusic) return;
         currentMusic = cue;
-        musicTarget[activeMusic] = 0f; // fade the current bed out
+        float fade = cue != null && cue.fadeInSeconds > 0f ? cue.fadeInSeconds : musicFadeSeconds;
+        musicTarget[activeMusic] = 0f; // fade the current bed out (as slowly as the new one comes in, so they crossfade)
+        musicFade[activeMusic] = fade;
         if (cue == null || cue.IsEmpty) return;
 
         activeMusic = 1 - activeMusic;
+        musicFade[activeMusic] = fade;
         AudioSource src = music[activeMusic];
         src.clip = cue.Pick();
         src.volume = 0f;
@@ -290,12 +306,12 @@ public class AudioDirector : MonoBehaviour
             pool[i].volume = voiceVolume[i] * sfx * fade;
         }
 
-        float step = Time.unscaledDeltaTime / Mathf.Max(0.05f, musicFadeSeconds);
         float musicMix = GameSettings.MusicVolume;
         for (int i = 0; i < music.Length; i++)
         {
             AudioSource src = music[i];
             if (!src.isPlaying) continue;
+            float step = Time.unscaledDeltaTime / Mathf.Max(0.05f, musicFade[i]);
             musicLevel[i] = Mathf.MoveTowards(musicLevel[i], musicTarget[i] > 0f ? 1f : 0f, step);
             src.volume = musicLevel[i] * musicBase[i] * musicMix;
             if (musicTarget[i] <= 0f && musicLevel[i] <= 0f) src.Stop();

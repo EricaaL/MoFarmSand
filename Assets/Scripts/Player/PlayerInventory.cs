@@ -47,6 +47,9 @@ public class PlayerInventory : MonoBehaviour
 
     private void Update()
     {
+        // A run screen (map, shop, bank...) owns the wheel and number keys; don't cycle the hotbar behind it.
+        if (RunDirector.ModalOpen) return;
+
         Keyboard kb = Keyboard.current;
         if (kb != null)
         {

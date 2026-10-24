@@ -14,7 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   clips:
   - {fileID: 8300000, guid: 10f58d426060d45808ab848762bfb95b, type: 3}
+  - {fileID: 8300000, guid: a99b59bc25a954b7a892f92526659c8b, type: 3}
+  - {fileID: 8300000, guid: 774bc7547c3b94e7695322da199aad65, type: 3}
+  - {fileID: 8300000, guid: c681d5af0ad934b688e3877f9a9e02ce, type: 3}
+  - {fileID: 8300000, guid: edd43b5b816994053bde75329e0fa8b6, type: 3}
   volume: 1
   pitchRange: {x: 0.95, y: 1.05}
   minInterval: 0.05
+  maxSeconds: 0
+  fadeInSeconds: 0
   loop: 0

@@ -17,4 +17,6 @@ MonoBehaviour:
   volume: 1
   pitchRange: {x: 0.95, y: 1.05}
   minInterval: 0.05
+  maxSeconds: 0
+  fadeInSeconds: 0
   loop: 0

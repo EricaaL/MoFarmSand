@@ -60,6 +60,8 @@ public class AudioLibrary : ScriptableObject
     public AudioCue bossScare;
     public AudioCue burst;
     public AudioCue evolve;
+    [Tooltip("Orchestral stinger when the final boss stage (the butterfly) is fed full and defeated.")]
+    public AudioCue victory;
 
     [Header("World")]
     public AudioCue bell;
@@ -67,4 +69,6 @@ public class AudioLibrary : ScriptableObject
     [Header("Music")]
     public AudioCue dayMusic;
     public AudioCue nightMusic;
+    [Tooltip("Fades in over the night music when the caterpillar evolves into the butterfly.")]
+    public AudioCue butterflyMusic;
 }

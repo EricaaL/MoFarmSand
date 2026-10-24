@@ -13,9 +13,13 @@ MonoBehaviour:
   m_Name: Cue_eat
   m_EditorClassIdentifier: 
   clips:
-  - {fileID: 8300000, guid: aff46ea05cf699c48a6c6d87719f33e9, type: 3}
+  - {fileID: 8300000, guid: c6897ae4fca234072b36c48bf2aa1395, type: 3}
+  - {fileID: 8300000, guid: ed60da5a3190d4ccc8139181f17617d0, type: 3}
+  - {fileID: 8300000, guid: b89153b8c084d4356bb2a98308c8a708, type: 3}
+  - {fileID: 8300000, guid: d499e6a73b9bc46b881d175999e1f34a, type: 3}
   volume: 1
   pitchRange: {x: 0.95, y: 1.05}
   minInterval: 0.05
   maxSeconds: 0
+  fadeInSeconds: 0
   loop: 0

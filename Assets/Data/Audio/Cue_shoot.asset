@@ -12,8 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78f05f6e5eb2f1141ab0d09089c7ad37, type: 3}
   m_Name: Cue_shoot
   m_EditorClassIdentifier: 
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: 76fea1e2bbb60534c91f989b3213919f, type: 3}
+  - {fileID: 8300000, guid: e749b6ba86f4b904788c2b229cc7c0b5, type: 3}
+  - {fileID: 8300000, guid: 2455d596255fc1d42a788d1542749c1d, type: 3}
+  - {fileID: 8300000, guid: a6549767a23097b4f979e01d25aff00c, type: 3}
   volume: 1
   pitchRange: {x: 0.95, y: 1.05}
   minInterval: 0.05
+  maxSeconds: 0
+  fadeInSeconds: 0
   loop: 0

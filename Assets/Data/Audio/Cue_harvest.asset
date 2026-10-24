@@ -12,8 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78f05f6e5eb2f1141ab0d09089c7ad37, type: 3}
   m_Name: Cue_harvest
   m_EditorClassIdentifier: 
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: 69ecc70937d9c4649ad6e74dbe86c1b5, type: 3}
+  - {fileID: 8300000, guid: ee2cecdf9c49bdc40aab278727bc6d59, type: 3}
+  - {fileID: 8300000, guid: e1042f83616d45e4fb62a77c60b97bc2, type: 3}
+  - {fileID: 8300000, guid: a456e8e59f030b4449c903eecf760286, type: 3}
+  - {fileID: 8300000, guid: e73ed77a19320d84585eaea91d141db4, type: 3}
   volume: 1
   pitchRange: {x: 0.95, y: 1.05}
   minInterval: 0.05
+  maxSeconds: 0
+  fadeInSeconds: 0
   loop: 0

@@ -26,7 +26,7 @@ public class SummaryScreen : IRunScreen
         float x = card.x + 26f * s, w = card.width - 52f * s;
 
         ImGuiKit.Heading(new Rect(x, card.y + 14f * s, w, 80f * s), $"Year {year}", 64f, ImGuiKit.Text);
-        ImGuiKit.Label(new Rect(x, card.y + 94f * s, w, 40f * s), won ? "The Miracle Berry Blooms!" : "The Night Consumed You", 28f, ImGuiKit.Accent, TextAnchor.MiddleLeft, true);
+        ImGuiKit.Label(new Rect(x, card.y + 94f * s, w, 40f * s), won ? "You Survived Another Year..." : "The Night Consumed You", 28f, ImGuiKit.Accent, TextAnchor.MiddleLeft, true);
         ImGuiKit.DashedRule(x, card.y + 142f * s, w);
 
         ImGuiKit.Label(new Rect(x, card.y + 158f * s, w, 120f * s),

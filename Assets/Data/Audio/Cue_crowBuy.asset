@@ -14,7 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   clips:
   - {fileID: 8300000, guid: a6692cdd687bc2e48b6d5e6d04c7ed6c, type: 3}
+  - {fileID: 8300000, guid: ca453073cabea454ebd13e42e2e0a0f6, type: 3}
+  - {fileID: 8300000, guid: a721c6003a3b4416bbdf0d5bba4bf1a6, type: 3}
+  - {fileID: 8300000, guid: fdf2a0b27f7d54e90894f2c5de9b9503, type: 3}
+  - {fileID: 8300000, guid: 76a60afb0ffc74b619b9ef280e0bcbdf, type: 3}
+  - {fileID: 8300000, guid: d2741b7b394a74407b06f0443db1c777, type: 3}
+  - {fileID: 8300000, guid: 51c0af8c46f504864b4246befc49983e, type: 3}
+  - {fileID: 8300000, guid: 20cd96a1cecaf4c48b2b636834c6a8d0, type: 3}
+  - {fileID: 8300000, guid: c48eac6aacd1748f7b3d0381bcc5704c, type: 3}
+  - {fileID: 8300000, guid: f845e3d8e5cdf4259a4552af665625ea, type: 3}
+  - {fileID: 8300000, guid: 59993ab6c0d8242f48fb10e237a2609e, type: 3}
+  - {fileID: 8300000, guid: 399a2b4016d3e4cc980b8475229b1779, type: 3}
+  - {fileID: 8300000, guid: 35c0561f70cde47cd91cb34212aaf0f4, type: 3}
+  - {fileID: 8300000, guid: 73254f6e4a39b46c9a79f2d82151f60d, type: 3}
   volume: 1
   pitchRange: {x: 0.95, y: 1.05}
   minInterval: 0.05
+  maxSeconds: 0
+  fadeInSeconds: 0
   loop: 0

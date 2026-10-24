@@ -192,7 +192,7 @@ public class DebugHUD : MonoBehaviour
             ImGuiKit.HudLabel(new Rect(0f, h * 0.3f, w, 60f), voidMessage, new GUIStyle(big) { fontSize = 36 });
 
         // Banner
-        if (phase == GamePhase.Won) ImGuiKit.HudLabel(new Rect(0f, h / 2f - 40f, w, 80f), $"{bossName.ToUpper()} SATISFIED!", big);
+        if (phase == GamePhase.Won) ImGuiKit.HudLabel(new Rect(0f, h / 2f - 40f, w, 80f), "You Survived Another Year...", big);
         else if (phase == GamePhase.DayEnd) ImGuiKit.HudLabel(new Rect(0f, h / 2f - 40f, w, 80f), "DAY COMPLETE!", big);
 
         if (phase == GamePhase.Lost) DrawDeathScreen(w, h);

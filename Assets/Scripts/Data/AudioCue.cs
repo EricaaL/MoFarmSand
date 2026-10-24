@@ -13,6 +13,8 @@ public class AudioCue : ScriptableObject
     public float minInterval = 0.05f;
     [Tooltip("Plays only the first N seconds of the clip (0 = the whole clip).")]
     public float maxSeconds;
+    [Tooltip("Music beds only: seconds to fade this cue in (and the previous bed out). 0 = the director's default.")]
+    public float fadeInSeconds;
     [Tooltip("Looping cues are music beds.")]
     public bool loop;
 
@@ -47,6 +49,7 @@ public class AudioCue : ScriptableObject
     {
         minInterval = Mathf.Max(0f, minInterval);
         maxSeconds = Mathf.Max(0f, maxSeconds);
+        fadeInSeconds = Mathf.Max(0f, fadeInSeconds);
         pitchRange = new Vector2(Mathf.Max(0.1f, pitchRange.x), Mathf.Max(0.1f, pitchRange.y));
     }
 }

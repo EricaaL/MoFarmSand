@@ -48,3 +48,5 @@ MonoBehaviour:
   bell: {fileID: 11400000, guid: f129183c4b7cb8c46a7b47c93291e9ea, type: 2}
   dayMusic: {fileID: 11400000, guid: 2f9d5d14b044a6b4b8a76bf94f9ac529, type: 2}
   nightMusic: {fileID: 11400000, guid: b26cbca53644ec248a9157ce5729343e, type: 2}
+  victory: {fileID: 11400000, guid: c52f9a6e1d8b4370a4e7b0d3f1962c8e, type: 2}
+  butterflyMusic: {fileID: 11400000, guid: a4c81e7d3b5f4026b9d0e2f6718c3a5d, type: 2}
