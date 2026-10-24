@@ -9,6 +9,9 @@ public class ButterflyBoss : MonoBehaviour
     [SerializeField] private float bobAmount = 0.25f;
     [SerializeField] private float weaveAmount = 0.8f;
     [SerializeField] private float flapDegrees = 35f;
+    [SerializeField] private Vector3 flapAxis = Vector3.forward;
+    [Tooltip("Swing 0..flapDegrees instead of +/-flapDegrees, so paper wings only tip back and never fold away from the body.")]
+    [SerializeField] private bool flapBackOnly;
     [SerializeField] private float contactRange = 1.4f;
     [SerializeField] private float contactCooldown = 1.2f;
     [SerializeField] private float knockbackForce = 14f;
@@ -81,12 +84,13 @@ public class ButterflyBoss : MonoBehaviour
     private void AnimateWings()
     {
         if (wingPivots == null) return;
-        float flap = Mathf.Sin(Time.time * (awake ? 14f : 4f)) * flapDegrees;
+        float wave = Mathf.Sin(Time.time * (awake ? 14f : 4f));
+        float flap = (flapBackOnly ? wave * 0.5f + 0.5f : wave) * flapDegrees;
         for (int i = 0; i < wingPivots.Length; i++)
         {
             if (wingPivots[i] == null) continue;
             float sign = i % 2 == 0 ? 1f : -1f;
-            wingPivots[i].localRotation = Quaternion.Euler(0f, 0f, sign * flap);
+            wingPivots[i].localRotation = Quaternion.AngleAxis(sign * flap, flapAxis);
         }
     }
 }

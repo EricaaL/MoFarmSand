@@ -25,6 +25,7 @@ public class PaperBillboard : MonoBehaviour
 
     private Camera cam;
     private CaterpillarBoss boss;
+    private ButterflyBoss butterfly;
     private BossHunger hunger;
     private float flipSign = 1f;
     private float flipValue = 1f;
@@ -39,6 +40,7 @@ public class PaperBillboard : MonoBehaviour
             heading = boss != null ? boss.transform : transform.root;
         }
         else boss = heading.GetComponent<CaterpillarBoss>();
+        butterfly = GetComponentInParent<ButterflyBoss>();
         hunger = GetComponentInParent<BossHunger>();
         baseScaleX = transform.localScale.x;
         baseY = transform.localPosition.y;
@@ -50,7 +52,7 @@ public class PaperBillboard : MonoBehaviour
     {
         if (cam == null) { cam = Camera.main; if (cam == null) return; }
 
-        bool awake = boss != null && boss.IsAwake;
+        bool awake = (boss != null && boss.IsAwake) || (butterfly != null && butterfly.IsAwake);
         bool busy = boss != null && (boss.IsChewing || boss.IsWinding);
         bool scared = hunger != null && hunger.IsScared;
         float amount = awake ? (busy ? busyMultiplier : 1f) * (scared ? 1.6f : 1f) : 0.25f;
