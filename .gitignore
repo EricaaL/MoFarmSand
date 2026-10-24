@@ -67,3 +67,8 @@ crashlytics-build.properties
 # Editor screenshots taken through MCP / the Game view (4K, ~34 MB)
 /Assets/Screenshots/
 /Assets/Screenshots.meta
+# Asset Store packs (large, re-import after cloning)
+/Assets/CartoonGrass/
+/Assets/CartoonGrass.meta
+/Assets/LowPolyFantasyBundle/
+/Assets/LowPolyFantasyBundle.meta

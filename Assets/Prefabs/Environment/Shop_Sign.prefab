@@ -217,6 +217,7 @@ GameObject:
   - component: {fileID: 1287031060642151314}
   - component: {fileID: 3099132496522294509}
   - component: {fileID: 2100341958579910015}
+  - component: {fileID: 7700000000000000001}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -262,7 +263,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 06c81b2de993cbe429efc7202174a7fd, type: 3}
+  - {fileID: 2100000, guid: b8d4f2e05c3a4f69a7e1b2c3d4e5f607, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -308,3 +309,15 @@ TextMesh:
   m_Color:
     serializedVersion: 2
     rgba: 4290768383
+--- !u!114 &7700000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9161032470411038511}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9e5a3f16d4b4a7ab8f2c3d4e5f60718, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
