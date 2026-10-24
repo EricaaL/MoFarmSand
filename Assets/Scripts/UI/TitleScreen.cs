@@ -40,7 +40,7 @@ public class TitleScreen : IRunScreen
     {
         float s = ImGuiKit.Scale;
         Refresh(false);
-        ImGuiKit.Backdrop(0f);
+        ImGuiKit.Backdrop(UiBackdrop.LiveInterval);
 
         if (ImGuiKit.BackButton(new Rect(42f * s, 36f * s, 130f * s, 130f * s)))
         {
@@ -175,7 +175,7 @@ public class TitleScreen : IRunScreen
         float s = ImGuiKit.Scale;
         SaveFile file = director.File;
         MetaProgress meta = file.meta;
-        ImGuiKit.Backdrop(0f);
+        ImGuiKit.Backdrop(UiBackdrop.LiveInterval);
 
         if (ImGuiKit.BackButton(new Rect(42f * s, 36f * s, 130f * s, 130f * s))) { BackToSlots(); return; }
 

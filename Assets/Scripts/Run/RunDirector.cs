@@ -34,6 +34,8 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     [SerializeField] private CozyBridge cozyBridge;
     [SerializeField] private GameObject merchantStall;
     [SerializeField] private DayClock clock;
+    [Tooltip("Camera that circles the farm behind the title screens (MoFarmSand > Add Title Orbit).")]
+    [SerializeField] private TitleOrbit titleOrbit;
 
     private enum View { None, MainMenu, Options, Title, Map, Event, Bank, Shop, Summary, Items, Pause, Route, BetaSeeds }
 
@@ -62,6 +64,10 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     private bool dayEnding;   // the day just resolved: keep the HUD up until the scene reloads
     private bool resolving;
     private bool leaving; // the scene is about to reload: stop drawing and ignore input
+    private bool wasTitleView;
+
+    /// <summary>True on the main menu, the slot cards / upgrade page and Options opened from the main menu: the screens over the turning farm panorama.</summary>
+    public bool IsTitleView => view == View.Title || view == View.MainMenu || (view == View.Options && optionsReturnView == View.MainMenu);
 
     /// <summary>True while a full-screen run screen is up. DebugHUD hides itself then.</summary>
     public static bool ModalOpen { get; private set; }
@@ -259,6 +265,49 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
 
         // Any screen opened mid-day (menu, shop, items) freezes the world: no boss chasing while you read.
         Time.timeScale = s != null && dayRunning ? 0f : 1f;
+
+        bool title = IsTitleView;
+        if (titleOrbit != null) titleOrbit.SetActive(title, cut: title && !wasTitleView);
+        if (title != wasTitleView) SetPlayerVisible(!title);
+        if (title && !wasTitleView)
+        {
+            if (bossRoot != null) bossRoot.SetActive(false);
+            StartCoroutine(ApplyTitleLook());
+        }
+        wasTitleView = title;
+    }
+
+    private readonly List<Renderer> hiddenPlayerRenderers = new List<Renderer>();
+
+    /// <summary>Hides the farmer's meshes on the title screens (only renderers, so nothing that references the player breaks) and puts back exactly the ones it hid.</summary>
+    private void SetPlayerVisible(bool visible)
+    {
+        if (visible)
+        {
+            foreach (Renderer r in hiddenPlayerRenderers) if (r != null) r.enabled = true;
+            hiddenPlayerRenderers.Clear();
+            return;
+        }
+        if (playerController == null) return;
+        foreach (Renderer r in playerController.GetComponentsInChildren<Renderer>())
+        {
+            if (!r.enabled) continue;
+            r.enabled = false;
+            hiddenPlayerRenderers.Add(r);
+        }
+    }
+
+    /// <summary>Dresses the panorama in the season of the most recently played year (spring if there is none).</summary>
+    private IEnumerator ApplyTitleLook()
+    {
+        yield return null;   // COZY finishes its own Start first, like BeginDayRoutine
+        if (!IsTitleView || cozyBridge == null || db == null) yield break;
+
+        var slots = new List<SlotSummary>(SaveService.SlotCount);
+        for (int i = 0; i < SaveService.SlotCount; i++) slots.Add(Service.Peek(i));
+        int recent = SaveService.MostRecentRunSlot(slots);
+        CalendarDate date = db.Calendar.DateOf(recent >= 0 ? slots[recent].dayIndex : 0);
+        cozyBridge.ApplyDate(date, WeatherKind.Clear, null, db.cozyWeather, 0f);
     }
 
     private void SetFrozen(bool frozen)
@@ -758,8 +807,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     {
         if (!IsRoguelike || leaving) return;
         // Between unloading the slot and the scene reload there can be one more frame: don't draw run screens with no run.
-        bool noRunScreen = view == View.Title || view == View.MainMenu || (view == View.Options && optionsReturnView == View.MainMenu);
-        if (!noRunScreen && Run == null) return;
+        if (!IsTitleView && Run == null) return;
         GUI.depth = -10;
         if (screen != null)
         {

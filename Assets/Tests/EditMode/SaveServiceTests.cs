@@ -199,4 +199,30 @@ public class SaveServiceTests
             if (Directory.Exists(dir)) Directory.Delete(dir, true);
         }
     }
+
+    [Test]
+    public void MostRecentRunSlotPicksTheNewestSavedYearInProgress()
+    {
+        SlotSummary Run(string at) => new SlotSummary { status = LoadStatus.Ok, hasRun = true, savedAtUtc = at };
+        var slots = new List<SlotSummary>
+        {
+            Run("2026-10-01T10:00:00.0000000Z"),
+            new SlotSummary { status = LoadStatus.Ok, hasRun = false, savedAtUtc = "2026-12-01T10:00:00.0000000Z" },   // newer, but no year
+            Run("2026-10-05T10:00:00.0000000Z"),
+            new SlotSummary { status = LoadStatus.Corrupt },
+        };
+        Assert.AreEqual(2, SaveService.MostRecentRunSlot(slots));
+    }
+
+    [Test]
+    public void MostRecentRunSlotIsMinusOneWithoutAYearInProgress()
+    {
+        var slots = new List<SlotSummary>
+        {
+            new SlotSummary { status = LoadStatus.Empty },
+            new SlotSummary { status = LoadStatus.Ok, hasRun = false },
+            new SlotSummary { status = LoadStatus.TooNew, hasRun = true },
+        };
+        Assert.AreEqual(-1, SaveService.MostRecentRunSlot(slots));
+    }
 }

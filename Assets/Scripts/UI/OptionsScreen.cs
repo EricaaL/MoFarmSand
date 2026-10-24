@@ -25,7 +25,7 @@ public class OptionsScreen : IRunScreen
     public void Draw()
     {
         float s = ImGuiKit.Scale;
-        ImGuiKit.Backdrop(0f);
+        ImGuiKit.Backdrop(director.IsTitleView ? UiBackdrop.LiveInterval : 0f);   // keeps turning behind the title's options
         if (ImGuiKit.BackButton(new Rect(42f * s, 36f * s, 130f * s, 130f * s))) { director.CloseOptions(); return; }
 
         // The Item List needs a day in progress (its facts depend on today's weather).

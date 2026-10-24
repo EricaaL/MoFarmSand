@@ -10,10 +10,25 @@ public class MainMenuScreen : IRunScreen
 
     public void OnOpen() { confirmQuit = false; }
 
+    /// <summary>The farm panorama stays sharp behind the menu; a soft dark fade on the left keeps the logo and buttons readable.</summary>
+    private static void DrawScrim()
+    {
+        Rect screen = ImGuiKit.ScreenLocal;
+        // Whole-pixel strips that touch but never overlap, so no seams show where the alpha would double up.
+        const int strips = 24;
+        int width = Mathf.RoundToInt(screen.width * 0.5f);
+        for (int i = 0; i < strips; i++)
+        {
+            int x0 = width * i / strips, x1 = width * (i + 1) / strips;
+            float a = 0.38f * (1f - i / (float)strips);
+            ImGuiKit.Fill(new Rect(screen.x + x0, screen.y, x1 - x0, screen.height), new Color(0.08f, 0.05f, 0.02f, a));
+        }
+    }
+
     public void Draw()
     {
         float s = ImGuiKit.Scale;
-        ImGuiKit.Backdrop(1.5f);
+        DrawScrim();
 
         ImGuiKit.Heading(new Rect(110f * s, 110f * s, 1100f * s, 190f * s), "DOGSEND", 175f, ImGuiKit.Text);
 

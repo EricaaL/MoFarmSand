@@ -23,6 +23,8 @@ public struct SlotSummary
     public int runsStarted;
     /// <summary>Year number of the run in this slot (0 if none or from an old save).</summary>
     public int year;
+    /// <summary>ISO-8601 UTC time of the slot's last save (empty if never saved); sorts as plain text.</summary>
+    public string savedAtUtc;
 }
 
 /// <summary>Three independent slots with atomic writes, .bak fallback and version migration. Never throws on bad data.</summary>
@@ -92,6 +94,7 @@ public sealed class SaveService
         s.vaultLevel = r.file.meta.vaultLevel;
         s.unlockCount = r.file.meta.unlockedIds.Count;
         s.runsStarted = r.file.meta.runsStarted;
+        s.savedAtUtc = r.file.savedAtUtc ?? string.Empty;
         if (r.file.hasRun)
         {
             s.dayIndex = r.file.run.DayIndex;
@@ -99,6 +102,19 @@ public sealed class SaveService
             s.year = r.file.run.YearNumber(r.file.meta);
         }
         return s;
+    }
+
+    /// <summary>Index of the readable slot with a year in progress that was saved last, or -1 if there is none.</summary>
+    public static int MostRecentRunSlot(IReadOnlyList<SlotSummary> slots)
+    {
+        int best = -1;
+        for (int i = 0; i < slots.Count; i++)
+        {
+            SlotSummary s = slots[i];
+            if (s.status != LoadStatus.Ok || !s.hasRun) continue;
+            if (best < 0 || string.CompareOrdinal(s.savedAtUtc ?? string.Empty, slots[best].savedAtUtc ?? string.Empty) > 0) best = i;
+        }
+        return best;
     }
 
     /// <summary>Drops ids the game no longer knows, clamps values and rejects broken maps (guards against edited saves).</summary>

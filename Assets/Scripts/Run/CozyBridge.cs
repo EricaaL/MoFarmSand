@@ -30,23 +30,35 @@ public class CozyBridge : MonoBehaviour
 
     public void Apply(DayPlan plan, DisasterData disaster, CozyWeatherMap map)
     {
+        if (plan == null) { ClearFx(); return; }
+        ApplyDate(plan.date, plan.weather.kind, disaster, map, map != null ? map.transitionSeconds : 0f);
+    }
+
+    private void ClearFx()
+    {
         if (ambientFx != null) Destroy(ambientFx);
         if (seasonFx != null) Destroy(seasonFx);
-        if (plan == null || plan.date.season == null) return;
+    }
 
-        SeasonData season = plan.date.season;
+    /// <summary>The same look as a day, from just a date and a weather kind (the title screen panorama uses this). Seconds 0 snaps.</summary>
+    public void ApplyDate(CalendarDate date, WeatherKind kind, DisasterData disaster, CozyWeatherMap map, float transitionSeconds)
+    {
+        ClearFx();
+        if (date.season == null) return;
+
+        SeasonData season = date.season;
         CozyWeatherMap.SeasonLook look = map != null ? map.LookFor(season) : CozyWeatherMap.SeasonLook.Neutral;
-        if (seasonAtmosphere != null && map != null) seasonAtmosphere.SetLook(look, map.transitionSeconds);
+        if (seasonAtmosphere != null && map != null) seasonAtmosphere.SetLook(look, transitionSeconds);
         if (leafLitter != null) leafLitter.SetCount(look.groundLeaves);
         if (seasonTrees != null) seasonTrees.SetSnowy(look.snowyTrees);
-        if (snowCover != null) snowCover.SetSeason(look, plan.date.seasonProgress01, 1f / Mathf.Max(1, season.lengthInDays));
+        if (snowCover != null) snowCover.SetSeason(look, date.seasonProgress01, 1f / Mathf.Max(1, season.lengthInDays));
         CozyWeather cozy = CozyWeather.instance;
         if (cozy != null)
         {
             CozyTimeModule time = cozy.timeModule;
             if (time != null)
             {
-                float year01 = Mathf.Repeat(season.cozyYearStart01 + plan.date.seasonProgress01 * season.cozyYearSpan01, 1f);
+                float year01 = Mathf.Repeat(season.cozyYearStart01 + date.seasonProgress01 * season.cozyYearSpan01, 1f);
                 time.currentYear = 0;
                 time.currentDay = Mathf.Clamp(Mathf.FloorToInt(year01 * time.DaysPerYear), 0, time.DaysPerYear - 1);
             }
@@ -56,8 +68,8 @@ public class CozyBridge : MonoBehaviour
             {
                 // Forecast mode would overwrite the weather we set, so take manual control.
                 eco.weatherSelectionMode = CozyEcosystem.EcosystemStyle.manual;
-                DistantLands.Cozy.Data.WeatherProfile profile = map.ProfileFor(season, plan.weather.kind, disaster);
-                if (profile != null) eco.SetWeather(profile, map.transitionSeconds);
+                DistantLands.Cozy.Data.WeatherProfile profile = map.ProfileFor(season, kind, disaster);
+                if (profile != null) eco.SetWeather(profile, transitionSeconds);
             }
 
             // Snow cover (climateModule.snowAmount) is owned by SnowCover, from the season look.

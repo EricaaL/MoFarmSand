@@ -18,6 +18,9 @@ public static class UiBackdrop
     private static bool hasImage;
     private static Runner runner;
 
+    /// <summary>Re-capture interval for menus over the turning title panorama.</summary>
+    public const float LiveInterval = 0.1f;
+
     /// <summary>Forget the picture so the next screen captures the world as it is now (call when a screen opens over live gameplay).</summary>
     public static void Invalidate() { hasImage = false; }
 
