@@ -4,13 +4,18 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 
 /// <summary>
-/// Scatters the Poly Universal Pack grass prefabs over the ground of the open scene. Idempotent: it rebuilds the
+/// Scatters the CartoonGrass grass and plant prefabs over the ground of the open scene. Idempotent: it rebuilds the
 /// "Grass" group under "--- ENVIRONMENT ---" from a fixed seed, so re-running gives the same layout. Grass stays out of
 /// the farm field (including where extra farmland is built) and off props and trees.
 /// </summary>
 public static class GrassScatterBuilder
 {
-    private const string GrassFolder = "Assets/polyperfect/Poly Universal Pack/Prefabs/Nature/Grass";
+    private const string GrassFolder = "Assets/CartoonGrass/Prefabs";
+    private static readonly string[] PrefabNames =
+    {
+        "Grass_01", "Grass_02", "Grass_03", "Grass_04-1", "Grass_04-2", "Grass_05-1", "Grass_05-2",
+        "Grass_06-1", "Grass_06-2", "Grass_07-1", "Grass_07-2", "Plant_01", "Plant_02",
+    };
     private const string EnvironmentName = "--- ENVIRONMENT ---";
     private const string GroupName = "Grass";
 
@@ -19,8 +24,8 @@ public static class GrassScatterBuilder
     private const int BladesPerClump = 7;
     private const float ClumpRadius = 1.6f;
     private const int Stragglers = 120;
-    private const float MinScale = 0.4f;
-    private const float MaxScale = 0.7f;
+    private const float MinScale = 1f;
+    private const float MaxScale = 1.3f;
 
     // Field footprint plus room for extra farmland columns and rows; no grass in here.
     private static readonly Rect FieldKeepClear = new Rect(-6.5f, -4.5f, 13f, 11f);
@@ -100,10 +105,11 @@ public static class GrassScatterBuilder
     private static GameObject[] LoadPrefabs()
     {
         List<GameObject> list = new List<GameObject>();
-        foreach (string guid in AssetDatabase.FindAssets("t:Prefab", new[] { GrassFolder }))
+        foreach (string name in PrefabNames)
         {
-            GameObject go = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
+            GameObject go = AssetDatabase.LoadAssetAtPath<GameObject>($"{GrassFolder}/{name}.prefab");
             if (go != null) list.Add(go);
+            else Debug.LogWarning($"GrassScatter: missing prefab {GrassFolder}/{name}.prefab");
         }
         return list.ToArray();
     }

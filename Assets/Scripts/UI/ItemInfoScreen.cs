@@ -45,6 +45,7 @@ public class ItemInfoScreen : IRunScreen
             if (ownedOnly && (director.Inventory == null || director.Inventory.CountOf(it) <= 0)) continue;
             items.Add(it);
         }
+        SortBySeason(items);
         if (selected == null || !items.Contains(selected)) selected = items.Count > 0 ? items[0] : null;
 
         // Right: cream card grid.
@@ -57,6 +58,29 @@ public class ItemInfoScreen : IRunScreen
         Rect detail = new Rect(panel.x + 34f * s, panel.y + 26f * s, grid.x - panel.x - 70f * s, panel.height - 52f * s);
         if (selected != null) DrawDetail(selected, detail, s);
         else ImGuiKit.Label(detail, ownedOnly ? "Your pockets are empty.\nHarvest or buy something first." : "Nothing to show yet.", 34f, ImGuiKit.Text, TextAnchor.UpperLeft);
+    }
+
+    /// <summary>Groups by the crop's best season in calendar order; inside a season the crops come first, then their seeds.</summary>
+    private void SortBySeason(List<ItemData> items)
+    {
+        var seasons = director.Db.calendar.seasons;
+        var keyed = new List<KeyValuePair<long, ItemData>>();
+        for (int i = 0; i < items.Count; i++)
+        {
+            ItemData it = items[i];
+            CropData crop = it as CropData ?? (it as SeedData)?.grows;
+            int season = seasons.Count;
+            if (crop != null)
+            {
+                SeasonData best = ItemInfoBuilder.BestSeason(crop, director.BuildItemContext(it), out _);
+                int idx = best != null ? seasons.IndexOf(best) : -1;
+                if (idx >= 0) season = idx;
+            }
+            int kind = it is CropData ? 0 : 1;
+            keyed.Add(new KeyValuePair<long, ItemData>((season * 2L + kind) * 10000L + i, it));
+        }
+        keyed.Sort((a, b) => a.Key.CompareTo(b.Key));
+        for (int i = 0; i < items.Count; i++) items[i] = keyed[i].Value;
     }
 
     private void DrawGrid(Rect grid, List<ItemData> items, float s)
@@ -86,7 +110,7 @@ public class ItemInfoScreen : IRunScreen
             ItemIconDrawer.Draw(new Rect(art.x + 8f * s, art.y + 8f * s, art.width - 16f * s, art.height - 16f * s), it);
 
             int owned = director.Inventory != null ? director.Inventory.CountOf(it) : 0;
-            bool locked = CropAvailability.LockedBehind(it, director.Run.unlockedIds, director.Db) != null;
+            bool locked = director.Run != null && CropAvailability.LockedBehind(it, director.Run.unlockedIds, director.Db) != null;
             string tag = locked ? "locked" : owned > 0 ? "x" + owned : "-";
             ImGuiKit.Label(new Rect(card.x + 10f * s, card.yMax - 56f * s, card.width - 26f * s, 46f * s), tag, 32f, ImGuiKit.Text, TextAnchor.MiddleRight);
 

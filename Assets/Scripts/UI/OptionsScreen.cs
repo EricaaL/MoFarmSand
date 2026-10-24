@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// The tabbed settings page, reachable from the main menu and the Esc menu: Options (sound, tips, HUD size), How to Play,
-/// and (during a day) the Item List of every seed and crop.
+/// and the Item List of every seed and crop.
 /// </summary>
 public class OptionsScreen : IRunScreen
 {
@@ -28,10 +28,8 @@ public class OptionsScreen : IRunScreen
         ImGuiKit.Backdrop(director.IsTitleView ? UiBackdrop.LiveInterval : 0f);   // keeps turning behind the title's options
         if (ImGuiKit.BackButton(new Rect(42f * s, 36f * s, 130f * s, 130f * s))) { director.CloseOptions(); return; }
 
-        // The Item List needs a day in progress (its facts depend on today's weather).
-        bool hasItems = director.IsDayRunning && director.Plan != null && director.Run != null;
-        var names = new List<string> { "Options", "How to Play" };
-        if (hasItems) names.Add("Item List");
+        // On the title screen there is no day, so the Item List describes the first day of spring.
+        var names = new List<string> { "Options", "How to Play", "Item List" };
         if (tab >= names.Count) tab = 0;
 
         Rect outer = new Rect(209f * s, 119f * s, 1502f * s, 842f * s);

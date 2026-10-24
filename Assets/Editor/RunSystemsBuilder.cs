@@ -194,7 +194,7 @@ public static class RunSystemsBuilder
 
         // ---- FX prefabs ----
         Material fxMat = Mat("RunFX", Color.white, "Universal Render Pipeline/Particles/Unlit");
-        GameObject fxRain = Fx("FX_Rain", fxMat, new Color(0.6f, 0.75f, 1f, 0.8f), loop: true, rate: 220f, life: 1.1f, size: 0.05f, speed: 0f, gravity: 6f, shape: ParticleSystemShapeType.Box, shapeScale: new Vector3(24f, 0.1f, 24f), offset: new Vector3(0f, 10f, 4f));
+        GameObject fxRain = Fx("FX_Rain", fxMat, new Color(0.6f, 0.75f, 1f, 0.8f), loop: true, rate: 220f, life: 1.1f, size: 0.05f, speed: 0f, gravity: 6f, shape: ParticleSystemShapeType.Box, shapeScale: new Vector3(24f, 0.1f, 24f), offset: new Vector3(0f, 10f, 4f), shards: false);
         GameObject fxSnow = Fx("FX_Snow", fxMat, new Color(1f, 1f, 1f, 0.9f), loop: true, rate: 120f, life: 6f, size: 0.12f, speed: 0f, gravity: 0.25f, shape: ParticleSystemShapeType.Box, shapeScale: new Vector3(24f, 0.1f, 24f), offset: new Vector3(0f, 10f, 4f));
         GameObject[] autumnLeafPrefabs = AutumnLeafPrefabs();
         GameObject fxAutumnLeaves = AutumnLeavesFx(autumnLeafPrefabs);
@@ -861,7 +861,7 @@ public static class RunSystemsBuilder
     }
 
     internal static GameObject Fx(string name, Material mat, Color color, bool loop, float rate, float life, float size, float speed, float gravity,
-        ParticleSystemShapeType shape, Vector3 shapeScale, Vector3 offset, int burst = 0, bool circleEdge = false)
+        ParticleSystemShapeType shape, Vector3 shapeScale, Vector3 offset, int burst = 0, bool circleEdge = false, bool shards = true)
     {
         string path = $"{FxDir}/{name}.prefab";
         GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
@@ -884,6 +884,7 @@ public static class RunSystemsBuilder
         else { sh.radius = shapeScale.x; if (circleEdge) sh.radiusThickness = 0f; }
 
         go.GetComponent<ParticleSystemRenderer>().sharedMaterial = mat;
+        if (shards) TriangleFxBuilder.MakeShards(ps);
         GameObject saved = PrefabUtility.SaveAsPrefabAsset(go, path);
         Object.DestroyImmediate(go);
         return saved;
@@ -1057,6 +1058,7 @@ public static class RunSystemsBuilder
         col.bounce = 0f; col.dampen = 1f; col.lifetimeLoss = 1f;   // flakes vanish where they land; SnowCover builds the drifts
 
         go.GetComponent<ParticleSystemRenderer>().sharedMaterial = mat;
+        TriangleFxBuilder.MakeShards(ps);
         GameObject saved = PrefabUtility.SaveAsPrefabAsset(go, path);
         Object.DestroyImmediate(go);
         return saved;

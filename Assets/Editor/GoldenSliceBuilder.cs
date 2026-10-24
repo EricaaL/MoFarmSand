@@ -41,12 +41,12 @@ public static class GoldenSliceBuilder
         Material postMat = Mat("Post", new Color(0.45f, 0.3f, 0.2f));
         Material lineMat = Mat("TrajectoryLine", new Color(1f, 0.95f, 0.5f), "Universal Render Pipeline/Unlit");
         Material markerMat = Mat("LandingMarker", new Color(1f, 0.5f, 0.2f), "Universal Render Pipeline/Unlit");
-        Material splatMat = Mat("SplatFX", new Color(0.9f, 0.2f, 0.15f), "Universal Render Pipeline/Particles/Unlit");
+        Material splatMat = Mat("SplatFX", Color.white, "Universal Render Pipeline/Particles/Unlit");   // white so FxTint can recolour the splat per crop
         Material burstMat = Mat("BurstFX", new Color(1f, 0.85f, 0.3f), "Universal Render Pipeline/Particles/Unlit");
 
         // ---- Particle prefabs ----
-        GameObject splatFx = ParticlePrefab("Splat_FX", splatMat, 18, 0.18f, 4f);
-        GameObject burstFx = ParticlePrefab("Burst_FX", burstMat, 80, 0.4f, 9f);
+        GameObject splatFx = ParticlePrefab("Splat_FX", splatMat, SplatFallbackColor, 18, 0.18f, 4f);
+        GameObject burstFx = ParticlePrefab("Burst_FX", burstMat, burstMat.color, 80, 0.4f, 9f);
 
         // ---- Projectile prefab ----
         GameObject tomatoProj = MakePrefab("Tomato_Projectile", () =>
@@ -376,7 +376,10 @@ public static class GoldenSliceBuilder
         return saved;
     }
 
-    private static GameObject ParticlePrefab(string name, Material mat, int count, float size, float speed)
+    /// <summary>Splat colour when no crop is known (CropProjectile tints it with the crop's colour otherwise).</summary>
+    internal static readonly Color SplatFallbackColor = new Color(0.9f, 0.2f, 0.15f);
+
+    private static GameObject ParticlePrefab(string name, Material mat, Color startColor, int count, float size, float speed)
     {
         return MakePrefab(name, () =>
         {
@@ -385,13 +388,14 @@ public static class GoldenSliceBuilder
             ParticleSystem.MainModule main = ps.main;
             main.duration = 0.5f; main.loop = false; main.startLifetime = 0.7f;
             main.startSpeed = speed; main.startSize = size; main.gravityModifier = 1f;
-            main.startColor = mat.color; main.playOnAwake = true;
+            main.startColor = startColor; main.playOnAwake = true;
             ParticleSystem.EmissionModule em = ps.emission;
             em.rateOverTime = 0f;
             em.SetBursts(new[] { new ParticleSystem.Burst(0f, (short)count) });
             ParticleSystem.ShapeModule shape = ps.shape;
             shape.shapeType = ParticleSystemShapeType.Sphere; shape.radius = 0.2f;
             go.GetComponent<ParticleSystemRenderer>().sharedMaterial = mat;
+            TriangleFxBuilder.MakeShards(ps);
             return go;
         });
     }
