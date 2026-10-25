@@ -61,7 +61,11 @@ public class DayClock : MonoBehaviour
             bool timeUp = timer.Tick(Time.deltaTime);
             if (lighting != null) lighting.SetDayProgress(timer.Progress01);
             if (cozyBridge != null) cozyBridge.SetDayProgress(timer.Progress01);
-            if (timeUp) gameManager.StartNight();
+            if (timeUp)
+            {
+                BellTrigger.RingByItself();
+                gameManager.StartNight();
+            }
         }
         else if (phase == GamePhase.Night)
         {

@@ -187,7 +187,7 @@ public class ShopScreen : IRunScreen
 
         string title = null, sub = null, desc = null;
         int price = -1;
-        string grow = null, fullness = null;
+        string grow = null, fullness = null, shield = null;
         Texture growIcon = theme != null ? theme.growIcon : null;
         string action = null;
         bool canAct = false;
@@ -206,7 +206,7 @@ public class ShopScreen : IRunScreen
                 {
                     inventoryFull = !director.Inventory.CanFit(item);
                     ItemInfo info = ItemInfoBuilder.Build(item, director.BuildItemContext(item));
-                    title = info.title; desc = info.summary; grow = info.growTime; fullness = info.fullness; growIcon = ItemDetailCard.GrowIcon(info, theme);
+                    title = info.title; desc = info.summary; grow = info.growTime; fullness = info.fullness; shield = info.shield; growIcon = ItemDetailCard.GrowIcon(info, theme);
                     PriceTable.PriceRow row = director.Db.prices.RowForSeed(o.id);
                     float mult = row != null ? row.SeasonMultFor(plan.date.season) : 1f;
                     if (mult > 1.02f) desc += "  (Season price is up today.)"; else if (mult < 0.98f) desc += "  (Season price is down today.)";
@@ -232,7 +232,7 @@ public class ShopScreen : IRunScreen
             CropData crop = selectedCrop;
             ItemInfo info = ItemInfoBuilder.Build(crop, director.BuildItemContext(crop));
             int owned = director.Inventory.CountOf(crop);
-            title = crop.displayName; sub = $"owned {owned}"; desc = info.summary; fullness = info.fullness;
+            title = crop.displayName; sub = $"owned {owned}"; desc = info.summary; fullness = info.fullness; shield = info.shield;
             price = director.SellPriceOf(crop);
             action = "SELL";
             canAct = owned > 0;
@@ -272,6 +272,11 @@ public class ShopScreen : IRunScreen
         if (!string.IsNullOrEmpty(fullness))
         {
             ImGuiKit.IconValue(new Rect(x, y, w, 82f * s), theme != null ? theme.bread : null, fullness, 42f, ImGuiKit.Text);
+            y += 92f * s;
+        }
+        if (!string.IsNullOrEmpty(shield))
+        {
+            ImGuiKit.IconValue(new Rect(x, y, w, 82f * s), theme != null ? theme.barkShield : null, shield, 42f, ImGuiKit.Text);
             y += 92f * s;
         }
         if (demand01 >= 0f)

@@ -65,6 +65,12 @@ public static class ItemDetailCard
             y += 84f * s;
         }
 
+        if (!string.IsNullOrEmpty(info.shield))
+        {
+            if (draw) ImGuiKit.IconValue(new Rect(x, y, w, 76f * s), theme != null ? theme.barkShield : null, info.shield, 38f * k, ImGuiKit.Text);
+            y += 84f * s;
+        }
+
         foreach (InfoLine line in info.lines)
         {
             if (System.Array.IndexOf(KeyLabels, line.label) < 0) continue;

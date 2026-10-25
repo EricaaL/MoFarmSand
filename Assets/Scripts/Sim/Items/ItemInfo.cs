@@ -26,6 +26,8 @@ public class ItemInfo
     public string growTime;
     /// <summary>Fullness it feeds the boss, e.g. "30" or "30 (3 per ammo)". Null for support crops.</summary>
     public string fullness;
+    /// <summary>How long the Bark Shield lasts, e.g. "20s". Null for attack crops.</summary>
+    public string shield;
     /// <summary>The season this crop grows best in; its icon sits beside the grow time on the item card.</summary>
     public SeasonData bestSeason;
 
@@ -113,6 +115,7 @@ public static class ItemInfoBuilder
         float quality = ClimateModel.Quality(crop, ctx.date, ctx.weather, ctx.db.climate);
         info.growTime = Seconds(crop.growTime, todayMult, ctx);
         info.fullness = FullnessText(crop, quality);
+        info.shield = ShieldText(crop, quality);
         info.Add($"Grow time in {seasonName}", $"about {Seconds(crop.growTime, typicalRate, ctx)}  (base {crop.growTime:0}s)", Tone(typicalRate));
         info.Add("Grow time today", $"about {Seconds(crop.growTime, todayMult, ctx)}  ({WeatherNote(ctx)}, speed x{todayMult:0.0#})", Tone(todayMult));
 
@@ -226,6 +229,7 @@ public static class ItemInfoBuilder
         float todayMult = TodayGrowRate(crop, ctx);
         info.growTime = Seconds(crop.growTime, todayMult, ctx);
         info.fullness = FullnessText(crop, ctx.owned > 0 ? ctx.ownedQuality : 1f);
+        info.shield = ShieldText(crop, ctx.owned > 0 ? ctx.ownedQuality : 1f);
         info.Add("Grows in",$"about {Seconds(crop.growTime, todayMult, ctx)} today  (base {crop.growTime:0}s)", Tone(todayMult));
         SeasonData bestGrow = BestSeason(crop, ctx, out _);
         info.bestSeason = bestGrow;
@@ -283,6 +287,14 @@ public static class ItemInfoBuilder
             return $"{crop.fullnessValue * crop.ammoPerCrop * quality:0.#} ({crop.fullnessValue * quality:0.#} per ammo){pct}";
         if (crop.type == CropType.Projectile) return $"{crop.fullnessValue * quality:0.#}{pct}";
         return null;
+    }
+
+    /// <summary>How long a support crop's Bark Shield lasts at the given strength ("15s (75%)"). Null for attack crops.</summary>
+    private static string ShieldText(CropData crop, float quality)
+    {
+        if (crop.type != CropType.Support) return null;
+        string pct = Mathf.Abs(quality - 1f) > 0.05f ? $" ({Percent(quality)})" : string.Empty;
+        return $"{ClimateModel.ShieldSeconds(crop, quality):0.#}s{pct}";
     }
 
     private static string Percent(float q) => $"{Mathf.RoundToInt(q * 100f)}%";

@@ -24,6 +24,14 @@ public class BellTrigger : MonoBehaviour, IInteractable
     /// <summary>Raised when the bell is rung (before the day ends / night falls). Drives the bell sound.</summary>
     public static event System.Action Rung;
 
+    /// <summary>The day clock ran out: the bell rings by itself (sound and swing) as night falls.</summary>
+    public static void RingByItself()
+    {
+        BellTrigger bell = FindFirstObjectByType<BellTrigger>();
+        if (bell != null && bell.swing != null) bell.swing.Ring(bell.transform.position - bell.transform.forward);
+        Rung?.Invoke();
+    }
+
     private BellSwing swing;
 
     private void Awake() => swing = GetComponent<BellSwing>();

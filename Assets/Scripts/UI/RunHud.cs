@@ -119,21 +119,23 @@ public class RunHud
             GUI.DrawTexture(new Rect(hub.x - radius, hub.y - radius, radius * 2f, radius * 2f), theme.dayNightDial, ScaleMode.StretchToFill, true);
         }
 
-        // The arrow (drawn pointing left): at the start of a phase it points down, then turns clockwise through the visible left half to point up.
-        Color orange = ImGuiKit.Orange;
-        Matrix4x4 saved = GUI.matrix;
-        GUIUtility.RotateAroundPivot(ArrowAngle(), hub);
-        Vector2 tip = new Vector2(hub.x - 112 * c, hub.y);
-        ImGuiKit.Line(tip, hub, 12 * c, orange);
-        ImGuiKit.Line(tip, tip + new Vector2(42 * c, -34 * c), 12 * c, orange);
-        ImGuiKit.Line(tip, tip + new Vector2(42 * c, 34 * c), 12 * c, orange);
-        ImGuiKit.Circle(tip, 6 * c, orange);
-        GUI.matrix = saved;
-        ImGuiKit.Circle(hub, 36 * c, orange);   // the pivot knob stays put
-
         ImGuiKit.Rounded(card, ImGuiKit.Orange);
         Rect inner = new Rect(card.x + 13 * c, card.y + 13 * c, card.width - 26 * c, card.height - 26 * c);
         ImGuiKit.Rounded(inner, ImGuiKit.Cream);
+
+        // The arrow (drawn pointing left): at the start of a phase it points down, then turns clockwise through the visible left half to point up.
+        // It is drawn over the card: the hub sits on the card's left edge, so an arrow pointing up would otherwise vanish behind it. (Orange on the orange border: where they overlap the arrow merges into the card edge.)
+        // Rotated by hand about the hub: GUIUtility.RotateAroundPivot reads its pivot in screen space, which is off once the HUD is scaled or offset.
+        float rad = ArrowAngle() * Mathf.Deg2Rad, cos = Mathf.Cos(rad), sin = Mathf.Sin(rad);
+        Vector2 Turn(Vector2 offset) => hub + new Vector2(offset.x * cos - offset.y * sin, offset.x * sin + offset.y * cos);
+        Vector2 tip = Turn(new Vector2(-112 * c, 0f));
+        Vector2 headA = Turn(new Vector2(-112 * c + 42 * c, -34 * c)), headB = Turn(new Vector2(-112 * c + 42 * c, 34 * c));
+        Color orange = ImGuiKit.Orange;
+        ImGuiKit.Line(tip, hub, 12 * c, orange);
+        ImGuiKit.Line(tip, headA, 12 * c, orange);
+        ImGuiKit.Line(tip, headB, 12 * c, orange);
+        ImGuiKit.Circle(tip, 6 * c, orange);
+        ImGuiKit.Circle(hub, 36 * c, orange);   // the pivot knob stays put
 
         SeasonData season = plan.date.season;
         int year = director.Run != null ? director.Run.YearNumber(director.Meta) : 1;
@@ -169,12 +171,31 @@ public class RunHud
     /// </summary>
     private float ArrowAngle()
     {
-        DayClock clock = director.Clock;
-        float p = 0f;
-        if (clock != null && clock.Active && !clock.Unlimited && clock.Duration > 0f)
-            p = 1f - Mathf.Clamp01(clock.Remaining / clock.Duration);
-        return -90f + 180f * p;
+        // Anything past the day counts: on a day with no night fight the bell ends the day (DayEnd) and the stopped clock would read 0, i.e. "down".
+        bool night = GameManager.Instance != null && GameManager.Instance.Phase != GamePhase.Day;
+        float target = 90f;   // night: the arrow rests at the top
+        if (!night)
+        {
+            DayClock clock = director.Clock;
+            float p = 0f;
+            if (clock != null && clock.Active && !clock.Unlimited && clock.Duration > 0f)
+                p = 1f - Mathf.Clamp01(clock.Remaining / clock.Duration);
+            target = -90f + 180f * p;
+        }
+
+        // Ringing the bell swings the arrow from where it is up to the top; a stale value (a night that starts the scene, a new day) snaps.
+        float now = Time.unscaledTime;
+        if (Event.current == null || Event.current.type == EventType.Repaint)
+        {
+            float dt = now - arrowStamp;
+            if (!night || dt > 0.5f) shownArrow = target;
+            else shownArrow = Mathf.MoveTowards(shownArrow, target, 240f * dt);
+            arrowStamp = now;
+        }
+        return shownArrow;
     }
+
+    private float shownArrow = -90f, arrowStamp;
 
     /// <summary>Daylight / night countdown under the wheel. Flashes red when time is nearly up. Hidden once the day has resolved (the clock is stopped).</summary>
     private void DrawTimer(float s, Vector2 hub, float radius, float c)
