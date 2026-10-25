@@ -9,6 +9,7 @@ public static class GameSettings
     private const string MusicKey = "audio.musicVolume";
     private const string SfxKey = "audio.sfxVolume";
     private const string WeatherKey = "audio.weatherVolume";
+    private const string DialogueKey = "audio.dialogueVolume";
     private const string DisplayKey = "display.mode";
     private const string TipsEnabledKey = "tips.enabled";
     private const string TipsSeenKey = "tips.seen";
@@ -48,6 +49,16 @@ public static class GameSettings
     {
         get => Mathf.Clamp01(PlayerPrefs.GetFloat(WeatherKey, 1f));
         set => PlayerPrefs.SetFloat(WeatherKey, Mathf.Clamp01(value));
+    }
+
+    /// <summary>What the voices (crow, dog, chocobo) play at: the dialogue slider times master. Independent of the SFX slider.</summary>
+    public static float OutputDialogueVolume => DialogueVolume * MasterVolume;
+
+    /// <summary>0..1 multiplier on every voice line (the sounds in Assets/Audio/Dialogue).</summary>
+    public static float DialogueVolume
+    {
+        get => Mathf.Clamp01(PlayerPrefs.GetFloat(DialogueKey, 1f));
+        set => PlayerPrefs.SetFloat(DialogueKey, Mathf.Clamp01(value));
     }
 
     public enum DisplayMode { Windowed, Borderless, Fullscreen }

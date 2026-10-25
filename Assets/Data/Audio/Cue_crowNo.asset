@@ -12,8 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78f05f6e5eb2f1141ab0d09089c7ad37, type: 3}
   m_Name: Cue_crowNo
   m_EditorClassIdentifier: 
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: 578b1c6effecdeb4cbb4cba48c859e30, type: 3}
+  - {fileID: 8300000, guid: b4bca6bd19510ef42aa00b9c1a6f3a52, type: 3}
+  - {fileID: 8300000, guid: a20280bab281d964e9509a56e3ffa4b3, type: 3}
   volume: 1
   pitchRange: {x: 0.95, y: 1.05}
   minInterval: 0.05
+  maxSeconds: 0
+  fadeInSeconds: 0
+  dialogue: 1
   loop: 0

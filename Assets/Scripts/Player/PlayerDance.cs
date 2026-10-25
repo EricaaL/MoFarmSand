@@ -14,6 +14,9 @@ public class PlayerDance : MonoBehaviour
     /// <summary>True while the wheel is open (and until the selecting click is released), so the world ignores the click.</summary>
     public static bool WheelOpen => open || (swallowClick && Mouse.current != null && Mouse.current.leftButton.isPressed);
 
+    /// <summary>Raised when a dance starts (audio).</summary>
+    public static event System.Action Danced;
+
     private static readonly int DanceAHash = Animator.StringToHash("DanceA");
     private static readonly int DanceBHash = Animator.StringToHash("DanceB");
 
@@ -104,6 +107,7 @@ public class PlayerDance : MonoBehaviour
         overrides[nextIsB ? slotB : slotA] = dance.clip;
         animator.CrossFadeInFixedTime(nextIsB ? DanceBHash : DanceAHash, crossFade);
         nextIsB = !nextIsB;
+        Danced?.Invoke();
         if (controller != null) controller.PlayThrowSquash(); // small pop so the start reads on camera
     }
 

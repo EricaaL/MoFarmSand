@@ -12,8 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78f05f6e5eb2f1141ab0d09089c7ad37, type: 3}
   m_Name: Cue_crowGreet
   m_EditorClassIdentifier: 
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: 3cd929d209f2eea45ae3e84bc19d37cf, type: 3}
+  - {fileID: 8300000, guid: 87d09b3d4413c6c4c9fa36fd5890f10f, type: 3}
+  - {fileID: 8300000, guid: 20638eb925fded542aa6e526fdbb4e27, type: 3}
+  - {fileID: 8300000, guid: 1e7680fa9505f4743a17f76da1c05953, type: 3}
   volume: 1
   pitchRange: {x: 0.95, y: 1.05}
   minInterval: 0.05
+  maxSeconds: 0
+  fadeInSeconds: 0
+  dialogue: 1
   loop: 0

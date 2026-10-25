@@ -1,9 +1,14 @@
 using UnityEngine;
+using UnityEngine.Audio;
 
 /// <summary>Every sound the game plays, by name. Drop clips into the cues; AudioDirector decides when each one plays.</summary>
 [CreateAssetMenu(fileName = "AudioLibrary", menuName = "MoFarmSand/Audio Library")]
 public class AudioLibrary : ScriptableObject
 {
+    [Header("Mixing")]
+    [Tooltip("Mixer group with a +6 dB boost. Cues with Dialogue ticked play through it, so voices can go past full volume.")]
+    public AudioMixerGroup dialogueGroup;
+
     [Header("Farming")]
     public AudioCue plant;
     [Tooltip("Plays when a crop grows into its second growth stage.")]
@@ -44,18 +49,29 @@ public class AudioLibrary : ScriptableObject
     public AudioCue wither;
     public AudioCue shieldBreak;
     public AudioCue death;
+    [Tooltip("The dog's yelp on death. Plays together with the Death stinger.")]
+    public AudioCue deathBark;
     public AudioCue fall;
+    [Tooltip("Plays when the dog starts a dance from the Q wheel.")]
+    public AudioCue dance;
 
     [Header("Crow merchant")]
-    [Tooltip("Not wired yet: needs a signal for walking up to the booth.")]
+    [Tooltip("Plays when the shop screen opens, on top of the shop-open sound.")]
     public AudioCue crowGreet;
     [Tooltip("Plays when the shop screen opens (one of several clips at random).")]
     public AudioCue shopOpen;
     public AudioCue crowBuy;
     public AudioCue crowSell;
+    [Tooltip("Plays when BUY is clicked but can't go through: sold out, not enough coins, or inventory full.")]
     public AudioCue crowNo;
-    [Tooltip("Not wired yet: needs a signal for leaving the booth.")]
+    [Tooltip("Plays when you leave the shop screen (back button or Esc).")]
     public AudioCue crowBye;
+
+    [Header("Crow merchant dialogue")]
+    [Tooltip("The crow's voice line after you buy something. Plays on top of the Crow Buy coin sound.")]
+    public AudioCue crowBuyDialogue;
+    [Tooltip("The crow's voice line after you sell something. Plays on top of the Crow Sell coin sound.")]
+    public AudioCue crowSellDialogue;
 
     [Header("Boss")]
     public AudioCue bossGulp;

@@ -12,8 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78f05f6e5eb2f1141ab0d09089c7ad37, type: 3}
   m_Name: Cue_hurt
   m_EditorClassIdentifier: 
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: cf7514e4ac4613b4dbd1c595f713db3c, type: 3}
+  - {fileID: 8300000, guid: 55d2e4aefc007614b8dca41eb2e4a074, type: 3}
   volume: 1
   pitchRange: {x: 0.95, y: 1.05}
   minInterval: 0.05
+  maxSeconds: 0
+  fadeInSeconds: 0
+  dialogue: 1
   loop: 0

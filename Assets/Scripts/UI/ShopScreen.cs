@@ -306,7 +306,17 @@ public class ShopScreen : IRunScreen
                 if (ImGuiKit.Pill(new Rect(card.center.x - 330f * s, by, 300f * s, 82f * s), action, ImGuiKit.PillKind.Primary, canAct, 50f)) act?.Invoke();
                 if (ImGuiKit.Pill(new Rect(card.center.x + 10f * s, by, 300f * s, 82f * s), "SELL ALL", ImGuiKit.PillKind.Cream, canAct, 38f)) actAll();
             }
-            else if (ImGuiKit.Pill(new Rect(card.center.x - 130f * s, by, 260f * s, 82f * s), action, ImGuiKit.PillKind.Primary, canAct, 50f)) act?.Invoke();
+            else
+            {
+                Rect buy = new Rect(card.center.x - 130f * s, by, 260f * s, 82f * s);
+                if (ImGuiKit.Pill(buy, action, ImGuiKit.PillKind.Primary, canAct, 50f)) act?.Invoke();
+                // A greyed-out BUY still answers a click: the crow says no (sold out, too poor, or no room).
+                else if (!canAct && Event.current.type == EventType.MouseDown && Event.current.button == 0 && buy.Contains(Event.current.mousePosition))
+                {
+                    Event.current.Use();
+                    act?.Invoke();
+                }
+            }
         }
         if (ImGuiKit.BackButton(new Rect(24f * s, 6f * s, 58f * s, 58f * s))) director.CloseShop();
     }

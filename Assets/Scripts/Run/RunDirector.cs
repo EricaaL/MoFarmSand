@@ -460,7 +460,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     }
 
     public void OpenShop() { if (!dayRunning) return; shopScreen.OnOpen(); Show(View.Shop, shopScreen); ShopOpened?.Invoke(); }
-    public void CloseShop() { if (view == View.Shop) Show(View.None, null); }
+    public void CloseShop() { if (view != View.Shop) return; Show(View.None, null); ShopClosed?.Invoke(); }
 
     // ---------------------------------------------------------------- slots and runs
 
@@ -812,6 +812,8 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     /// <summary>Seam events for audio: the crow reacts to a purchase, a sale, or a refused purchase.</summary>
     /// <summary>Raised when the shop screen opens. Drives the shop-open sound.</summary>
     public static event System.Action ShopOpened;
+    /// <summary>Raised when the player leaves the shop screen (back button or Esc). Drives the crow's goodbye.</summary>
+    public static event System.Action ShopClosed;
     public static event System.Action PauseOpened;
     public static event System.Action Bought;
     public static event System.Action Sold;
@@ -824,7 +826,8 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         if (plan == null || offerIndex < 0 || offerIndex >= plan.offers.Count) return false;
         ShopOffer offer = plan.offers[offerIndex];
         int price = OfferPrice(offer);
-        if (offer.stock <= 0 || wallet.Coins < price)
+        bool noRoom = offer.kind == OfferKind.Seed && db.items.TryGet(offer.id, out ItemData seedItem) && !inventory.CanFit(seedItem);
+        if (offer.stock <= 0 || wallet.Coins < price || noRoom)
         {
             BuyRefused?.Invoke();
             return false;

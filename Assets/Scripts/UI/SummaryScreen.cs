@@ -32,7 +32,7 @@ public class SummaryScreen : IRunScreen
         ImGuiKit.Label(new Rect(x, card.y + 158f * s, w, 120f * s),
             won ? "The caterpillar burst into a butterfly and the farm is safe, for now."
                 : run.stats.daysSurvived == 0 ? "The year ended before it began."
-                : "The farm falls quiet. Next year, plant in season and bring crops to the night.",
+                : "The farm falls quiet, but the soil remembers.",
             24f, ImGuiKit.Muted, TextAnchor.UpperLeft);
 
         RunStats st = run.stats;
@@ -46,7 +46,7 @@ public class SummaryScreen : IRunScreen
 
         ImGuiKit.IconValue(new Rect(x, card.y + 540f * s, w, 72f * s), theme != null ? theme.piggyBank : null, $"{meta.vaultCoins} in the vault", 36f, ImGuiKit.Text, TextAnchor.MiddleLeft, true);
         ImGuiKit.Label(new Rect(x, card.y + 624f * s, w, 130f * s),
-            "Your purse always starts fresh. Spend the vault on upgrades here, before the next year begins.", 22f, ImGuiKit.Muted, TextAnchor.UpperLeft);
+            "Coins in your purse fade with the year. The vault is what the farm remembers: spend it on upgrades here, before the next year begins.", 22f, ImGuiKit.Muted, TextAnchor.UpperLeft);
 
         // Right: the upgrade shop.
         Rect shop = new Rect(660f * s, 119f * s, 1220f * s, 842f * s);

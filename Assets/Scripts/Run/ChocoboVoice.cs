@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Makes the wild chocobo call out now and then: one "kweh" every <see cref="minGap"/> to <see cref="maxGap"/> seconds.
-/// Stops while the game is paused (time scale 0), including the event screen that freezes the world. Volume follows the Options SFX slider.
+/// Stops while the game is paused (time scale 0), including the event screen that freezes the world. Volume follows the Options Dialogue slider.
 /// </summary>
 [RequireComponent(typeof(AudioSource))]
 public class ChocoboVoice : MonoBehaviour
@@ -44,7 +44,7 @@ public class ChocoboVoice : MonoBehaviour
         timeLeft -= Time.deltaTime;
         if (timeLeft > 0f) return;
         timeLeft = NextGap();
-        source.volume = volume * GameSettings.OutputSfxVolume;
+        source.volume = volume * GameSettings.OutputDialogueVolume;
         source.PlayOneShot(kweh);
         Called?.Invoke();
     }

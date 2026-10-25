@@ -19,4 +19,5 @@ MonoBehaviour:
   minInterval: 0.05
   maxSeconds: 0
   fadeInSeconds: 0
+  dialogue: 0
   loop: 0

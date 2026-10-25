@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>One sound: a few clips to pick from, with volume and pitch variation. An empty cue is silent, so it is safe to leave unassigned.</summary>
 [CreateAssetMenu(fileName = "Cue_New", menuName = "MoFarmSand/Audio Cue")]
@@ -15,6 +16,8 @@ public class AudioCue : ScriptableObject
     public float maxSeconds;
     [Tooltip("Music beds only: seconds to fade this cue in (and the previous bed out). 0 = the director's default.")]
     public float fadeInSeconds;
+    [Tooltip("Voice lines (the crow, the dog, the chocobo): follows the Options Dialogue slider instead of SFX, and plays through the +6 dB Dialogue mixer group.")]
+    [FormerlySerializedAs("boost")] public bool dialogue;
     [Tooltip("Looping cues are music beds.")]
     public bool loop;
 

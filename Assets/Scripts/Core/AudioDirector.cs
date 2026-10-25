@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 
 /// <summary>
 /// Plays the game's sounds from the events it already raises, and crossfades the day and night music. Presentation only:
@@ -25,6 +26,7 @@ public class AudioDirector : MonoBehaviour
     private AudioSource[] pool;
     private float[] voiceStopAt;
     private float[] voiceVolume;
+    private bool[] voiceDialogue;   // which bus (Dialogue or SFX slider) each voice follows
     private int nextVoice;
     private int aimVoice = -1; // voice playing the aim sound, so a throw can cut it short
     private readonly Dictionary<AudioCue, float> lastPlayed = new Dictionary<AudioCue, float>();
@@ -45,6 +47,7 @@ public class AudioDirector : MonoBehaviour
         pool = new AudioSource[Mathf.Max(1, voices)];
         voiceStopAt = new float[pool.Length];
         voiceVolume = new float[pool.Length];
+        voiceDialogue = new bool[pool.Length];
         for (int i = 0; i < voiceStopAt.Length; i++) voiceStopAt[i] = float.MaxValue;
         for (int i = 0; i < pool.Length; i++) pool[i] = NewSource("Voice " + i, false);
         music = new[] { NewSource("Music A", true), NewSource("Music B", true) };
@@ -72,7 +75,9 @@ public class AudioDirector : MonoBehaviour
         PlayerCombat.Fired += HandleFired;
         PlayerCombat.AimStarted += HandleAimStarted;
         PlayerCombat.Ate += HandleAte;
+        PlayerDance.Danced += HandleDanced;
         RunDirector.ShopOpened += HandleShopOpen;
+        RunDirector.ShopClosed += HandleShopClosed;
         RunDirector.PauseOpened += HandlePauseOpen;
         TipsView.Shown += HandleTip;
         CropProjectile.Landed += HandleLanded;
@@ -130,7 +135,9 @@ public class AudioDirector : MonoBehaviour
         PlayerCombat.Fired -= HandleFired;
         PlayerCombat.AimStarted -= HandleAimStarted;
         PlayerCombat.Ate -= HandleAte;
+        PlayerDance.Danced -= HandleDanced;
         RunDirector.ShopOpened -= HandleShopOpen;
+        RunDirector.ShopClosed -= HandleShopClosed;
         RunDirector.PauseOpened -= HandlePauseOpen;
         TipsView.Shown -= HandleTip;
         CropProjectile.Landed -= HandleLanded;
@@ -177,17 +184,39 @@ public class AudioDirector : MonoBehaviour
     private void HandleButtonSmall() { Play(library != null ? library.buttonSmall : null); }
     private void HandleAimStarted() { aimVoice = Play(library != null ? library.aimCrop : null); }
     private void HandleAte() { Play(library != null ? library.eat : null); }
-    private void HandleShopOpen() { Play(library != null ? library.shopOpen : null); }
+    private void HandleDanced() { Play(library != null ? library.dance : null); }
+    private void HandleShopOpen()
+    {
+        if (library == null) return;
+        Play(library.shopOpen);
+        Play(library.crowGreet);
+    }
+    private void HandleShopClosed() { Play(library != null ? library.crowBye : null); }
     private void HandlePauseOpen() { Play(library != null ? library.pauseOpen : null); }
     private void HandleTip() { Play(library != null ? library.tip : null); }
     private void HandleSelect() { Play(library != null ? library.inventorySelect : null); }
     private void HandleShopSelect() { Play(library != null ? library.shopSelect : null); }
     private void HandleTab() { Play(library != null ? library.tabSwitch : null); }
     private void HandleWithered(FarmTile tile) { Play(library != null ? library.wither : null); }
-    private void HandleDied() { Play(library != null ? library.death : null); }
+    private void HandleDied()
+    {
+        if (library == null) return;
+        Play(library.death);
+        Play(library.deathBark);
+    }
     private void HandleVoidFall(bool endsDay) { Play(library != null ? library.fall : null); }
-    private void HandleBought() { Play(library != null ? library.crowBuy : null); }
-    private void HandleSold() { Play(library != null ? library.crowSell : null); }
+    private void HandleBought()
+    {
+        if (library == null) return;
+        Play(library.crowBuy);
+        Play(library.crowBuyDialogue);
+    }
+    private void HandleSold()
+    {
+        if (library == null) return;
+        Play(library.crowSell);
+        Play(library.crowSellDialogue);
+    }
     private void HandleBuyRefused() { Play(library != null ? library.crowNo : null); }
     private void HandleLanded(Vector3 position, bool hitBoss) { Play(library != null ? library.splat : null); }
     private void HandleFed(float current, float max) { Play(library != null ? library.bossGulp : null); }
@@ -259,13 +288,16 @@ public class AudioDirector : MonoBehaviour
         AudioSource src = pool[nextVoice];
         nextVoice = (nextVoice + 1) % pool.Length;
         src.clip = cue.Pick();
-        src.volume = cue.volume * GameSettings.OutputSfxVolume;
+        src.outputAudioMixerGroup = cue.dialogue && library != null ? library.dialogueGroup : null; // voices are pooled, so reset it every play
+        float bus = cue.dialogue ? GameSettings.OutputDialogueVolume : GameSettings.OutputSfxVolume;
+        src.volume = cue.volume * bus;
         src.pitch = cue.RandomPitch();
         src.Play();
         int voice = (nextVoice + pool.Length - 1) % pool.Length;
         voiceStopAt[voice] = cue.maxSeconds > 0f ? now + cue.maxSeconds / src.pitch : float.MaxValue;
         voiceVolume[voice] = cue.volume;
-        src.volume = cue.volume * GameSettings.OutputSfxVolume;
+        voiceDialogue[voice] = cue.dialogue;
+        src.volume = cue.volume * bus;
         return voice;
     }
 
@@ -302,9 +334,10 @@ public class AudioDirector : MonoBehaviour
 
     private void Update()
     {
-        // Trimmed cues (maxSeconds) fade out over their last moments, then stop. The SFX volume is applied live.
+        // Trimmed cues (maxSeconds) fade out over their last moments, then stop. The SFX and Dialogue volumes are applied live.
         float nowUnscaled = Time.unscaledTime;
         float sfx = GameSettings.OutputSfxVolume;
+        float dialogue = GameSettings.OutputDialogueVolume;
         for (int i = 0; i < pool.Length; i++)
         {
             if (!pool[i].isPlaying) continue;
@@ -315,7 +348,7 @@ public class AudioDirector : MonoBehaviour
                 if (left <= 0f) { pool[i].Stop(); voiceStopAt[i] = float.MaxValue; continue; }
                 if (left < TrimFadeSeconds) fade = left / TrimFadeSeconds;
             }
-            pool[i].volume = voiceVolume[i] * sfx * fade;
+            pool[i].volume = voiceVolume[i] * (voiceDialogue[i] ? dialogue : sfx) * fade;
         }
 
         float musicMix = GameSettings.OutputMusicVolume;

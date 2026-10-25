@@ -191,7 +191,7 @@ MoFarmSand/
 1. **Verify Before Overwriting:** Always check if a script or prefab already exists in `Assets/Scripts/` or `Assets/Prefabs/` before creating new ones.
 2. **Non-Destructive Changes:** When modifying existing mechanics, preserve working input bindings and Animator parameter names.
 3. **Keep It Visual:** If asked to implement a feature, always consider how it will look in the camera frame for the pitch video (particle bursts, squash & stretch, camera shakes).
-4. **Version Bump Per Commit:** the title screen shows `v{Application.version}`, which comes from `bundleVersion` in `ProjectSettings/ProjectSettings.asset` (format `0.1.NN`, two-digit last number, currently `0.1.15`). Every commit increases the last number by one (the next commit makes it `0.1.16`), and the bump goes into that same commit.
+4. **Version Bump Per Commit:** the title screen shows `v{Application.version}`, which comes from `bundleVersion` in `ProjectSettings/ProjectSettings.asset` (format `0.1.NN`, two-digit last number, currently `0.1.16`). Every commit increases the last number by one (the next commit makes it `0.1.17`), and the bump goes into that same commit.
 
 ---
 

@@ -52,15 +52,16 @@ public class OptionsScreen : IRunScreen
     private void DrawSettings(Rect inner, float s)
     {
         float x = inner.x + 55f * s, w = inner.width - 110f * s;
-        float y = inner.y + 50f * s, row = 100f * s;
+        float y = inner.y + 40f * s, row = 90f * s;
 
         DrawVolume(x, y, w, s, "Master", GameSettings.MasterVolume, v => GameSettings.MasterVolume = v);
         DrawVolume(x, y + row, w, s, "Music", GameSettings.MusicVolume, v => GameSettings.MusicVolume = v);
         DrawVolume(x, y + row * 2f, w, s, "SFX", GameSettings.SfxVolume, v => GameSettings.SfxVolume = v);
-        DrawVolume(x, y + row * 3f, w, s, "Weather", GameSettings.WeatherVolume, v => GameSettings.WeatherVolume = v);
-        DrawDisplay(x, y + row * 4f, s);
-        DrawHudSize(x, y + row * 5f, w, s);
-        DrawTips(x, y + row * 6f, w, s);
+        DrawVolume(x, y + row * 3f, w, s, "Dialogue", GameSettings.DialogueVolume, v => GameSettings.DialogueVolume = v);
+        DrawVolume(x, y + row * 4f, w, s, "Weather", GameSettings.WeatherVolume, v => GameSettings.WeatherVolume = v);
+        DrawDisplay(x, y + row * 5f, s);
+        DrawHudSize(x, y + row * 6f, w, s);
+        DrawTips(x, y + row * 7f, w, s);
     }
 
     private static void DrawDisplay(float x, float y, float s)
