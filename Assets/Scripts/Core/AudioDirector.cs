@@ -291,6 +291,15 @@ public class AudioDirector : MonoBehaviour
         musicTarget[activeMusic] = musicBase[activeMusic];
     }
 
+    private readonly WeatherAudioScaler weatherScaler = new WeatherAudioScaler();
+
+    // After COZY's own Update has set its weather sounds, scale them by the Options weather volume.
+    private void LateUpdate()
+    {
+        if (DistantLands.Cozy.CozyWeather.instance != null)
+            weatherScaler.Apply(DistantLands.Cozy.CozyWeather.instance.transform, GameSettings.OutputWeatherVolume);
+    }
+
     private void Update()
     {
         // Trimmed cues (maxSeconds) fade out over their last moments, then stop. The SFX volume is applied live.

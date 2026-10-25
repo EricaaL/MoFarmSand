@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9533699d2feb27e43ba90d95f6905edc, type: 3}
+  m_Name: Event_WildChocobo
+  m_EditorClassIdentifier: 
+  eventId: wild_chocobo
+  title: A Wild Chocobo
+  body: A fluffy yellow chocobo is pecking at the dirt by your fence. It tilts its
+    head at you, curious.
+  options:
+  - label: Pet its fluffy head
+    coinCost: 0
+    effects:
+    - {fileID: 11400000, guid: 4358ad64e5256da4787d059eb75f050d, type: 2}
+    hideEffects: 0
+  - label: Share some of your harvest
+    coinCost: 0
+    effects:
+    - {fileID: 11400000, guid: 97a98841811458344bf51c629fa40924, type: 2}
+    - {fileID: 11400000, guid: 21fe4234538d00342827133d3235a6a0, type: 2}
+    hideEffects: 0
+  - label: Shoo it away
+    coinCost: 0
+    effects: []
+    hideEffects: 0
+  seasons: []
+  stagePrefab: {fileID: 7584921971951563031, guid: 9ba064aff21779b46840e70a0feec029, type: 3}
+  stagePosition: {x: 2.7600021, y: 0, z: 7.076147}
+  stageEuler: {x: 0, y: 211.06747, z: 0}

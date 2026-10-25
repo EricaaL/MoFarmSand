@@ -8,6 +8,7 @@ public static class GameSettings
     private const string MasterKey = "audio.master";
     private const string MusicKey = "audio.musicVolume";
     private const string SfxKey = "audio.sfxVolume";
+    private const string WeatherKey = "audio.weatherVolume";
     private const string TipsEnabledKey = "tips.enabled";
     private const string TipsSeenKey = "tips.seen";
 
@@ -36,6 +37,16 @@ public static class GameSettings
     {
         get => Mathf.Clamp01(PlayerPrefs.GetFloat(SfxKey, PlayerPrefs.GetFloat(OldVolumeKey, 1f)));
         set => PlayerPrefs.SetFloat(SfxKey, Mathf.Clamp01(value));
+    }
+
+    /// <summary>What COZY's weather sounds (wind, rain, thunder, ambience) play at: the weather slider times master.</summary>
+    public static float OutputWeatherVolume => WeatherVolume * MasterVolume;
+
+    /// <summary>0..1 multiplier on the weather sounds.</summary>
+    public static float WeatherVolume
+    {
+        get => Mathf.Clamp01(PlayerPrefs.GetFloat(WeatherKey, 1f));
+        set => PlayerPrefs.SetFloat(WeatherKey, Mathf.Clamp01(value));
     }
 
     /// <summary>Whether the in-play tip cards show at all.</summary>

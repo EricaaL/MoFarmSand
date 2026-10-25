@@ -319,8 +319,8 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         if (playerCombat != null) playerCombat.CanAct = !frozen;
     }
 
-    public void ShowMainMenu() { dayRunning = false; mainMenuScreen.OnOpen(); Show(View.MainMenu, mainMenuScreen); }
-    public void ShowTitle() { dayRunning = false; Show(View.Title, titleScreen); }
+    public void ShowMainMenu() { dayRunning = false; ClearEventProp(); mainMenuScreen.OnOpen(); Show(View.MainMenu, mainMenuScreen); }
+    public void ShowTitle() { dayRunning = false; ClearEventProp(); Show(View.Title, titleScreen); }
 
     /// <summary>How to Play is a tab of the Options page.</summary>
     public void ShowHowToPlay() { ShowOptions(OptionsScreen.TabHowToPlay); }
@@ -349,9 +349,9 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         Application.Quit();
 #endif
     }
-    public void ShowMap() { dayRunning = false; Show(View.Map, mapScreen); }
-    public void ShowBank() { dayRunning = false; Show(View.Bank, bankScreen); }
-    public void ShowSummary() { dayRunning = false; Show(View.Summary, summaryScreen); }
+    public void ShowMap() { dayRunning = false; ClearEventProp(); Show(View.Map, mapScreen); }
+    public void ShowBank() { dayRunning = false; ClearEventProp(); Show(View.Bank, bankScreen); }
+    public void ShowSummary() { dayRunning = false; ClearEventProp(); Show(View.Summary, summaryScreen); }
 
     public void ShowItems()
     {
@@ -555,12 +555,29 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     private void StartDay(int nodeId)
     {
         plan = DayPlanner.Plan(Run, nodeId, db);
+        SpawnEventProp(plan.evt);
         if (plan.evt != null && Run.eventResolvedNodeId != nodeId)
         {
             Show(View.Event, eventScreen);
             return;
         }
         StartCoroutine(BeginDayRoutine());
+    }
+
+    private GameObject eventProp;
+
+    /// <summary>Puts the event's stage prop (e.g. the chocobo) on the farm; it stays until the day is over. Also clears the previous day's prop.</summary>
+    private void SpawnEventProp(EventData evt)
+    {
+        ClearEventProp();
+        if (evt == null || evt.stagePrefab == null) return;
+        eventProp = Instantiate(evt.stagePrefab, evt.stagePosition, Quaternion.Euler(evt.stageEuler));
+    }
+
+    private void ClearEventProp()
+    {
+        if (eventProp != null) Destroy(eventProp);
+        eventProp = null;
     }
 
     public void ResolveEvent(int optionIndex)

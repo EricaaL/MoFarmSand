@@ -24,6 +24,13 @@ public class EventData : ScriptableObject, IHasId
     [Tooltip("Seasons this event can appear in. Empty = any season.")]
     public List<SeasonData> seasons = new List<SeasonData>();
 
+    [Header("Stage prop")]
+    [Tooltip("Optional prefab spawned on the farm for this event: it stands behind the event card and stays through the day.")]
+    public GameObject stagePrefab;
+    public Vector3 stagePosition;
+    [Tooltip("Euler angles of the spawned prop.")]
+    public Vector3 stageEuler;
+
     public string Id => eventId;
 
     public bool AllowedIn(SeasonData season) => seasons == null || seasons.Count == 0 || seasons.Contains(season);
