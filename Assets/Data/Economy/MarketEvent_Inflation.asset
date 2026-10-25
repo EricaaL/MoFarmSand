@@ -14,7 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   eventId: inflation
   displayName: Inflation
-  bannerText: Inflation! The merchant charges and pays 20% more for the rest of the
-    season.
+  bannerText: Inflation! Everything cost more!
   priceMultiplier: 1.2
   chancePerDay: 0.05

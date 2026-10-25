@@ -26,7 +26,11 @@ public class HeldItemView
 
         const float k = 1.45f;   // the card is drawn 45% larger than its base size
         float s = ImGuiKit.Scale * k;
-        float w = 200f * s, h = 112f * s, margin = 16f * s;
+        ItemInfo info = InfoFor(item, inventory.ActiveCount);
+        UiTheme theme = ImGuiKit.Theme;
+        Texture statIcon;
+        string stat = StatFor(item, info, theme, out statIcon);
+        float w = 200f * s, h = (stat != null ? 138f : 112f) * s, margin = 16f * s;
         Rect card = new Rect(screenW - w - margin, screenH - h - margin, w, h);
 
         ImGuiKit.Rounded(card, ImGuiKit.Orange);
@@ -54,5 +58,54 @@ public class HeldItemView
         ImGuiKit.Label(countRect, label.main, size, color, TextAnchor.MiddleCenter, true);
         if (label.sub.Length > 0)
             ImGuiKit.Label(new Rect(countRect.x, card.y + 62f * s, countRect.width, 28f * s), label.sub, 16f * k, ImGuiKit.Muted, TextAnchor.UpperCenter, true);
+
+        // Under the count: seconds to grow for a seed, the bread (fullness) for an attack crop, the Bark Shield time for a support crop.
+        if (stat != null)
+        {
+            float rowY = card.y + (label.sub.Length > 0 ? 90f : 64f) * s;
+            ImGuiKit.IconValue(new Rect(countRect.x, rowY, countRect.width, 34f * s), statIcon, stat, 15f * k, ImGuiKit.Text, TextAnchor.MiddleLeft, true);
+        }
+    }
+
+    // ------------------------------------------------------------------ the stat row
+
+    private RunDirector director;
+    private bool directorSearched;
+    private ItemInfo cachedInfo;
+    private ItemData cachedItem;
+    private int cachedCount;
+    private float cachedAt;
+
+    /// <summary>Today's numbers for the held item (same source as the hotbar tooltip), rebuilt when the stack changes or twice a second.</summary>
+    private ItemInfo InfoFor(ItemData item, int count)
+    {
+        if (cachedItem == item && cachedCount == count && Time.unscaledTime - cachedAt < 0.5f) return cachedInfo;
+        if (!directorSearched)
+        {
+            director = Object.FindFirstObjectByType<RunDirector>();
+            directorSearched = true;
+        }
+        cachedInfo = director != null && director.IsRoguelike && director.IsDayRunning && director.Plan != null && director.Run != null
+            ? ItemInfoBuilder.Build(item, director.BuildItemContext(item))
+            : null;
+        cachedItem = item;
+        cachedCount = count;
+        cachedAt = Time.unscaledTime;
+        return cachedInfo;
+    }
+
+    /// <summary>The short value for the row ("22s", "30"), with the strength note dropped; null when the item has none.</summary>
+    private static string StatFor(ItemData item, ItemInfo info, UiTheme theme, out Texture icon)
+    {
+        icon = null;
+        if (info == null) return null;
+        string text;
+        if (item is SeedData) { text = info.growTime; icon = ItemDetailCard.GrowIcon(info, theme); }
+        else if (item is CropData crop && crop.type == CropType.Support) { text = info.shield; icon = theme != null ? theme.barkShield : null; }
+        else if (item is CropData) { text = info.fullness; icon = theme != null ? theme.bread : null; }
+        else return null;
+        if (string.IsNullOrEmpty(text)) return null;
+        int note = text.IndexOf(" (", System.StringComparison.Ordinal);
+        return note > 0 ? text.Substring(0, note) : text;
     }
 }

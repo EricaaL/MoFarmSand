@@ -14,7 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   eventId: deflation
   displayName: Deflation
-  bannerText: Deflation! The merchant charges and pays 20% less for the rest of the
-    season.
+  bannerText: Deflation! Everything cost less!
   priceMultiplier: 0.8
   chancePerDay: 0.05

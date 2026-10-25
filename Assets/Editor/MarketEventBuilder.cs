@@ -14,9 +14,9 @@ public static class MarketEventBuilder
     public static void AddMarketEvents()
     {
         MarketEventData inflation = Make("MarketEvent_Inflation", "inflation", "Inflation", 1.2f,
-            "Inflation! The merchant charges and pays 20% more for the rest of the season.");
+            "Inflation! Everything cost more!");
         MarketEventData deflation = Make("MarketEvent_Deflation", "deflation", "Deflation", 0.8f,
-            "Deflation! The merchant charges and pays 20% less for the rest of the season.");
+            "Deflation! Everything cost less!");
 
         EconomyConfig config = AssetDatabase.LoadAssetAtPath<EconomyConfig>(ConfigPath);
         foreach (MarketEventData e in new[] { inflation, deflation })
