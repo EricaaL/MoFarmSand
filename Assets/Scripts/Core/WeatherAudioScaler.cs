@@ -12,13 +12,20 @@ public class WeatherAudioScaler
 
     private readonly Dictionary<AudioSource, Entry> entries = new Dictionary<AudioSource, Entry>();
     private readonly List<AudioSource> found = new List<AudioSource>();
+    private readonly HashSet<AudioSource> held = new HashSet<AudioSource>();
 
-    public void Apply(Transform root, float multiplier)
+    /// <summary>
+    /// Scales every weather source by <paramref name="multiplier"/>. While <paramref name="paused"/> it also holds the ones that are playing
+    /// (audio ignores the time scale) every frame, so COZY restarting a loop can't leak sound; they carry on when the pause ends.
+    /// </summary>
+    public void Apply(Transform root, float multiplier, bool paused = false)
     {
         if (root == null) return;
         root.GetComponentsInChildren(true, found);
+        if (!paused && held.Count > 0) Release();
         foreach (AudioSource src in found)
         {
+            if (paused && src.isPlaying) { src.Pause(); held.Add(src); }
             float volume = src.volume;
             if (!entries.TryGetValue(src, out Entry e) || !Mathf.Approximately(volume, e.written)) e.baseVolume = volume;   // new, or COZY wrote a fresh value
             src.volume = e.baseVolume * multiplier;
@@ -26,6 +33,12 @@ public class WeatherAudioScaler
             entries[src] = e;
         }
         if (entries.Count > found.Count + 32) Prune();
+    }
+
+    private void Release()
+    {
+        foreach (AudioSource src in held) if (src != null) src.UnPause();
+        held.Clear();
     }
 
     private void Prune()

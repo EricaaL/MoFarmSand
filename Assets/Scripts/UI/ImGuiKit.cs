@@ -192,6 +192,21 @@ public static class ImGuiKit
         GUI.matrix = saved;
     }
 
+    /// <summary>A "- - - -" line at any angle, with the same dash and gap as <see cref="DashedRule"/> (both scaled by <paramref name="scale"/>).</summary>
+    public static void DashedLine(Vector2 a, Vector2 b, float width, Color c, float scale = 1f)
+    {
+        Matrix4x4 saved = GUI.matrix;
+        Vector2 d = b - a;
+        float len = d.magnitude;
+        if (len < 0.01f) return;
+        float angle = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
+        float dash = 11f * scale, gap = 7f * scale;
+        GUI.matrix = saved * Matrix4x4.TRS(new Vector3(a.x, a.y, 0f), Quaternion.Euler(0f, 0f, angle), Vector3.one) * Matrix4x4.TRS(new Vector3(-a.x, -a.y, 0f), Quaternion.identity, Vector3.one);
+        for (float dx = 0f; dx < len; dx += dash + gap)
+            Fill(new Rect(a.x + dx, a.y - width * 0.5f, Mathf.Min(dash, len - dx), width), c);
+        GUI.matrix = saved;
+    }
+
     public static void Circle(Vector2 center, float radius, Color c)
     {
         if (circle == null) circle = MakeCircle(64);

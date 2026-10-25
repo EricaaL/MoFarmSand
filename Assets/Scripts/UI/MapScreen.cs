@@ -80,7 +80,7 @@ public class MapScreen : IRunScreen
                 bool walked = run.visited.Contains(n.id) && (run.visited.Contains(c.id));
                 bool reachable = current != null && n.id == current.id;
                 Color col = walked ? ImGuiKit.Brown : reachable ? new Color(0.07f, 0.07f, 0.07f, 0.95f) : new Color(0.07f, 0.07f, 0.07f, 0.55f);
-                ImGuiKit.Line(pos(n), pos(c), walked || reachable ? 6f * s : 4f * s, col);
+                ImGuiKit.DashedLine(pos(n), pos(c), walked || reachable ? 6f * s : 4f * s, col, s);
             }
 
         // Nodes.

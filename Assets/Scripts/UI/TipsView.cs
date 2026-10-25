@@ -11,6 +11,9 @@ public class TipsView : MonoBehaviour
     [SerializeField] private PlayerInventory inventory;
     [SerializeField] private PlayerInteractor interactor;
     [SerializeField] private DisasterDirector disasters;
+    [SerializeField] private DayClock clock;
+    [SerializeField] private RunDirector director;
+    [SerializeField] private float nightSoonSeconds = 15f;
     [SerializeField] private float showSeconds = 10f;
     [SerializeField] private float gapSeconds = 1.2f;
 
@@ -36,6 +39,7 @@ public class TipsView : MonoBehaviour
         FarmTile.Planted += HandlePlanted;
         FarmTile.Ripened += HandleRipened;
         FarmTile.Harvested += HandleHarvested;
+        FarmTile.Withered += HandleWithered;
         if (inventory != null) inventory.OnChanged += HandleInventory;
         if (disasters != null) disasters.OnDisasterStarted += HandleDisaster;
     }
@@ -52,6 +56,7 @@ public class TipsView : MonoBehaviour
         FarmTile.Planted -= HandlePlanted;
         FarmTile.Ripened -= HandleRipened;
         FarmTile.Harvested -= HandleHarvested;
+        FarmTile.Withered -= HandleWithered;
         if (inventory != null) inventory.OnChanged -= HandleInventory;
         if (disasters != null) disasters.OnDisasterStarted -= HandleDisaster;
     }
@@ -66,6 +71,7 @@ public class TipsView : MonoBehaviour
     private void HandlePlanted(FarmTile tile, GameObject who) { book.Raise(TipIds.FirstPlant); }
     private void HandleRipened(FarmTile tile) { book.Raise(TipIds.FirstRipe); }
     private void HandleHarvested(FarmTile tile, CropData crop) { book.Raise(TipIds.FirstHarvest); }
+    private void HandleWithered(FarmTile tile) { book.Raise(TipIds.FirstWither); }
     private void HandleDisaster(DisasterData disaster, float seconds) { book.Raise(TipIds.FirstDisaster); }
     private void HandleVoidFall(bool dayEnds) { book.Raise(TipIds.FirstVoidFall); }
     private void HandlePhase(GamePhase phase) { if (phase == GamePhase.Night) book.Raise(TipIds.FirstNight); }
@@ -75,9 +81,11 @@ public class TipsView : MonoBehaviour
         ItemData item = inventory.ActiveItem;
         if (item == null || inventory.ActiveCount <= 0) return;
         if (item is SeedData) book.Raise(TipIds.HoldingSeed);
+        else if (item is FarmlandPlotItem) book.Raise(TipIds.PlotHeld);
         else if (item is CropData crop)
         {
-            if (crop.type == CropType.Shooter) book.Raise(TipIds.ShooterHeld);
+            if (crop.type == CropType.Projectile) book.Raise(TipIds.ThrownHeld);
+            else if (crop.type == CropType.Shooter) book.Raise(TipIds.ShooterHeld);
             else if (crop.type == CropType.Support) book.Raise(TipIds.SupportHeld);
         }
     }
@@ -94,6 +102,7 @@ public class TipsView : MonoBehaviour
         {
             book.Raise(TipIds.FirstDay);
             if (interactor != null && interactor.Current is MerchantStall) book.Raise(TipIds.Merchant);
+            if (BossComesTomorrow()) book.Raise(TipIds.NightSoon);
         }
 
         if (book.Current == null) return;
@@ -138,6 +147,14 @@ public class TipsView : MonoBehaviour
         Rect close = new Rect(card.xMax - 56f * s, card.y + 6f * s, 44f * s, 44f * s);
         HotbarView.BlockRect2 = close;
         if (ImGuiKit.CloseButton(close, false, alpha)) DismissCurrent();
+    }
+
+    /// <summary>True in the last seconds of daylight on the day before a season boss (the final boss included).</summary>
+    private bool BossComesTomorrow()
+    {
+        if (clock == null || director == null || !clock.Active || clock.Unlimited || clock.Remaining > nightSoonSeconds) return false;
+        RunState run = director.Run;
+        return run != null && director.Db != null && director.Db.Calendar.IsLastDayOfSeason(run.DayIndex + 1);
     }
 
     private static bool Visible(GamePhase phase) { return phase == GamePhase.Day || phase == GamePhase.Night; }

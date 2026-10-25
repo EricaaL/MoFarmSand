@@ -15,6 +15,7 @@ public static class ChocoboBuilder
     private const string MaterialPath = Folder + "/Chocobo.mat";
     private const string ControllerPath = "Assets/Art/Animations/Chocobo.controller";
     private const string PrefabPath = "Assets/Prefabs/Characters/Chocobo.prefab";
+    private const string KwehPath = "Assets/Audio/Dialogue/chocobo_kweh.mp3";
     private const string ClipName = "Toctoc";
     /// <summary>The file is about 0.2 units tall; this brings the bird to roughly a metre and a half.</summary>
     private const float PrefabScale = 8f;
@@ -106,9 +107,47 @@ public static class ChocoboBuilder
         animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
         instance.name = "Chocobo";
         instance.transform.localScale = Vector3.one * PrefabScale;
+        AddCollider(instance);
+        AddVoice(instance);
 
         System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(PrefabPath));
         PrefabUtility.SaveAsPrefabAsset(instance, PrefabPath);
         Object.DestroyImmediate(instance);
+    }
+
+    /// <summary>One capsule on the root, sized from the bird's body so the player and props can't walk through it.</summary>
+    private static void AddCollider(GameObject instance)
+    {
+        Bounds world = new Bounds();
+        bool first = true;
+        foreach (SkinnedMeshRenderer r in instance.GetComponentsInChildren<SkinnedMeshRenderer>())
+        {
+            if (first) { world = r.bounds; first = false; }
+            else world.Encapsulate(r.bounds);
+        }
+        if (first) return;
+
+        // Renderer bounds are in world space and the instance sits at the origin, so dividing by the scale gives root-local units.
+        Vector3 center = instance.transform.InverseTransformPoint(world.center);
+        Vector3 size = world.size / PrefabScale;
+        CapsuleCollider capsule = instance.GetComponent<CapsuleCollider>();
+        if (capsule == null) capsule = instance.AddComponent<CapsuleCollider>();
+        capsule.direction = 1; // Y
+        capsule.center = center;
+        capsule.radius = Mathf.Min(size.x, size.z) * 0.5f;
+        capsule.height = Mathf.Max(size.y, capsule.radius * 2f);
+    }
+
+    /// <summary>The occasional "kweh": a 3D AudioSource plus <see cref="ChocoboVoice"/> holding the clip.</summary>
+    private static void AddVoice(GameObject instance)
+    {
+        AudioSource source = instance.GetComponent<AudioSource>();
+        if (source == null) source = instance.AddComponent<AudioSource>();
+        source.playOnAwake = false;
+        ChocoboVoice voice = instance.GetComponent<ChocoboVoice>();
+        if (voice == null) voice = instance.AddComponent<ChocoboVoice>();
+        SerializedObject so = new SerializedObject(voice);
+        so.FindProperty("kweh").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>(KwehPath);
+        so.ApplyModifiedPropertiesWithoutUndo();
     }
 }

@@ -14,11 +14,16 @@ public static class TipIds
     public const string SupportHeld = "support_held";
     public const string FirstDisaster = "first_disaster";
     public const string FirstVoidFall = "first_void_fall";
+    public const string ThrownHeld = "thrown_held";
+    public const string PlotHeld = "plot_held";
+    public const string FirstWither = "first_wither";
+    public const string NightSoon = "night_soon";
 
     public static readonly string[] All =
     {
         FirstDay, HoldingSeed, FirstPlant, FirstRipe, FirstHarvest, Merchant,
         FirstNight, ShooterHeld, SupportHeld, FirstDisaster, FirstVoidFall,
+        ThrownHeld, PlotHeld, FirstWither, NightSoon,
     };
 }
 

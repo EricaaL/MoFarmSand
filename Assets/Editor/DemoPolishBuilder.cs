@@ -433,6 +433,10 @@ public static class DemoPolishBuilder
         (TipIds.SupportHeld, "Support crop", "Right-click to eat it for Bark Shield charges. The shield wears off after 20 seconds."),
         (TipIds.FirstDisaster, "Disaster!", "Bad weather and pests can wither your crops. Harvest early and replant afterwards."),
         (TipIds.FirstVoidFall, "Watch the edge", "Falling off the farm costs a heart. On a boss night you respawn and the fight goes on."),
+        (TipIds.ThrownHeld, "Throw crop", "Hold left-click to aim, let go to lob it at the cursor. One crop per throw."),
+        (TipIds.PlotHeld, "New farmland", "Left-click open ground to place this plot (green means it fits). Press R on an empty placed plot to pick it back up."),
+        (TipIds.FirstWither, "It withered", "That crop died and the plot is empty again. Plant a new seed in it."),
+        (TipIds.NightSoon, "Night is coming", "Daylight is almost gone, and the next day is the season boss. Boss days start at night, so pick what's ripe now and keep crops to feed it."),
     };
 
     private static void BuildTips()
@@ -473,6 +477,8 @@ public static class DemoPolishBuilder
         SetRef(view, "inventory", Object.FindFirstObjectByType<PlayerInventory>());
         SetRef(view, "interactor", Object.FindFirstObjectByType<PlayerInteractor>());
         SetRef(view, "disasters", Object.FindFirstObjectByType<DisasterDirector>());
+        SetRef(view, "clock", Object.FindFirstObjectByType<DayClock>());
+        SetRef(view, "director", Object.FindFirstObjectByType<RunDirector>());
     }
 
     // =====================================================================================

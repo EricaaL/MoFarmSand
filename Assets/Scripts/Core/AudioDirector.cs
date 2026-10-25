@@ -297,7 +297,7 @@ public class AudioDirector : MonoBehaviour
     private void LateUpdate()
     {
         if (DistantLands.Cozy.CozyWeather.instance != null)
-            weatherScaler.Apply(DistantLands.Cozy.CozyWeather.instance.transform, GameSettings.OutputWeatherVolume);
+            weatherScaler.Apply(DistantLands.Cozy.CozyWeather.instance.transform, GameSettings.OutputWeatherVolume, Time.timeScale <= 0f);
     }
 
     private void Update()

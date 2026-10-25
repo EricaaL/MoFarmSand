@@ -18697,6 +18697,9 @@ MonoBehaviour:
   inventory: {fileID: 369750574}
   interactor: {fileID: 369750573}
   disasters: {fileID: 247518840}
+  clock: {fileID: 1819347237}
+  director: {fileID: 314585791}
+  nightSoonSeconds: 15
   showSeconds: 10
   gapSeconds: 1.2
 --- !u!1001 &183566692
@@ -37112,6 +37115,8 @@ MonoBehaviour:
   feedShake: 0.25
   burstShake: 1.2
   hitShake: 0.6
+  playerHitColor: {r: 1, g: 0.15, b: 0.15, a: 1}
+  playerFlashSeconds: 0.35
   hitStopSeconds: 0.06
   burstCutSeconds: 2.2
 --- !u!114 &509824794
