@@ -905,6 +905,7 @@ GameObject:
   - component: {fileID: 5968217591507862208}
   - component: {fileID: 2410105024964755447}
   - component: {fileID: 8395060841447777609}
+  - component: {fileID: 722699226312274626}
   m_Layer: 0
   m_Name: Chocobo
   m_TagString: Untagged
@@ -1088,6 +1089,18 @@ MonoBehaviour:
   minGap: 10
   maxGap: 20
   volume: 0.8
+--- !u!114 &722699226312274626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7584921971951563031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61981e7dc59d90f43984c85be2f133f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &8054682534181425173
 GameObject:
   m_ObjectHideFlags: 0

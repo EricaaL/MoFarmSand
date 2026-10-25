@@ -36,6 +36,8 @@ public class RunState
     public int pendingNodeId = -1;
     /// <summary>Node whose event was already resolved, so resuming mid-day doesn't repeat it.</summary>
     public int eventResolvedNodeId = -1;
+    /// <summary>Node whose event prop was left hungry by the player's choice (the wild chocobo then eats planted crops that day).</summary>
+    public int hungryNodeId = -1;
     public List<int> visited = new List<int>();
     public RunPhase phase = RunPhase.ChoosingNode;
 

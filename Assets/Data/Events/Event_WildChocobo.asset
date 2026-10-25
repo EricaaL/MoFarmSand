@@ -21,6 +21,7 @@ MonoBehaviour:
     coinCost: 0
     effects:
     - {fileID: 11400000, guid: 4358ad64e5256da4787d059eb75f050d, type: 2}
+    - {fileID: 11400000, guid: 6080c8135ba876747aeb8d08dabdcced, type: 2}
     hideEffects: 0
   - label: Share some of your harvest
     coinCost: 0

@@ -4846,7 +4846,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccc18089ca4732147af31d3e35f9449e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fogBoost: 6
+  fogBoost: 2.5
   fogTint: {r: 0.88, g: 0.93, b: 1, a: 1}
   tintStrength: 0.85
   fadeInSeconds: 3

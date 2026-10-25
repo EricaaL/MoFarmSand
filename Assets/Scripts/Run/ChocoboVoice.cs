@@ -12,6 +12,9 @@ public class ChocoboVoice : MonoBehaviour
     [SerializeField] private float maxGap = 20f;
     [SerializeField, Range(0f, 1f)] private float volume = 0.8f;
 
+    /// <summary>Raised each time the chocobo calls out.</summary>
+    public event System.Action Called;
+
     private AudioSource source;
     private float timeLeft;
     private bool paused;
@@ -43,6 +46,7 @@ public class ChocoboVoice : MonoBehaviour
         timeLeft = NextGap();
         source.volume = volume * GameSettings.OutputSfxVolume;
         source.PlayOneShot(kweh);
+        Called?.Invoke();
     }
 
     private float NextGap() { return Random.Range(Mathf.Min(minGap, maxGap), Mathf.Max(minGap, maxGap)); }

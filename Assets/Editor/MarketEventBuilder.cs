@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Adds the two season-long market events (Inflation +20%, Deflation -20%, 5% a day each) and lists them in the EconomyConfig.
+/// Adds the two season-long market events (Inflation +50%, Deflation -40%, 5% a day each) and lists them in the EconomyConfig.
 /// Additive: existing assets keep their tuned values.
 /// </summary>
 public static class MarketEventBuilder
@@ -13,9 +13,9 @@ public static class MarketEventBuilder
     [MenuItem("MoFarmSand/Add Market Events")]
     public static void AddMarketEvents()
     {
-        MarketEventData inflation = Make("MarketEvent_Inflation", "inflation", "Inflation", 1.2f,
+        MarketEventData inflation = Make("MarketEvent_Inflation", "inflation", "Inflation", 1.5f,
             "Inflation! Everything cost more!");
-        MarketEventData deflation = Make("MarketEvent_Deflation", "deflation", "Deflation", 0.8f,
+        MarketEventData deflation = Make("MarketEvent_Deflation", "deflation", "Deflation", 0.6f,
             "Deflation! Everything cost less!");
 
         EconomyConfig config = AssetDatabase.LoadAssetAtPath<EconomyConfig>(ConfigPath);

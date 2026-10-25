@@ -99,6 +99,9 @@ public class FarmTile : MonoBehaviour, IInteractable, IFarmPlot
 
     private static readonly List<FarmTile> all = new List<FarmTile>();
 
+    /// <summary>Every enabled plot in the scene.</summary>
+    public static IReadOnlyList<FarmTile> All => all;
+
     /// <summary>Raised after a seed is planted: the tile and who planted it (drives the farming animation).</summary>
     public static event System.Action<FarmTile, GameObject> Planted;
     /// <summary>Raised when a growing crop visibly grows into its second stage (not when a plot is restored). Drives the growth chime.</summary>

@@ -9,7 +9,7 @@ using UnityEngine;
 public class BlizzardFog : MonoBehaviour
 {
     [Tooltip("Multiplies COZY's fog density once fully faded in (1 = no change).")]
-    [SerializeField] private float fogBoost = 6f;
+    [SerializeField] private float fogBoost = 2.5f;
     [SerializeField] private Color fogTint = new Color(0.88f, 0.93f, 1f);
     [Range(0f, 1f)] [SerializeField] private float tintStrength = 0.85f;
     [Tooltip("Seconds for the whiteout to roll in.")]

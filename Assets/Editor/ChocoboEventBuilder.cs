@@ -10,6 +10,7 @@ public static class ChocoboEventBuilder
 {
     private const string Data = "Assets/Data";
     private const string EventPath = Data + "/Events/Event_WildChocobo.asset";
+    private const string HungryPath = Data + "/Run/Effects/Effect_Hungry.asset";
     private const string RegistryPath = Data + "/Registries/EventRegistry.asset";
     private const string PrefabPath = "Assets/Prefabs/Characters/Chocobo.prefab";
     private static readonly Vector3 Position = new Vector3(2.76000214f, 0f, 7.07614708f);
@@ -36,6 +37,16 @@ public static class ChocoboEventBuilder
             };
             AssetDatabase.CreateAsset(evt, EventPath);
         }
+        // "Pet its fluffy head" heals, but leaves the chocobo hungry: it then eats a planted crop whenever it calls out.
+        HungryPropEffect hungry = AssetDatabase.LoadAssetAtPath<HungryPropEffect>(HungryPath);
+        if (hungry == null)
+        {
+            hungry = ScriptableObject.CreateInstance<HungryPropEffect>();
+            AssetDatabase.CreateAsset(hungry, HungryPath);
+        }
+        if (evt.options.Count > 0 && evt.options[0].effects != null && !evt.options[0].effects.Contains(hungry))
+            evt.options[0].effects.Add(hungry);
+
         evt.stagePrefab = prefab;
         evt.stagePosition = Position;
         evt.stageEuler = Euler;

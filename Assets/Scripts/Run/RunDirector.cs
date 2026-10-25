@@ -572,6 +572,15 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         ClearEventProp();
         if (evt == null || evt.stagePrefab == null) return;
         eventProp = Instantiate(evt.stagePrefab, evt.stagePosition, Quaternion.Euler(evt.stageEuler));
+        UpdatePropHunger();
+    }
+
+    /// <summary>A prop with an appetite (the chocobo) is hungry only on the day the player chose to leave it that way.</summary>
+    private void UpdatePropHunger()
+    {
+        if (eventProp == null || plan == null) return;
+        ChocoboAppetite appetite = eventProp.GetComponent<ChocoboAppetite>();
+        if (appetite != null) appetite.Hungry = Run.hungryNodeId == plan.nodeId;
     }
 
     private void ClearEventProp()
@@ -593,6 +602,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
             foreach (RunEffect e in option.effects) if (e != null) e.Apply(run, db);
         if (run.coins > coinsBefore) CoinsMoved?.Invoke();
         run.eventResolvedNodeId = plan.nodeId;
+        UpdatePropHunger();
         RunSession.Commit();
         StartCoroutine(BeginDayRoutine());
     }

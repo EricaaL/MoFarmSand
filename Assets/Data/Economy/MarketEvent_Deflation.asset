@@ -15,5 +15,5 @@ MonoBehaviour:
   eventId: deflation
   displayName: Deflation
   bannerText: Deflation! Everything cost less!
-  priceMultiplier: 0.8
+  priceMultiplier: 0.6
   chancePerDay: 0.05

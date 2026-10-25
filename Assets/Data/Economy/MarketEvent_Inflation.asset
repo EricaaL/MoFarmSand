@@ -15,5 +15,5 @@ MonoBehaviour:
   eventId: inflation
   displayName: Inflation
   bannerText: Inflation! Everything cost more!
-  priceMultiplier: 1.2
+  priceMultiplier: 1.5
   chancePerDay: 0.05

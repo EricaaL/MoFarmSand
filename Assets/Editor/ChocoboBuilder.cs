@@ -146,6 +146,7 @@ public static class ChocoboBuilder
         source.playOnAwake = false;
         ChocoboVoice voice = instance.GetComponent<ChocoboVoice>();
         if (voice == null) voice = instance.AddComponent<ChocoboVoice>();
+        if (instance.GetComponent<ChocoboAppetite>() == null) instance.AddComponent<ChocoboAppetite>();
         SerializedObject so = new SerializedObject(voice);
         so.FindProperty("kweh").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>(KwehPath);
         so.ApplyModifiedPropertiesWithoutUndo();
