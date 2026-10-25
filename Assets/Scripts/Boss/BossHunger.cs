@@ -112,9 +112,12 @@ public class BossHunger : MonoBehaviour
         Destroy(fx, 3f);
     }
 
+    /// <summary>How much bigger the boss is than at the start of the stage (1 empty, <c>maxGrowScale</c> when full); contact ranges scale with it.</summary>
+    public float GrowScale => Mathf.Lerp(1f, maxGrowScale, Fullness01);
+
     private void Update()
     {
-        float grow = Mathf.Lerp(1f, maxGrowScale, Fullness01);
+        float grow = GrowScale;
         wobble = Mathf.MoveTowards(wobble, 0f, Time.deltaTime * 1.5f);
         float w = 1f + wobble * 0.25f * Mathf.Sin(Time.time * 25f);
         transform.localScale = new Vector3(baseScale.x * grow * w, baseScale.y * grow * (2f - w), baseScale.z * grow * w);

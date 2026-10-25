@@ -22,6 +22,8 @@ public class PlayerHealth : MonoBehaviour
 
     public event Action OnChanged;
     public event Action OnDied;
+    /// <summary>Raised by <see cref="Restore"/> just before <see cref="OnChanged"/>: hearts were set from the run, not lost to a hit.</summary>
+    public event Action OnRestored;
 
     private void Awake() { Hp = maxHp; }
 
@@ -46,6 +48,7 @@ public class PlayerHealth : MonoBehaviour
         Hp = Mathf.Clamp(hp, 1, maxHp);
         ShieldCharges = 0;
         ShieldTimeLeft = 0f;
+        OnRestored?.Invoke();
         OnChanged?.Invoke();
     }
 

@@ -146,7 +146,9 @@ public class CaterpillarBoss : MonoBehaviour
             windupUntil = 0f;
             return;
         }
-        if (to.magnitude <= contactRange && Time.time >= nextHitTime)
+        // The boss grows as it fills up and its collider keeps the farmer that much farther from the centre, so the reach grows with it.
+        float reach = contactRange * (hunger != null ? hunger.GrowScale : 1f);
+        if (to.magnitude <= reach && Time.time >= nextHitTime)
         {
             nextHitTime = Time.time + biteCooldown;
             holdUntil = Time.time + biteRecoverSeconds;

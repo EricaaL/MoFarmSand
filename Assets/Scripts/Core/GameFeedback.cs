@@ -13,11 +13,15 @@ public class GameFeedback : MonoBehaviour
     [SerializeField] private float feedShake = 0.25f;
     [SerializeField] private float burstShake = 1.2f;
     [SerializeField] private float hitShake = 0.6f;
+    [SerializeField] private Color playerHitColor = new Color(1f, 0.15f, 0.15f);
+    [SerializeField] private float playerFlashSeconds = 0.35f;
     [SerializeField] private float hitStopSeconds = 0.06f;
     [SerializeField] private float burstCutSeconds = 2.2f;
 
     private CinemachineImpulseSource impulse;
     private MaterialPropertyBlock block;
+    private MaterialPropertyBlock playerBlock;
+    private Coroutine playerFlash;
     private BossReactions reactions;
     private int lastHp = -1;
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
@@ -26,6 +30,7 @@ public class GameFeedback : MonoBehaviour
     {
         impulse = GetComponent<CinemachineImpulseSource>();
         block = new MaterialPropertyBlock();
+        playerBlock = new MaterialPropertyBlock();
         if (hunger != null) reactions = hunger.GetComponent<BossReactions>();
     }
 
@@ -41,6 +46,7 @@ public class GameFeedback : MonoBehaviour
         {
             lastHp = playerHealth.Hp;
             playerHealth.OnChanged += HandleHealthChanged;
+            playerHealth.OnRestored += HandleHealthRestored;
         }
     }
 
@@ -52,7 +58,11 @@ public class GameFeedback : MonoBehaviour
             hunger.OnBossSatisfied -= HandleBurst;
             hunger.OnBossEvolved -= HandleEvolved;
         }
-        if (playerHealth != null) playerHealth.OnChanged -= HandleHealthChanged;
+        if (playerHealth != null)
+        {
+            playerHealth.OnChanged -= HandleHealthChanged;
+            playerHealth.OnRestored -= HandleHealthRestored;
+        }
         Time.timeScale = 1f;
     }
 
@@ -76,9 +86,31 @@ public class GameFeedback : MonoBehaviour
 
     private void HandleHealthChanged()
     {
-        if (playerHealth.Hp < lastHp) impulse.GenerateImpulseWithForce(hitShake);
+        if (playerHealth.Hp < lastHp)
+        {
+            impulse.GenerateImpulseWithForce(hitShake);
+            if (playerFlash != null) StopCoroutine(playerFlash);
+            playerFlash = StartCoroutine(FlashPlayer());
+        }
         lastHp = playerHealth.Hp;
     }
+
+    /// <summary>The dog goes red the moment it is hurt, then fades back to its own colours.</summary>
+    private IEnumerator FlashPlayer()
+    {
+        Renderer[] renderers = playerHealth.GetComponentsInChildren<Renderer>();
+        for (float t = 0f; t < playerFlashSeconds; t += Time.unscaledDeltaTime)
+        {
+            playerBlock.SetColor(BaseColorId, Color.Lerp(playerHitColor, Color.white, t / playerFlashSeconds));
+            foreach (Renderer r in renderers) if (r != null) r.SetPropertyBlock(playerBlock);
+            yield return null;
+        }
+        foreach (Renderer r in renderers) if (r != null) r.SetPropertyBlock(null);
+        playerFlash = null;
+    }
+
+    // A new day loads the run's hearts (below the scene's full default): that is not a hit, so no shake.
+    private void HandleHealthRestored() { lastHp = playerHealth.Hp; }
 
     private IEnumerator HitStop()
     {
