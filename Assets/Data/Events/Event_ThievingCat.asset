@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9533699d2feb27e43ba90d95f6905edc, type: 3}
+  m_Name: Event_ThievingCat
+  m_EditorClassIdentifier: 
+  eventId: thieving_cat
+  title: The Thieving Cat
+  body: A sleek black cat slinks off your porch with a sack of your things in its
+    jaws.
+  options:
+  - label: Tussle with the cat for your crops
+    coinCost: 0
+    effects:
+    - {fileID: 11400000, guid: e80067aa542e82041a85f68e4f3bff24, type: 2}
+    hideEffects: 0
+  - label: Let the cat go
+    coinCost: 0
+    effects:
+    - {fileID: 11400000, guid: 20072915e2bb41f49bfd6da1cd68f7e3, type: 2}
+    hideEffects: 0
+  seasons: []

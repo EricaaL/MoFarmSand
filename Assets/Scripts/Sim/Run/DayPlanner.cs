@@ -37,8 +37,7 @@ public static class DayPlanner
         db.nodeTypes.TryGet(mapNode.nodeTypeId, out plan.node);
         plan.date = db.Calendar.DateOf(mapNode.layer);
 
-        float seasonScale = plan.date.season != null ? plan.date.season.dayLengthMultiplier : 1f;
-        plan.dayLengthSeconds = db.run.dayLengthSeconds > 0f ? db.run.dayLengthSeconds * seasonScale : 0f;
+        plan.dayLengthSeconds = db.run.DayLengthFor(plan.date.season);
         plan.nightLengthSeconds = Mathf.Max(0f, db.run.nightLengthSeconds);
 
         plan.weather = ClimateModel.SampleDay(plan.date, db.climate, SeededRng.Derive(run.runSeed, nodeId, RngStreams.Weather));
@@ -66,8 +65,14 @@ public static class DayPlanner
 
             if (plan.node.eventPool != null && plan.node.eventPool.All.Count > 0)
             {
-                SeededRng evRng = SeededRng.Derive(run.runSeed, nodeId, RngStreams.Event);
-                plan.evt = plan.node.eventPool.All[evRng.NextInt(0, plan.node.eventPool.All.Count)];
+                // Season-only events (see EventData.seasons) are left out of the other seasons' pools.
+                List<EventData> pool = new List<EventData>();
+                foreach (EventData e in plan.node.eventPool.All) if (e != null && e.AllowedIn(plan.date.season)) pool.Add(e);
+                if (pool.Count > 0)
+                {
+                    SeededRng evRng = SeededRng.Derive(run.runSeed, nodeId, RngStreams.Event);
+                    plan.evt = pool[evRng.NextInt(0, pool.Count)];
+                }
             }
         }
 

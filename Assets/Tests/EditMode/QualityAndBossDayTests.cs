@@ -96,16 +96,15 @@ public class QualityAndBossDayTests
     }
 
     [Test]
-    public void ShieldChargesScaleWithQualityButNeverBelowOne()
+    public void ShieldSecondsScaleWithQualityAndChargesStayFixed()
     {
         CropData turnip = Crop("turnip"), spinach = Crop("spinach");
 
-        Assert.AreEqual(2, ClimateModel.ShieldCharges(turnip, 1f));
-        Assert.AreEqual(1, ClimateModel.ShieldCharges(turnip, 0.4f));
-        Assert.AreEqual(3, ClimateModel.ShieldCharges(spinach, 1f));
-        Assert.AreEqual(2, ClimateModel.ShieldCharges(spinach, 0.5f));
-        Assert.AreEqual(1, ClimateModel.ShieldCharges(spinach, 0.25f));
-        Assert.AreEqual(1, ClimateModel.ShieldCharges(spinach, 0f), "an eaten crop always gives some shield");
+        Assert.AreEqual(Mathf.Max(1, turnip.shieldCharges), ClimateModel.ShieldCharges(turnip, 0.1f));
+        Assert.AreEqual(Mathf.Max(1, spinach.shieldCharges), ClimateModel.ShieldCharges(spinach, 1f));
+        Assert.AreEqual(spinach.shieldSeconds, ClimateModel.ShieldSeconds(spinach, 1f), 0.001f);
+        Assert.AreEqual(spinach.shieldSeconds * 0.1f, ClimateModel.ShieldSeconds(spinach, 0.1f), 0.001f);
+        Assert.AreEqual(0f, ClimateModel.ShieldSeconds(spinach, 0f), 0.001f);
     }
 
     // ------------------------------------------------------------------ quality is carried by the harvested crops
@@ -338,6 +337,6 @@ public class QualityAndBossDayTests
         Assert.That(mine.value, Does.Contain("fullness per hit"));
 
         ItemInfo turnip = ItemInfoBuilder.Build(db.items.Get("turnip"), ctx);
-        Assert.That(turnip.lines.Find(l => l.label.StartsWith("Your crops' strength")).value, Does.Contain("shield charge"));
+        Assert.That(turnip.lines.Find(l => l.label.StartsWith("Your crops' strength")).value, Does.Contain("Bark Shield lasts"));
     }
 }

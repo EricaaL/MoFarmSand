@@ -380,6 +380,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         pauseReturnScreen = screen;
         pauseScreen.OnOpen();
         Show(View.Pause, pauseScreen);
+        PauseOpened?.Invoke();
     }
 
     public void ClosePause()
@@ -604,7 +605,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
 
         conditions.Growth.Clear();
         conditions.Growth.Set("day", plan.growthMultiplier);
-        conditions.Configure(plan.date, plan.weather);
+        conditions.Configure(plan.date, plan.weather, plan.dayLengthSeconds);
         conditions.Bonus = new HarvestBonus(db, run, SeededRng.Derive(run.runSeed, plan.nodeId, RngStreams.HarvestBonus));
 
         DisasterData data = plan.disaster.IsNone || db.disasters == null ? null : db.disasters.Get(plan.disaster.disasterId);
@@ -775,6 +776,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     /// <summary>Seam events for audio: the crow reacts to a purchase, a sale, or a refused purchase.</summary>
     /// <summary>Raised when the shop screen opens. Drives the shop-open sound.</summary>
     public static event System.Action ShopOpened;
+    public static event System.Action PauseOpened;
     public static event System.Action Bought;
     public static event System.Action Sold;
     public static event System.Action BuyRefused;

@@ -245,7 +245,7 @@ public class PlayerCombat : MonoBehaviour
         if (crop.type == CropType.Support)
         {
             if (TryEat(crop)) { message = "Bark Shield up!"; return true; }
-            message = "Couldn't eat that";
+            message = health.ShieldFull ? "Bark Shield is full" : "Couldn't eat that";
             return false;
         }
 
@@ -285,12 +285,13 @@ public class PlayerCombat : MonoBehaviour
         return true;
     }
 
-    /// <summary>Eats a support crop. Out-of-season crops are weaker and grant fewer shield charges.</summary>
+    /// <summary>Eats a support crop. Out-of-season crops are weaker and grant a shorter Bark Shield.</summary>
     public bool TryEat(CropData crop)
     {
+        if (health.ShieldFull) return false;
         float quality = inventory.ActiveQuality;
         if (!inventory.TryConsume(crop, 1)) return false;
-        health.GrantShield(ClimateModel.ShieldCharges(crop, quality), crop.shieldSeconds);
+        health.GrantShield(ClimateModel.ShieldCharges(crop, quality), ClimateModel.ShieldSeconds(crop, quality));
         Ate?.Invoke();
         return true;
     }

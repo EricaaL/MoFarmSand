@@ -50,3 +50,4 @@ MonoBehaviour:
   nightMusic: {fileID: 11400000, guid: b26cbca53644ec248a9157ce5729343e, type: 2}
   victory: {fileID: 11400000, guid: c52f9a6e1d8b4370a4e7b0d3f1962c8e, type: 2}
   butterflyMusic: {fileID: 11400000, guid: a4c81e7d3b5f4026b9d0e2f6718c3a5d, type: 2}
+  pauseOpen: {fileID: 11400000, guid: 6c2e9a4f8b1d4e7a9f305d1b8e2c7a64, type: 2}

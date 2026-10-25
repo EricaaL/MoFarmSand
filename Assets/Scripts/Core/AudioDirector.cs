@@ -4,7 +4,7 @@ using UnityEngine;
 /// <summary>
 /// Plays the game's sounds from the events it already raises, and crossfades the day and night music. Presentation only:
 /// a cue with no clips is silent, so the game runs fine before any audio has been dropped in. Music and sound effects each have their own
-/// Options volume (<see cref="GameSettings.MusicVolume"/>, <see cref="GameSettings.SfxVolume"/>), applied live.
+/// Options volume (<see cref="GameSettings.MusicVolume"/>, <see cref="GameSettings.SfxVolume"/>, both scaled by <see cref="GameSettings.MasterVolume"/>), applied live.
 /// </summary>
 public class AudioDirector : MonoBehaviour
 {
@@ -73,6 +73,7 @@ public class AudioDirector : MonoBehaviour
         PlayerCombat.AimStarted += HandleAimStarted;
         PlayerCombat.Ate += HandleAte;
         RunDirector.ShopOpened += HandleShopOpen;
+        RunDirector.PauseOpened += HandlePauseOpen;
         TipsView.Shown += HandleTip;
         CropProjectile.Landed += HandleLanded;
         BellTrigger.Rung += HandleBell;
@@ -130,6 +131,7 @@ public class AudioDirector : MonoBehaviour
         PlayerCombat.AimStarted -= HandleAimStarted;
         PlayerCombat.Ate -= HandleAte;
         RunDirector.ShopOpened -= HandleShopOpen;
+        RunDirector.PauseOpened -= HandlePauseOpen;
         TipsView.Shown -= HandleTip;
         CropProjectile.Landed -= HandleLanded;
         BellTrigger.Rung -= HandleBell;
@@ -176,6 +178,7 @@ public class AudioDirector : MonoBehaviour
     private void HandleAimStarted() { aimVoice = Play(library != null ? library.aimCrop : null); }
     private void HandleAte() { Play(library != null ? library.eat : null); }
     private void HandleShopOpen() { Play(library != null ? library.shopOpen : null); }
+    private void HandlePauseOpen() { Play(library != null ? library.pauseOpen : null); }
     private void HandleTip() { Play(library != null ? library.tip : null); }
     private void HandleSelect() { Play(library != null ? library.inventorySelect : null); }
     private void HandleShopSelect() { Play(library != null ? library.shopSelect : null); }
@@ -256,13 +259,13 @@ public class AudioDirector : MonoBehaviour
         AudioSource src = pool[nextVoice];
         nextVoice = (nextVoice + 1) % pool.Length;
         src.clip = cue.Pick();
-        src.volume = cue.volume * GameSettings.SfxVolume;
+        src.volume = cue.volume * GameSettings.OutputSfxVolume;
         src.pitch = cue.RandomPitch();
         src.Play();
         int voice = (nextVoice + pool.Length - 1) % pool.Length;
         voiceStopAt[voice] = cue.maxSeconds > 0f ? now + cue.maxSeconds / src.pitch : float.MaxValue;
         voiceVolume[voice] = cue.volume;
-        src.volume = cue.volume * GameSettings.SfxVolume;
+        src.volume = cue.volume * GameSettings.OutputSfxVolume;
         return voice;
     }
 
@@ -292,7 +295,7 @@ public class AudioDirector : MonoBehaviour
     {
         // Trimmed cues (maxSeconds) fade out over their last moments, then stop. The SFX volume is applied live.
         float nowUnscaled = Time.unscaledTime;
-        float sfx = GameSettings.SfxVolume;
+        float sfx = GameSettings.OutputSfxVolume;
         for (int i = 0; i < pool.Length; i++)
         {
             if (!pool[i].isPlaying) continue;
@@ -306,7 +309,7 @@ public class AudioDirector : MonoBehaviour
             pool[i].volume = voiceVolume[i] * sfx * fade;
         }
 
-        float musicMix = GameSettings.MusicVolume;
+        float musicMix = GameSettings.OutputMusicVolume;
         for (int i = 0; i < music.Length; i++)
         {
             AudioSource src = music[i];
@@ -367,7 +370,7 @@ public class AudioDirector : MonoBehaviour
 
             // Normal run is ~5 m/s, walk is ~2.5 m/s. Adjust pitch slightly with movement speed.
             footstepSource.pitch = Mathf.Clamp(speed / 5f, 0.85f, 1.15f);
-            footstepTargetVolume = cue.volume * GameSettings.SfxVolume;
+            footstepTargetVolume = cue.volume * GameSettings.OutputSfxVolume;
         }
         else
         {

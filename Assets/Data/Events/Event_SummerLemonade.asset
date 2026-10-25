@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9533699d2feb27e43ba90d95f6905edc, type: 3}
+  m_Name: Event_SummerLemonade
+  m_EditorClassIdentifier: 
+  eventId: summer_lemonade
+  title: The Lemonade Frog
+  body: A frog runs a lemonade stand in the shade. "Ice cold, three coins!"
+  options:
+  - label: Buy a cold glass
+    coinCost: 3
+    effects:
+    - {fileID: 11400000, guid: 4358ad64e5256da4787d059eb75f050d, type: 2}
+    hideEffects: 0
+  - label: Swipe a jug and run
+    coinCost: 0
+    effects:
+    - {fileID: 11400000, guid: e80067aa542e82041a85f68e4f3bff24, type: 2}
+    - {fileID: 11400000, guid: 6ab0d941b6a392c4aa021d16bf5d7b8c, type: 2}
+    hideEffects: 0
+  seasons:
+  - {fileID: 11400000, guid: cc74ed0b11b6962469f72414350069e2, type: 2}

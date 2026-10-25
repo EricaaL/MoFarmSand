@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9533699d2feb27e43ba90d95f6905edc, type: 3}
+  m_Name: Event_WinterBadger
+  m_EditorClassIdentifier: 
+  eventId: winter_badger
+  title: The Snowed-In Badger
+  body: A shivering badger knocks, asking to wait out the snow by your stove.
+  options:
+  - label: Share your stores
+    coinCost: 0
+    effects:
+    - {fileID: 11400000, guid: 97a98841811458344bf51c629fa40924, type: 2}
+    - {fileID: 11400000, guid: 21fe4234538d00342827133d3235a6a0, type: 2}
+    hideEffects: 0
+  - label: Trade for its seeds
+    coinCost: 5
+    effects:
+    - {fileID: 11400000, guid: 2db933043f6a13345b12c7a671154d28, type: 2}
+    hideEffects: 0
+  - label: Point it to the inn
+    coinCost: 0
+    effects: []
+    hideEffects: 0
+  seasons:
+  - {fileID: 11400000, guid: 5bc8feee265739b4a9788711bdfbe020, type: 2}

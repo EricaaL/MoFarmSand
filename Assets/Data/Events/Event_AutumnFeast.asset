@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9533699d2feb27e43ba90d95f6905edc, type: 3}
+  m_Name: Event_AutumnFeast
+  m_EditorClassIdentifier: 
+  eventId: autumn_feast
+  title: The Harvest Moon Feast
+  body: Your neighbours set a long table under the orange moon. Everyone brings a
+    dish.
+  options:
+  - label: Bring a dish
+    coinCost: 0
+    effects:
+    - {fileID: 11400000, guid: 97a98841811458344bf51c629fa40924, type: 2}
+    - {fileID: 11400000, guid: 21fe4234538d00342827133d3235a6a0, type: 2}
+    hideEffects: 0
+  - label: Just grab a plate
+    coinCost: 0
+    effects:
+    - {fileID: 11400000, guid: 8a537f3403a678249aad96534c98e959, type: 2}
+    - {fileID: 11400000, guid: 4358ad64e5256da4787d059eb75f050d, type: 2}
+    hideEffects: 0
+  seasons:
+  - {fileID: 11400000, guid: e86be3641e5dfff48a2987ea6cb996ac, type: 2}

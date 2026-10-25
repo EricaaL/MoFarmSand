@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78f05f6e5eb2f1141ab0d09089c7ad37, type: 3}
+  m_Name: Cue_pauseOpen
+  m_EditorClassIdentifier: 
+  clips:
+  - {fileID: 8300000, guid: b52ec541cb53a41139061db6b4e928fc, type: 3}
+  - {fileID: 8300000, guid: 924844b4a077244d38abdd19258c7392, type: 3}
+  - {fileID: 8300000, guid: ae7fc192d2d99421e864ff34ef04e2e6, type: 3}
+  - {fileID: 8300000, guid: c6d1bce2956564dd09bb1712dde2f538, type: 3}
+  volume: 1
+  pitchRange: {x: 0.95, y: 1.05}
+  minInterval: 0.05
+  maxSeconds: 0
+  fadeInSeconds: 0
+  loop: 0

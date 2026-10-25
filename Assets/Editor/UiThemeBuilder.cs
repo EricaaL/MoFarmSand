@@ -38,7 +38,8 @@ public static class UiThemeBuilder
         theme.growIcon = Fill(theme.growIcon, Tex("UI_icon_summer"));
         theme.heartFull = Fill(theme.heartFull, Tex("HPFull"));
         theme.heartGone = Fill(theme.heartGone, Tex("HPGone"));
-        theme.dayNightDial = Fill(theme.dayNightDial, Tex("DayNightPanel"));
+        theme.barkShield = Fill(theme.barkShield, Tex("BarkShield_png"));
+        theme.dayNightDial =Fill(theme.dayNightDial, Tex("DayNightPanel"));
         theme.merchantPanel = Fill(theme.merchantPanel, Tex("MerchantShope"));
         theme.legend = Fill(theme.legend, Tex("Legend"));
         theme.eventSilhouette = Fill(theme.eventSilhouette, Tex("randomevent"));

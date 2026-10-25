@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: farmland_plot
   displayName: Farmland Plot
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: ce1790eaec7f0bc4da39bea87061a398, type: 3}
   color: {r: 0.35, g: 0.22, b: 0.12, a: 1}

@@ -51,10 +51,11 @@ public class OptionsScreen : IRunScreen
         float x = inner.x + 55f * s, w = inner.width - 110f * s;
         float y = inner.y + 50f * s, row = 100f * s;
 
-        DrawVolume(x, y, w, s, "Music", GameSettings.MusicVolume, v => GameSettings.MusicVolume = v);
-        DrawVolume(x, y + row, w, s, "SFX", GameSettings.SfxVolume, v => GameSettings.SfxVolume = v);
-        DrawHudSize(x, y + row * 2f, w, s);
-        DrawTips(x, y + row * 3f, w, s);
+        DrawVolume(x, y, w, s, "Master", GameSettings.MasterVolume, v => GameSettings.MasterVolume = v);
+        DrawVolume(x, y + row, w, s, "Music", GameSettings.MusicVolume, v => GameSettings.MusicVolume = v);
+        DrawVolume(x, y + row * 2f, w, s, "SFX", GameSettings.SfxVolume, v => GameSettings.SfxVolume = v);
+        DrawHudSize(x, y + row * 3f, w, s);
+        DrawTips(x, y + row * 4f, w, s);
     }
 
     private static void DrawVolume(float x, float y, float w, float s, string label, float volume, System.Action<float> set)

@@ -27,6 +27,8 @@ public class ClimateConfig : ScriptableObject
     [Header("Wrong-season penalty")]
     [Tooltip("A crop's season affinity below 1 is raised to this power, so out-of-season planting is hit much harder (1 = old behavior).")]
     [Range(1f, 4f)] public float seasonPenaltyExponent = 2f;
+    [Tooltip("An off-season crop takes at most this share of the day's daylight to grow (0.83 on a 60 s day = 50 s), and never longer than its normal time. 0 = no ceiling.")]
+    [Range(0f, 1f)] public float offSeasonDayFraction = 0.83f;
     [Tooltip("Harvested crops are at least this effective, however bad the season was.")]
     [Range(0.05f, 1f)] public float minQuality = 0.25f;
     [Tooltip("Best-season crops can be this much stronger than normal.")]

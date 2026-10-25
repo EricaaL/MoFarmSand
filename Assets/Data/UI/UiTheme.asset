@@ -30,6 +30,7 @@ MonoBehaviour:
   growIcon: {fileID: 2800000, guid: 892b29c3640ef6e44a488d6394c0a2de, type: 3}
   heartFull: {fileID: 2800000, guid: a98f94d0ef818ca4d8458764dd19893a, type: 3}
   heartGone: {fileID: 2800000, guid: b5d1c6644e7a5e9449a8691447186fd3, type: 3}
+  barkShield: {fileID: 2800000, guid: 23231ce035bb9964bbd3c32c3be08ffe, type: 3}
   dayNightDial: {fileID: 2800000, guid: 2cb4c6a112edd374f9dce4e7a6b03de7, type: 3}
   merchantPanel: {fileID: 2800000, guid: fbec6ce5dec3cb44584cd5ee0ae72559, type: 3}
   legend: {fileID: 2800000, guid: 922f38230eb61f64381cf18c239e3e65, type: 3}

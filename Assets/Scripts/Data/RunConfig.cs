@@ -32,6 +32,10 @@ public class RunConfig : ScriptableObject
     [Tooltip("Seconds to feed the boss at night. If dawn breaks first, the run is lost. 0 = unlimited.")]
     public float nightLengthSeconds = 75f;
 
+    /// <summary>Seconds of daylight in a season's days (0 = no clock).</summary>
+    public float DayLengthFor(SeasonData season)
+        => dayLengthSeconds > 0f ? dayLengthSeconds * (season != null ? season.dayLengthMultiplier : 1f) : 0f;
+
     [Header("Flow")]
     public float dayEndDelay = 2.5f;
     [Tooltip("How long the YOU DIED screen plays (red title, black creeping in from the edges) before a lost day reloads.")]

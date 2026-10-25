@@ -13,6 +13,8 @@ public class FarmConditions : MonoBehaviour
     public ModifierStack Growth { get; } = new ModifierStack();
     public CalendarDate Date { get; private set; }
     public DayWeather Weather { get; private set; }
+    /// <summary>Seconds of daylight today (0 = no clock), for the off-season growth ceiling.</summary>
+    public float DayLengthSeconds { get; private set; }
 
     /// <summary>Set by RunDirector each day. Null in the original trailer scene, so harvests give no extras there.</summary>
     public HarvestBonus Bonus { get; set; }
@@ -30,10 +32,11 @@ public class FarmConditions : MonoBehaviour
         return true;
     }
 
-    public void Configure(CalendarDate date, DayWeather weather)
+    public void Configure(CalendarDate date, DayWeather weather, float dayLengthSeconds = 0f)
     {
         Date = date;
         Weather = weather;
+        DayLengthSeconds = dayLengthSeconds;
         cache.Clear();
     }
 
@@ -51,7 +54,7 @@ public class FarmConditions : MonoBehaviour
         if (cachedVersion != Growth.Version) { cache.Clear(); cachedVersion = Growth.Version; }
         if (!cache.TryGetValue(crop, out float rate))
         {
-            rate = ClimateModel.CapRate(crop.growTime, ClimateModel.GrowthMultiplier(crop, Date, Weather, climate) * Growth.Product, climate);
+            rate = ClimateModel.CapRate(crop.growTime, ClimateModel.GrowthRate(crop, Date, Weather, climate, DayLengthSeconds) * Growth.Product, climate);
             cache[crop] = rate;
         }
         return rate;

@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9533699d2feb27e43ba90d95f6905edc, type: 3}
+  m_Name: Event_TollGoose
+  m_EditorClassIdentifier: 
+  eventId: toll_goose
+  title: The Toll Goose
+  body: A huge goose plants itself in your farm gate and hisses. It clearly wants
+    payment.
+  options:
+  - label: Pay the goose's toll
+    coinCost: 0
+    effects:
+    - {fileID: 11400000, guid: ee23e446fe66f1d41ac53699710e7a37, type: 2}
+    hideEffects: 0
+  - label: Shove past the goose
+    coinCost: 0
+    effects:
+    - {fileID: 11400000, guid: e80067aa542e82041a85f68e4f3bff24, type: 2}
+    hideEffects: 0
+  seasons: []

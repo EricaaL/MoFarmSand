@@ -167,15 +167,20 @@ public class DebugHUD : MonoBehaviour
                 // One heart icon per max HP, full or bitten-out; the purse (RunHud) sits under them.
                 float size = 72f * hs, step = 80f * hs;
                 for (int i = 0; i < health.MaxHp; i++)
-                    ImGuiKit.Icon(new Rect(18f * hs + i * step, 14f * hs, size, size), i < health.Hp ? theme.heartFull : theme.heartGone);
+                {
+                    Rect heart = new Rect(18f * hs + i * step, 14f * hs, size, size);
+                    ImGuiKit.Icon(heart, i < health.Hp ? theme.heartFull : theme.heartGone);
+                    // One shield per charge, covering hearts from the left.
+                    if (theme.barkShield != null && i < health.ShieldCharges) ImGuiKit.Icon(heart, theme.barkShield);
+                }
             }
             else
             {
                 string hearts = new string('♥', health.Hp) + new string('♡', Mathf.Max(0, health.MaxHp - health.Hp));
                 ImGuiKit.HudLabel(new Rect(16f * hs, 10f * hs, 520f * hs, 60f * hs), "HP " + hearts, 44f, TextAnchor.MiddleLeft, true);
             }
-            if (health.HasShield)
-                ImGuiKit.HudLabel(new Rect(18f * hs, 150f * hs, 420f * hs, 36f * hs), $"[BARK SHIELD x{health.ShieldCharges} - {Mathf.CeilToInt(health.ShieldTimeLeft)}s]", 24f, TextAnchor.MiddleLeft, true);
+            if (health.HasShield && (theme == null || theme.heartFull == null || theme.barkShield == null))
+                ImGuiKit.HudLabel(new Rect(18f * hs, 150f * hs, 420f * hs, 36f * hs), $"[BARK SHIELD x{health.ShieldCharges}]", 24f, TextAnchor.MiddleLeft, true);
         }
 
         // Hotbar (bottom center): slots, hover tooltip, drag-to-use.

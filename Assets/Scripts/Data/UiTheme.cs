@@ -30,6 +30,8 @@ public class UiTheme : ScriptableObject
     public Texture2D growIcon;
     public Texture2D heartFull;
     public Texture2D heartGone;
+    [Tooltip("Drawn over a heart while a Bark Shield charge covers it.")]
+    public Texture2D barkShield;
     public Texture2D dayNightDial;
 
     [Header("Full-screen art")]

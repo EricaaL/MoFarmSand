@@ -17,7 +17,7 @@ MonoBehaviour:
   type: 1
   growTime: 13
   fullnessValue: 0
-  shieldCharges: 2
+  shieldCharges: 1
   shieldSeconds: 20
   harvestYield: 1
   ammoPerCrop: 10

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 /// <summary>Inventory edits on the saved snapshot (the live PlayerInventory has its own equivalents).</summary>
@@ -27,6 +28,37 @@ public static class InventoryOps
         for (int i = 0; i < slots.Count; i++)
             if (slots[i].count <= 0) { slots[i] = new SlotSave(itemId, count); return true; }
         return false;
+    }
+
+    /// <summary>
+    /// Takes <paramref name="count"/> single units from random eligible slots (bigger stacks lose more often).
+    /// Returns how many were actually taken, which is fewer when the eligible items run out.
+    /// </summary>
+    public static int RemoveRandom(List<SlotSave> slots, int count, Func<string, bool> eligible, SeededRng rng)
+    {
+        int taken = 0;
+        for (int n = 0; n < count; n++)
+        {
+            int total = 0;
+            for (int i = 0; i < slots.Count; i++)
+                if (slots[i].count > 0 && eligible(slots[i].itemId)) total += slots[i].count;
+            if (total <= 0) break;
+
+            int roll = rng.NextInt(0, total);
+            for (int i = 0; i < slots.Count; i++)
+            {
+                if (slots[i].count <= 0 || !eligible(slots[i].itemId)) continue;
+                if (roll < slots[i].count)
+                {
+                    int left = slots[i].count - 1;
+                    slots[i] = left > 0 ? new SlotSave(slots[i].itemId, left, slots[i].EffectiveQuality) : new SlotSave(string.Empty, 0);
+                    taken++;
+                    break;
+                }
+                roll -= slots[i].count;
+            }
+        }
+        return taken;
     }
 
     public static int CountOf(List<SlotSave> slots, string itemId)

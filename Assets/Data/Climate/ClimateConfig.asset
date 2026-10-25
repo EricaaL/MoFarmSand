@@ -16,6 +16,7 @@ MonoBehaviour:
   maxGrowth: 1.6
   minGrowSeconds: 10
   seasonPenaltyExponent: 2
+  offSeasonDayFraction: 0.83
   minQuality: 0.25
   maxQuality: 1.25
   fallbackKind: 0

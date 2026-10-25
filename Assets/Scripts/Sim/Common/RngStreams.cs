@@ -11,4 +11,5 @@ public static class RngStreams
     public const int Loadout = 8;
     public const int DisasterRuntime = 9;
     public const int HarvestBonus = 10;
+    public const int EventLoss = 11;
 }

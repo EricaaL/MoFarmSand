@@ -14,6 +14,9 @@ public class PlayerHealth : MonoBehaviour
     /// <summary>Hits the Bark Shield can still block.</summary>
     public int ShieldCharges { get; private set; }
     public bool HasShield => ShieldCharges > 0;
+    /// <summary>The Bark Shield can cover at most one heart per max heart; at the cap no more shield crops can be eaten.</summary>
+    public int MaxShield => Mathf.Min(MaxShieldCharges, maxHp);
+    public bool ShieldFull => ShieldCharges >= MaxShield;
     /// <summary>Seconds until the Bark Shield wears off, whether or not it has blocked anything.</summary>
     public float ShieldTimeLeft { get; private set; }
 
@@ -49,7 +52,7 @@ public class PlayerHealth : MonoBehaviour
     /// <summary>Adds Bark Shield charges; each one blocks one hit. The shield lasts <paramref name="seconds"/>; eating again never shortens it.</summary>
     public void GrantShield(int charges = 1, float seconds = DefaultShieldSeconds)
     {
-        ShieldCharges = Mathf.Min(MaxShieldCharges, ShieldCharges + Mathf.Max(1, charges));
+        ShieldCharges = Mathf.Min(MaxShield, ShieldCharges + Mathf.Max(1, charges));
         ShieldTimeLeft = Mathf.Max(ShieldTimeLeft, seconds);
         OnChanged?.Invoke();
     }

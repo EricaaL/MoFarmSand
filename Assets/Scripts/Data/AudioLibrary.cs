@@ -33,6 +33,8 @@ public class AudioLibrary : ScriptableObject
     public AudioCue inventorySelect;
     [Tooltip("Picking a different item card in the merchant's shop.")]
     public AudioCue shopSelect;
+    [Tooltip("Plays when the pause menu opens (Esc).")]
+    public AudioCue pauseOpen;
     [Tooltip("Plays when an in-play tip card pops up.")]
     public AudioCue tip;
 

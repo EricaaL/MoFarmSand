@@ -108,14 +108,15 @@ public static class ItemInfoBuilder
 
         // Grow time: typical for the current season, and what it will actually be today.
         float typicalMult = SeasonMultiplier(crop, current, ctx);
-        float todayMult = ClimateModel.GrowthMultiplier(crop, ctx.date, ctx.weather, ctx.db.climate) * ctx.extraGrowth;
+        float typicalRate = SeasonGrowRate(crop, current, ctx);
+        float todayMult = TodayGrowRate(crop, ctx);
         float quality = ClimateModel.Quality(crop, ctx.date, ctx.weather, ctx.db.climate);
         info.growTime = Seconds(crop.growTime, todayMult, ctx);
         info.fullness = FullnessText(crop, quality);
-        info.Add($"Grow time in {seasonName}", $"about {Seconds(crop.growTime, typicalMult, ctx)}  (base {crop.growTime:0}s)", Tone(typicalMult));
+        info.Add($"Grow time in {seasonName}", $"about {Seconds(crop.growTime, typicalRate, ctx)}  (base {crop.growTime:0}s)", Tone(typicalRate));
         info.Add("Grow time today", $"about {Seconds(crop.growTime, todayMult, ctx)}  ({WeatherNote(ctx)}, speed x{todayMult:0.0#})", Tone(todayMult));
 
-        // Out-of-season crops come out weaker: less damage, fewer shield charges.
+        // Out-of-season crops come out weaker: less damage, a shorter Bark Shield.
         info.Add("Crop strength if planted now", $"{Percent(quality)}  ({EffectText(crop, quality)})", QualityTone(quality));
 
         // Season guide, best first marked.
@@ -127,7 +128,7 @@ public static class ItemInfoBuilder
         foreach (SeasonData s in ctx.db.calendar.seasons)
         {
             if (s == null) continue;
-            float m = SeasonMultiplier(crop, s, ctx);
+            float m = SeasonGrowRate(crop, s, ctx);
             string tag = s == best ? "  (best)" : s == worst && worstMult < bestMult - 0.01f ? "  (worst)" : string.Empty;
             string now = s == current ? "  <- now" : string.Empty;
             float q = SeasonQuality(crop, s, ctx);
@@ -222,7 +223,7 @@ public static class ItemInfoBuilder
         }
 
         // Growing it.
-        float todayMult = ClimateModel.GrowthMultiplier(crop, ctx.date, ctx.weather, ctx.db.climate) * ctx.extraGrowth;
+        float todayMult = TodayGrowRate(crop, ctx);
         info.growTime = Seconds(crop.growTime, todayMult, ctx);
         info.fullness = FullnessText(crop, ctx.owned > 0 ? ctx.ownedQuality : 1f);
         info.Add("Grows in",$"about {Seconds(crop.growTime, todayMult, ctx)} today  (base {crop.growTime:0}s)", Tone(todayMult));
@@ -247,6 +248,16 @@ public static class ItemInfoBuilder
         };
         return ClimateModel.GrowthMultiplier(crop, mid, typical, ctx.db.climate);
     }
+
+    /// <summary>The growth speed a plot really gets in a typical day of the season: <see cref="SeasonMultiplier"/> plus the off-season ceiling.</summary>
+    public static float SeasonGrowRate(CropData crop, SeasonData season, ItemInfoContext ctx)
+        => ClimateModel.OffSeasonFloor(crop, season, SeasonMultiplier(crop, season, ctx), DayLength(season, ctx), ctx.db.climate);
+
+    /// <summary>The growth speed a plot really gets today, including disasters and boosts.</summary>
+    private static float TodayGrowRate(CropData crop, ItemInfoContext ctx)
+        => ClimateModel.GrowthRate(crop, ctx.date, ctx.weather, ctx.db.climate, DayLength(ctx.date.season, ctx)) * ctx.extraGrowth;
+
+    private static float DayLength(SeasonData season, ItemInfoContext ctx) => ctx.db.run != null ? ctx.db.run.DayLengthFor(season) : 0f;
 
     /// <summary>Crop strength in a typical day of the season.</summary>
     public static float SeasonQuality(CropData crop, SeasonData season, ItemInfoContext ctx)
@@ -278,13 +289,12 @@ public static class ItemInfoBuilder
 
     private static InfoTone QualityTone(float q) => q >= 0.95f ? InfoTone.Good : q < 0.6f ? InfoTone.Bad : InfoTone.Normal;
 
-    /// <summary>What a given strength means in play: boss damage for attack crops, shield charges for support crops.</summary>
+    /// <summary>What a given strength means in play: boss damage for attack crops, Bark Shield time for support crops.</summary>
     public static string EffectText(CropData crop, float quality)
     {
         if (crop.type == CropType.Projectile || crop.type == CropType.Shooter)
             return $"+{crop.fullnessValue * quality:0.#} fullness per {(crop.type == CropType.Shooter ? "shot" : "hit")} instead of +{crop.fullnessValue:0.#}";
-        int charges = ClimateModel.ShieldCharges(crop, quality);
-        return $"{charges} shield charge{(charges == 1 ? "" : "s")} instead of {Mathf.Max(1, crop.shieldCharges)}";
+        return $"Bark Shield lasts {ClimateModel.ShieldSeconds(crop, quality):0.#}s instead of {crop.shieldSeconds:0.#}s";
     }
 
     public static SeasonData BestSeason(CropData crop, ItemInfoContext ctx, out float multiplier)

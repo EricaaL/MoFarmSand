@@ -100,7 +100,7 @@ public static class RunSystemsBuilder
         ClimateConfig climate = A<ClimateConfig>($"{Data}/Climate/ClimateConfig.asset", c =>
         {
             c.minGrowth = 0.12f; c.maxGrowth = 1.6f; c.fallbackKind = WeatherKind.Clear;
-            c.seasonPenaltyExponent = 2f; c.minQuality = 0.25f; c.maxQuality = 1.25f;
+            c.seasonPenaltyExponent = 2f; c.offSeasonDayFraction = 0.83f; c.minQuality = 0.25f; c.maxQuality = 1.25f;
             c.rules = new List<ClimateConfig.WeatherKindRule>
             {
                 Rule(WeatherKind.Snow, -100f, 1f, 0.3f, 1f),
@@ -245,6 +245,19 @@ public static class RunSystemsBuilder
         AddItemEffect pumpkinSeeds3 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_PumpkinSeeds3.asset", e => { e.item = seedPumpkin; e.count = 3; });
         AddItemEffect pumpkinSeeds4 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_PumpkinSeeds4.asset", e => { e.item = seedPumpkin; e.count = 4; });
         AddCoinsEffect nestEgg = A<AddCoinsEffect>($"{Data}/Run/Effects/Effect_NestEgg25.asset", e => e.amount = 25);
+        // Penalties and extra rewards for the bad and seasonal events below.
+        LoseItemsEffect loseItems2 = A<LoseItemsEffect>($"{Data}/Run/Effects/Effect_LoseItems2.asset", e => { e.kind = LoseItemsEffect.Kind.SeedsOrCrops; e.count = 2; });
+        LoseItemsEffect loseSeeds3 = A<LoseItemsEffect>($"{Data}/Run/Effects/Effect_LoseSeeds3.asset", e => { e.kind = LoseItemsEffect.Kind.SeedsOnly; e.count = 3; });
+        LoseItemsEffect loseCrops3 = A<LoseItemsEffect>($"{Data}/Run/Effects/Effect_LoseCrops3.asset", e => { e.kind = LoseItemsEffect.Kind.CropsOnly; e.count = 3; });
+        AddCoinsEffect loseCoins8 = A<AddCoinsEffect>($"{Data}/Run/Effects/Effect_LoseCoins8.asset", e => e.amount = -8);
+        AddCoinsEffect loseCoins5 = A<AddCoinsEffect>($"{Data}/Run/Effects/Effect_LoseCoins5.asset", e => e.amount = -5);
+        MaxHpEffect maxHpMinus1 = A<MaxHpEffect>($"{Data}/Run/Effects/Effect_MaxHpMinus1.asset", e => e.delta = -1);
+        AddItemEffect peasSeeds2 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_PeasSeeds2.asset", e => { e.item = seedPeas; e.count = 2; });
+        AddItemEffect cornSeeds2 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_CornSeeds2.asset", e => { e.item = seedCorn; e.count = 2; });
+        AddItemEffect tomatoSeeds1 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_TomatoSeeds1.asset", e => { e.item = seedTomato; e.count = 1; });
+        AddItemEffect spinachSeeds2 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_SpinachSeeds2.asset", e => { e.item = seedSpinach; e.count = 2; });
+        AddItemEffect pumpkinSeeds1 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_PumpkinSeeds1.asset", e => { e.item = seedPumpkin; e.count = 1; });
+        AddCoinsEffect coins15 = A<AddCoinsEffect>($"{Data}/Run/Effects/Effect_Coins15.asset", e => e.amount = 15);
 
         EventData evPup = A<EventData>($"{Data}/Events/Event_StrayPup.asset", e =>
         {
@@ -287,7 +300,71 @@ public static class RunSystemsBuilder
                 new EventData.EventOption { label = "Take 10 coins", coinCost = 0, effects = new List<RunEffect> { coins10 }, hideEffects = true },
             };
         });
-        EventRegistry events = Registry<EventRegistry, EventData>($"{Data}/Registries/EventRegistry.asset", evPup, evWell, evCrow, evTreasure);
+
+        // ---- Bad events: every choice costs something ----
+        EventData evCat = Event("thieving_cat", "Event_ThievingCat", "The Thieving Cat",
+            "A sleek black cat slinks off your porch with a sack of your things in its jaws.",
+            Opt("Tussle with the cat for your crops", 0, damage1),
+            Opt("Let the cat go", 0, loseItems2));
+        EventData evGoose = Event("toll_goose", "Event_TollGoose", "The Toll Goose",
+            "A huge goose plants itself in your farm gate and hisses. It clearly wants payment.",
+            Opt("Pay the goose's toll", 0, loseCoins8),
+            Opt("Shove past the goose", 0, damage1));
+        EventData evMoles = Event("seed_moles", "Event_SeedMoles", "Moles in the Seed Shed",
+            "Fresh mounds dot the floor of the seed shed. Something down there is chewing.",
+            Opt("Dig them out by paw", 0, damage1),
+            Opt("Leave them be", 0, loseSeeds3));
+        EventData evHex = Event("scarecrow_hex", "Event_ScarecrowHex", "The Scarecrow's Hex",
+            "The old scarecrow turns its sack head toward you. \"Feed me, or wear my curse.\"",
+            Opt("Accept the hex", 0, maxHpMinus1),
+            Opt("Offer it your harvest", 0, loseCrops3));
+
+        // ---- Seasonal events: only appear in their season, good and bad choices mixed ----
+        EventData evBunnies = Event("spring_bunnies", "Event_SpringBunnies", "The Bunny Burrow",
+            "A family of bunnies has dug in under your lettuce rows. Tiny noses twitch at you.",
+            new[] { spring },
+            Opt("Let them nibble", 0, loseCrops3, maxHp1),
+            Opt("Chase them off", 0, damage1, peasSeeds2));
+        EventData evFair = Event("spring_fair", "Event_SpringFair", "The Spring Fair",
+            "The village fair is in full bloom. A pie contest and a seed stall are calling your name.",
+            new[] { spring },
+            Opt("Enter the pie-eating contest", 0, damage1, coins15),
+            Opt("Buy a bundle of pea seeds", 6, peasSeeds2),
+            Opt("Head home", 0));
+        EventData evLemonade = Event("summer_lemonade", "Event_SummerLemonade", "The Lemonade Frog",
+            "A frog runs a lemonade stand in the shade. \"Ice cold, three coins!\"",
+            new[] { summer },
+            Opt("Buy a cold glass", 3, healFull),
+            Opt("Swipe a jug and run", 0, damage1, coins10));
+        EventData evMaze = Event("summer_maze", "Event_SummerMaze", "The Corn Maze",
+            "Someone cut a maze into the cornfield. A golden ribbon flutters at its heart.",
+            new[] { summer },
+            Opt("Race to the centre", 0, damage1, coins15),
+            Opt("Stroll the edge", 0, tomatoSeeds1, cornSeeds2));
+        EventData evFeast = Event("autumn_feast", "Event_AutumnFeast", "The Harvest Moon Feast",
+            "Your neighbours set a long table under the orange moon. Everyone brings a dish.",
+            new[] { autumn },
+            Opt("Bring a dish", 0, loseCrops3, maxHp1),
+            Opt("Just grab a plate", 0, loseCoins5, healFull));
+        EventData evLeaves = Event("autumn_leaves", "Event_AutumnLeaves", "The Leaf Pile",
+            "A huge pile of crunchy leaves sits by the barn. Something glints inside.",
+            new[] { autumn },
+            Opt("Dive right in", 0, damage1, coins15),
+            Opt("Rake it up slowly", 0, pumpkinSeeds1));
+        EventData evPond = Event("winter_pond", "Event_WinterPond", "The Frozen Pond",
+            "The pond has iced over. A coin pouch is stuck just under the surface.",
+            new[] { winter },
+            Opt("Chip it free", 0, damage1, coins15),
+            Opt("Skate a few laps", 0, healFull));
+        EventData evBadger = Event("winter_badger", "Event_WinterBadger", "The Snowed-In Badger",
+            "A shivering badger knocks, asking to wait out the snow by your stove.",
+            new[] { winter },
+            Opt("Share your stores", 0, loseCrops3, maxHp1),
+            Opt("Trade for its seeds", 5, spinachSeeds2),
+            Opt("Point it to the inn", 0));
+
+        EventRegistry events = Registry<EventRegistry, EventData>($"{Data}/Registries/EventRegistry.asset", evPup, evWell, evCrow, evTreasure,
+            evCat, evGoose, evMoles, evHex, evBunnies, evFair, evLemonade, evMaze, evFeast, evLeaves, evPond, evBadger);
 
         RunModifierData scarecrow = Modifier("scarecrow", "Scarecrow", "Halves the severity of Locust Swarms.", 25, new[] { "locust" }, 0.5f, 1f, 0);
         RunModifierData rainBarrel = Modifier("rain_barrel", "Rain Barrel", "Halves the severity of Drought and Heatwave.", 25, new[] { "drought", "heatwave" }, 0.5f, 1f, 0);
@@ -343,11 +420,11 @@ public static class RunSystemsBuilder
             m.fallbackType = nFarm; m.bossType = nBoss; m.seasonBossType = nSeasonBoss;
             m.bands = new List<MapGenConfig.LayerBand>
             {
-                Band(0, 1, (nFarm, 5f), (nMerchant, 3f), (nEvent, 1f)),
+                Band(0, 1, (nFarm, 5f), (nMerchant, 3f), (nEvent, 2f)),
                 // No Treasure nodes any more: treasure is one of the random events (Event_TreasureChest).
-                Band(2, 5, (nFarm, 4f), (nMerchant, 2f), (nDisaster, 2f), (nEvent, 2f)),
-                Band(6, 10, (nFarm, 3f), (nMerchant, 2f), (nDisaster, 3f), (nEvent, 2f)),
-                Band(11, 99, (nFarm, 3f), (nMerchant, 2f), (nDisaster, 2f), (nEvent, 1f)),
+                Band(2, 5, (nFarm, 4f), (nMerchant, 2f), (nDisaster, 2f), (nEvent, 4f)),
+                Band(6, 10, (nFarm, 3f), (nMerchant, 2f), (nDisaster, 3f), (nEvent, 4f)),
+                Band(11, 99, (nFarm, 3f), (nMerchant, 2f), (nDisaster, 2f), (nEvent, 2f)),
             };
             m.forcedLayers = new List<MapGenConfig.ForcedLayer>
             {
@@ -860,6 +937,21 @@ public static class RunSystemsBuilder
         EditorUtility.SetDirty(reg);
         return reg;
     }
+
+    private static EventData.EventOption Opt(string label, int coinCost, params RunEffect[] effects) =>
+        new EventData.EventOption { label = label, coinCost = coinCost, effects = new List<RunEffect>(effects) };
+
+    private static EventData Event(string id, string file, string title, string body, params EventData.EventOption[] options) =>
+        Event(id, file, title, body, null, options);
+
+    /// <summary>An event asset that appears all year, or only in the given seasons.</summary>
+    private static EventData Event(string id, string file, string title, string body, SeasonData[] seasons, params EventData.EventOption[] options) =>
+        A<EventData>($"{Data}/Events/{file}.asset", e =>
+        {
+            e.eventId = id; e.title = title; e.body = body;
+            e.options = new List<EventData.EventOption>(options);
+            e.seasons = seasons != null ? new List<SeasonData>(seasons) : new List<SeasonData>();
+        });
 
     /// <summary>Loads the asset, or creates it and runs init. Existing assets are never overwritten.</summary>
     private static T A<T>(string path, System.Action<T> init) where T : ScriptableObject

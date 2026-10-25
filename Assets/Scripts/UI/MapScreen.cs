@@ -23,7 +23,7 @@ public class MapScreen : IRunScreen
     private const float MapShiftLeft = 170f;  // the whole graph sits a little left of centre, clear of the legend
 
     // Order of the legend rows (node type ids); rows without an icon or label are skipped.
-    private static readonly string[] LegendOrder = { "farm", "merchant", "event", "disaster", "boss" };
+    private static readonly string[] LegendOrder = { "farm", "merchant", "event", "disaster", "season_boss" };
 
     /// <param name="readOnly">The in-run "Your route" view: look but don't pick a node.</param>
     public MapScreen(RunDirector director, bool readOnly = false)
