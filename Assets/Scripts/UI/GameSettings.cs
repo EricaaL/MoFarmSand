@@ -9,6 +9,7 @@ public static class GameSettings
     private const string MusicKey = "audio.musicVolume";
     private const string SfxKey = "audio.sfxVolume";
     private const string WeatherKey = "audio.weatherVolume";
+    private const string DisplayKey = "display.mode";
     private const string TipsEnabledKey = "tips.enabled";
     private const string TipsSeenKey = "tips.seen";
 
@@ -47,6 +48,49 @@ public static class GameSettings
     {
         get => Mathf.Clamp01(PlayerPrefs.GetFloat(WeatherKey, 1f));
         set => PlayerPrefs.SetFloat(WeatherKey, Mathf.Clamp01(value));
+    }
+
+    public enum DisplayMode { Windowed, Borderless, Fullscreen }
+
+    /// <summary>How the game window is shown. Until the player picks one it follows whatever the build started with.</summary>
+    public static DisplayMode Display
+    {
+        get
+        {
+            if (PlayerPrefs.HasKey(DisplayKey)) return (DisplayMode)Mathf.Clamp(PlayerPrefs.GetInt(DisplayKey), 0, 2);
+            switch (Screen.fullScreenMode)
+            {
+                case FullScreenMode.ExclusiveFullScreen: return DisplayMode.Fullscreen;
+                case FullScreenMode.Windowed: return DisplayMode.Windowed;
+                default: return DisplayMode.Borderless;
+            }
+        }
+        set
+        {
+            PlayerPrefs.SetInt(DisplayKey, (int)value);
+            ApplyDisplay(value);
+        }
+    }
+
+    /// <summary>Windowed fills 80% of the monitor; borderless covers it without a border; fullscreen takes it over at its own resolution.</summary>
+    private static void ApplyDisplay(DisplayMode mode)
+    {
+        DisplayInfo screen = Screen.mainWindowDisplayInfo;
+        int w = screen.width > 0 ? screen.width : Screen.currentResolution.width;
+        int h = screen.height > 0 ? screen.height : Screen.currentResolution.height;
+        switch (mode)
+        {
+            case DisplayMode.Windowed: Screen.SetResolution(Mathf.RoundToInt(w * 0.8f), Mathf.RoundToInt(h * 0.8f), FullScreenMode.Windowed); break;
+            case DisplayMode.Borderless: Screen.SetResolution(w, h, FullScreenMode.FullScreenWindow); break;
+            default: Screen.SetResolution(w, h, FullScreenMode.ExclusiveFullScreen); break;
+        }
+    }
+
+    // Re-applies the saved choice when the game starts (never in the editor, where it would resize the Game view's window).
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void ApplySavedDisplay()
+    {
+        if (!Application.isEditor && PlayerPrefs.HasKey(DisplayKey)) ApplyDisplay(Display);
     }
 
     /// <summary>Whether the in-play tip cards show at all.</summary>

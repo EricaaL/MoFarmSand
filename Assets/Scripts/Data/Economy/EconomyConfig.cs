@@ -21,4 +21,7 @@ public class EconomyConfig : ScriptableObject
     public int starterSeedStock = 2;
     public int shopSeedSlots = 3;
     public int shopModifierSlots = 2;
+    [Header("Market events")]
+    [Tooltip("Season-long price swings (inflation, deflation) that can strike on any day; see MarketEventRoller.")]
+    public System.Collections.Generic.List<MarketEventData> marketEvents = new System.Collections.Generic.List<MarketEventData>();
 }

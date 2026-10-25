@@ -58,8 +58,22 @@ public class OptionsScreen : IRunScreen
         DrawVolume(x, y + row, w, s, "Music", GameSettings.MusicVolume, v => GameSettings.MusicVolume = v);
         DrawVolume(x, y + row * 2f, w, s, "SFX", GameSettings.SfxVolume, v => GameSettings.SfxVolume = v);
         DrawVolume(x, y + row * 3f, w, s, "Weather", GameSettings.WeatherVolume, v => GameSettings.WeatherVolume = v);
-        DrawHudSize(x, y + row * 4f, w, s);
-        DrawTips(x, y + row * 5f, w, s);
+        DrawDisplay(x, y + row * 4f, s);
+        DrawHudSize(x, y + row * 5f, w, s);
+        DrawTips(x, y + row * 6f, w, s);
+    }
+
+    private static void DrawDisplay(float x, float y, float s)
+    {
+        GameSettings.DisplayMode current = GameSettings.Display;
+        ImGuiKit.Label(new Rect(x, y, 300f * s, 64f * s), "Display", 40f, ImGuiKit.Text, TextAnchor.MiddleLeft);
+        string[] names = { "Windowed", "Borderless", "Fullscreen" };
+        for (int i = 0; i < names.Length; i++)
+        {
+            bool on = (int)current == i;
+            Rect pill = new Rect(x + 330f * s + i * 246f * s, y, 230f * s, 64f * s);
+            if (ImGuiKit.Pill(pill, names[i], on ? ImGuiKit.PillKind.Primary : ImGuiKit.PillKind.Light, true, 26f) && !on) GameSettings.Display = (GameSettings.DisplayMode)i;
+        }
     }
 
     private static void DrawVolume(float x, float y, float w, float s, string label, float volume, System.Action<float> set)

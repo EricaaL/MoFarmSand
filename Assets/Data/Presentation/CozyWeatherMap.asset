@@ -49,8 +49,8 @@ MonoBehaviour:
     profile: {fileID: 11400000, guid: f161b3af7360fc043927736dde8f5c42, type: 2}
     ambientFx: {fileID: 1181624697341830754, guid: abc9c6cc6cb94ce4e824318a80edd627, type: 3}
   - disaster: {fileID: 11400000, guid: 6eb2caeb4e581c145afb4c899ce6094c, type: 2}
-    profile: {fileID: 11400000, guid: 4d539afa69e41c24592baf151ffc2e69, type: 2}
-    ambientFx: {fileID: 22486868233188789, guid: 3780d7be1a249104c98181ec6228cd42, type: 3}
+    profile: {fileID: 11400000, guid: e2fbee6f21ca32740a76a387cf2a0abc, type: 2}
+    ambientFx: {fileID: 22486868233188789, guid: e13a8c6c4de4aa14aa93da3f924968d2, type: 3}
   - disaster: {fileID: 11400000, guid: 81f4e957de83a814fbced0f215735ce0, type: 2}
     profile: {fileID: 11400000, guid: 56652bb77d1606b4396767fbb07e50ab, type: 2}
     ambientFx: {fileID: 103596064744390681, guid: 0c255fb6f03baa34b891cdfdfd067ba9, type: 3}

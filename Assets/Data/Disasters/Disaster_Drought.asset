@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   disasterId: drought
   displayName: Drought
-  bannerText: The soil cracks. Crops grow slowly.
+  bannerText: Low humidty, crops grow slower.
   uiColor: {r: 0.85, g: 0.6, b: 0.25, a: 1}
   seasonWeights:
   - season: {fileID: 11400000, guid: cc74ed0b11b6962469f72414350069e2, type: 2}

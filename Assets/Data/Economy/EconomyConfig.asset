@@ -18,5 +18,10 @@ MonoBehaviour:
   maxDemand: 1.3
   recoveryPerDay: 0.35
   driftAmplitude: 0.06
+  restockSeedStock: 6
+  starterSeedStock: 2
   shopSeedSlots: 3
   shopModifierSlots: 2
+  marketEvents:
+  - {fileID: 11400000, guid: 0b8512c280e451a42b3677e99f5ec99e, type: 2}
+  - {fileID: 11400000, guid: e2fc31cc92e8fca478156e668dc7a2d9, type: 2}

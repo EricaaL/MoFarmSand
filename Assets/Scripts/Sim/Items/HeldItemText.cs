@@ -5,7 +5,7 @@ public struct HeldItemLabel
     public bool visible;
     /// <summary>The big count, e.g. "7 / 10" or "x4".</summary>
     public string main;
-    /// <summary>The small line under it, e.g. "+3 crops" or "seeds".</summary>
+    /// <summary>The small line under it, e.g. "+3 crops" or "plots".</summary>
     public string sub;
     /// <summary>Ammo is nearly gone: draw it red.</summary>
     public bool low;
@@ -46,9 +46,8 @@ public static class HeldItemText
         {
             visible = true,
             main = "x" + count,
-            sub = item is SeedData ? (count == 1 ? "seed" : "seeds")
-                : item is FarmlandPlotItem ? (count == 1 ? "plot" : "plots")
-                : string.Empty
+            // Seeds need no caption: the name already says "Seeds".
+            sub = item is FarmlandPlotItem ? (count == 1 ? "plot" : "plots") : string.Empty
         };
     }
 }

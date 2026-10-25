@@ -66,6 +66,13 @@ public class ShopScreen : IRunScreen
         if (!selling)
             ImGuiKit.Italic(new Rect(962f * s, 84f * s, 280f * s, 90f * s), plan.restocked ? "Fresh stock" : "Limited stock", 22f, dim, TextAnchor.UpperLeft);
 
+        // Inflation / deflation (season-long): the same spot under the stock note on both sides, red when prices are up.
+        if (plan.market.Active)
+        {
+            Color tone = plan.market.Multiplier > 1f ? new Color(1f, 0.42f, 0.38f) : new Color(0.55f, 0.9f, 0.55f);
+            ImGuiKit.Italic(new Rect(962f * s, 114f * s, 280f * s, 40f * s), plan.market.data.displayName, 22f, tone, TextAnchor.UpperLeft);
+        }
+
         // Cards: BUY lists the offers, SELL lists the crops you carry.
         const int cols = 3;
         float cardW = 268f * s, cardH = 373f * s, gapX = 31f * s, gapY = 26f * s;

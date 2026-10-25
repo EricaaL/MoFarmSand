@@ -37,7 +37,8 @@ public class HeldItemView
         Rect icon = new Rect(card.x + 5f * s + (84f * s - iconSize) * 0.5f, card.y + 8f * s, iconSize, iconSize);
         ItemIconDrawer.Draw(icon, item);
         float nameW = 84f * s;
-        ImGuiKit.Label(new Rect(card.x + 6f * s, card.y + 72f * s, nameW, 30f * s),ImGuiKit.Fit(item.DisplayName, 12f * k, nameW, 2), 12f * k, ImGuiKit.Text, TextAnchor.UpperCenter, true);
+        // Fit measures in the same bold face the label is drawn in, and the box holds two full lines, so a long seed name is never clipped.
+        ImGuiKit.Label(new Rect(card.x + 6f * s, card.y + 70f * s, nameW, 38f * s), ImGuiKit.Fit(item.DisplayName, 12f * k, nameW, 2, true), 12f * k, ImGuiKit.Text, TextAnchor.UpperCenter, true);
         // Crops grown out of season are weaker; same cue as the hotbar slot.
         float q = inventory.ActiveQuality;
         if (crop != null && Mathf.Abs(q - 1f) > 0.05f)

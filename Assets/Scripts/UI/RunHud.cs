@@ -53,7 +53,10 @@ public class RunHud
         if (!string.IsNullOrEmpty(toast) && Time.unscaledTime < toastUntil)
         {
             float a = Mathf.Clamp01((toastUntil - Time.unscaledTime) / 0.8f);
-            Rect t = new Rect(w * 0.5f - 280 * s, Screen.height * 0.62f, 560 * s, 54 * s);
+            // Wide enough for the whole line (long announcements such as inflation); wraps onto more lines only on a narrow window.
+            float tw = Mathf.Min(w - 40 * s, Mathf.Max(560 * s, ImGuiKit.TextWidth(toast, 28f, ImGuiKit.Face.Bold) + 80 * s));
+            float th = Mathf.Max(54 * s, ImGuiKit.TextHeight(toast, 28f, tw - 40 * s, true) + 20 * s);
+            Rect t = new Rect(w * 0.5f - tw * 0.5f, Screen.height * 0.62f, tw, th);
             ImGuiKit.Rounded(t, new Color(0.1f, 0.25f, 0.12f, 0.85f * a));
             ImGuiKit.HudLabel(t, toast, 28f, TextAnchor.MiddleCenter, true, a);
         }
@@ -92,11 +95,17 @@ public class RunHud
             ImGuiKit.HudLabel(b, $"{bannerDisaster.displayName.ToUpper()}  —  {bannerDisaster.bannerText}", 28f, TextAnchor.MiddleCenter, true, a);
             ImGuiKit.HudLabel(new Rect(b.x, b.yMax - 26 * s, b.width, 22 * s), $"Severity {Mathf.RoundToInt(bannerSeverity * 100f)}%", 16f, TextAnchor.MiddleCenter, false, a);
         }
-        else if (director.Disaster != null && director.Disaster.Current != null)
+        else if (director.Disaster != null && director.Disaster.Current != null && IsDisasterDay(plan))
         {
+            // Disaster days keep their note out here; any other day's disaster is named inside the date card, in red.
             ImGuiKit.HudLabel(new Rect(w - 360 * s, notesY, 344 * s, 26 * s), $"! {director.Disaster.Current.displayName}", 20f, TextAnchor.MiddleRight, true);
         }
     }
+
+    private static readonly Color DisasterRed = new Color(0.78f, 0.12f, 0.1f);
+
+    /// <summary>The day's own type is Disaster (its hazard is certain), as opposed to a disaster that happened to strike another day.</summary>
+    private static bool IsDisasterDay(DayPlan plan) => plan.node != null && plan.node.nodeTypeId == "disaster";
 
     private const float CardScale = 0.78f;   // the date card is drawn at this fraction of its mockup size
 
@@ -150,6 +159,10 @@ public class RunHud
         ImGuiKit.Icon(iconBox, season != null ? season.icon : null);
         ImGuiKit.Italic(new Rect(iconBox.xMax + 10 * c, inner.y + 196 * c, cw - 96 * c, 54 * c), plan.weather.kind.ToString(), 34f * CardScale, ImGuiKit.Muted, TextAnchor.MiddleLeft, false);
         ImGuiKit.Italic(new Rect(iconBox.xMax + 10 * c, inner.y + 238 * c, cw - 96 * c, 54 * c), $"{plan.weather.temperature:0}°C", 34f * CardScale, ImGuiKit.Muted, TextAnchor.MiddleLeft, false);
+
+        // A disaster that struck an ordinary day: named in red just above the day's type.
+        if (!IsDisasterDay(plan) && director.Disaster != null && director.Disaster.Current != null)
+            ImGuiKit.Label(new Rect(inner.x, inner.yMax - 110 * c, inner.width, 40 * c), director.Disaster.Current.displayName, 32f * CardScale, DisasterRed, TextAnchor.MiddleCenter, true, false);
 
         string nodeName = plan.node != null ? plan.node.displayName : "";
         ImGuiKit.Label(new Rect(inner.x, inner.yMax - 74 * c, inner.width, 56 * c), nodeName, 34f * CardScale, ImGuiKit.Text, TextAnchor.MiddleCenter, false, false);

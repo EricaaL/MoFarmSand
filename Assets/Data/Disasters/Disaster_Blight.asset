@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   disasterId: blight
   displayName: Blight
-  bannerText: A creeping rot withers the fields.
+  bannerText: A creeping rot is withering the fields
   uiColor: {r: 0.6, g: 0.3, b: 0.7, a: 1}
   seasonWeights:
   - season: {fileID: 11400000, guid: 1d6fbdaaca771e14a9656673775f7040, type: 2}

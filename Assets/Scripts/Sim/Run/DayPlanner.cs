@@ -20,6 +20,10 @@ public class DayPlan
     /// <summary>True on Merchant days: the shelf was refilled for this day.</summary>
     public bool restocked;
     public EventData evt;
+    /// <summary>The season-long market swing in force today (inflation / deflation), or inactive.</summary>
+    public MarketEventStatus market;
+    /// <summary>The factor on every merchant price today: 1 when no market event is active.</summary>
+    public float MarketMultiplier => market.Multiplier;
     public int coinReward;
     /// <summary>Product of node growth bonus and owned modifiers.</summary>
     public float growthMultiplier = 1f;
@@ -41,6 +45,8 @@ public static class DayPlanner
         plan.nightLengthSeconds = Mathf.Max(0f, db.run.nightLengthSeconds);
 
         plan.weather = ClimateModel.SampleDay(plan.date, db.climate, SeededRng.Derive(run.runSeed, nodeId, RngStreams.Weather));
+
+        plan.market = MarketEventRoller.For(run.runSeed, mapNode.layer - plan.date.dayInSeason, mapNode.layer, db.economy != null ? db.economy.marketEvents : null);
 
         float nodeChance = plan.node != null ? plan.node.disasterChance : 0f;
         plan.disaster = DisasterRoller.Roll(plan.date, nodeChance, db.disasters,

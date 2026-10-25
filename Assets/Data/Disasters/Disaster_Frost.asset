@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 673834991c34f0146986f81facd3c888, type: 3}
   m_Name: Disaster_Frost
   m_EditorClassIdentifier: 
-  disasterId: frost
-  displayName: Frost
+  disasterId: blizzard
+  displayName: Blizzard
   bannerText: A killing chill. Crops barely grow.
   uiColor: {r: 0.6, g: 0.85, b: 1, a: 1}
   seasonWeights:

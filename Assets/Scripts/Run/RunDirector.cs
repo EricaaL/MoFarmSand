@@ -449,8 +449,8 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
             date = plan.date,
             weather = plan.weather,
             extraGrowth = conditions != null ? conditions.Growth.Product : 1f,
-            sellShock = disaster != null ? disaster.SellPrice.Product : 1f,
-            seedShock = disaster != null ? disaster.SeedPrice.Product : 1f,
+            sellShock = (disaster != null ? disaster.SellPrice.Product : 1f) * MarketMultiplier,
+            seedShock = (disaster != null ? disaster.SeedPrice.Product : 1f) * MarketMultiplier,
             market = Run.market,
             owned = inventory != null ? inventory.CountOf(item) : 0,
             ownedQuality = inventory != null ? inventory.QualityOf(item) : 1f,
@@ -645,6 +645,9 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         dayRunning = true;
         Show(View.None, null);
 
+        // Inflation / deflation announces itself on the day it strikes; the HUD keeps a note for the rest of the season.
+        if (plan.market.startedToday) hud?.Say(plan.market.data.bannerText);
+
         // Limited time per day: daylight counts down, then night falls by itself.
         if (clock != null) clock.Begin(plan.dayLengthSeconds, plan.nightLengthSeconds);
 
@@ -787,11 +790,14 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
 
     public int OfferPrice(ShopOffer offer)
     {
-        if (offer.kind == OfferKind.Modifier) return offer.price;
+        if (offer.kind == OfferKind.Modifier) return Mathf.Max(1, Mathf.RoundToInt(offer.price * MarketMultiplier));
         PriceTable.PriceRow row = db.prices.RowForSeed(offer.id);
-        float shock = disaster != null ? disaster.SeedPrice.Product : 1f;
+        float shock = (disaster != null ? disaster.SeedPrice.Product : 1f) * MarketMultiplier;
         return EconomyModel.SeedPrice(row, plan.date.season, db.economy, shock);
     }
+
+    /// <summary>Today's season-long inflation / deflation factor on everything the merchant buys and sells (1 = none).</summary>
+    private float MarketMultiplier => plan != null ? plan.MarketMultiplier : 1f;
 
     /// <summary>Seam events for audio: the crow reacts to a purchase, a sale, or a refused purchase.</summary>
     /// <summary>Raised when the shop screen opens. Drives the shop-open sound.</summary>
@@ -835,7 +841,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     public int SellPriceOf(CropData crop)
     {
         PriceTable.PriceRow row = db.prices.RowForCrop(crop.Id);
-        float shock = disaster != null ? disaster.SellPrice.Product : 1f;
+        float shock = (disaster != null ? disaster.SellPrice.Product : 1f) * MarketMultiplier;
         return EconomyModel.SellPrice(row, plan.date.season, Run.market.GetDemand(crop.Id), shock);
     }
 

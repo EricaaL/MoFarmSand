@@ -16,8 +16,8 @@ public static class ChocoboBuilder
     private const string ControllerPath = "Assets/Art/Animations/Chocobo.controller";
     private const string PrefabPath = "Assets/Prefabs/Characters/Chocobo.prefab";
     private const string ClipName = "Toctoc";
-    /// <summary>The file is about 0.2 units tall; this brings the bird to roughly a metre and a bit.</summary>
-    private const float PrefabScale = 6f;
+    /// <summary>The file is about 0.2 units tall; this brings the bird to roughly a metre and a half.</summary>
+    private const float PrefabScale = 8f;
 
     [MenuItem("MoFarmSand/Add Chocobo")]
     public static void AddChocobo()

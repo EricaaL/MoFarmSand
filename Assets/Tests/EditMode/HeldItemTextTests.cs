@@ -86,12 +86,12 @@ public class HeldItemTextTests
     }
 
     [Test]
-    public void SeedsShowACountAndTheWordSeeds()
+    public void SeedsShowJustTheCount()
     {
         SeedData seed = TestUtil.Make<SeedData>(); seed.seedId = "seed_x";
         HeldItemLabel l = HeldItemText.Format(seed, 4, 0);
         Assert.AreEqual("x4", l.main);
-        Assert.AreEqual("seeds", l.sub);
-        Assert.AreEqual("seed", HeldItemText.Format(seed, 1, 0).sub);
+        Assert.AreEqual(string.Empty, l.sub);
+        Assert.AreEqual(string.Empty, HeldItemText.Format(seed, 1, 0).sub);
     }
 }

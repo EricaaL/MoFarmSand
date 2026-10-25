@@ -12,4 +12,5 @@ public static class RngStreams
     public const int DisasterRuntime = 9;
     public const int HarvestBonus = 10;
     public const int EventLoss = 11;
+    public const int MarketEvent = 12;
 }
