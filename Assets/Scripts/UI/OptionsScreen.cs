@@ -7,10 +7,11 @@ using UnityEngine;
 /// </summary>
 public class OptionsScreen : IRunScreen
 {
-    public const int TabOptions = 0, TabHowToPlay = 1, TabItems = 2;
+    public const int TabOptions = 0, TabHowToPlay = 1, TabItems = 2, TabCredits = 3;
 
     private readonly RunDirector director;
     private readonly HowToPlayScreen howToPlay = new HowToPlayScreen();
+    private readonly CreditsScreen credits = new CreditsScreen();
     private int tab;
 
     public OptionsScreen(RunDirector director) { this.director = director; }
@@ -19,6 +20,7 @@ public class OptionsScreen : IRunScreen
     {
         tab = startTab;
         howToPlay.OnOpen();
+        credits.OnOpen();
         director.ItemList.OnOpen();
     }
 
@@ -29,7 +31,7 @@ public class OptionsScreen : IRunScreen
         if (ImGuiKit.BackButton(new Rect(42f * s, 36f * s, 130f * s, 130f * s))) { director.CloseOptions(); return; }
 
         // On the title screen there is no day, so the Item List describes the first day of spring.
-        var names = new List<string> { "Options", "How to Play", "Item List" };
+        var names = new List<string> { "Options", "How to Play", "Item List", "Credits" };
         if (tab >= names.Count) tab = 0;
 
         Rect outer = new Rect(209f * s, 119f * s, 1502f * s, 842f * s);
@@ -42,6 +44,7 @@ public class OptionsScreen : IRunScreen
         {
             case TabHowToPlay: howToPlay.DrawBody(inner); break;
             case TabItems: director.ItemList.DrawBody(outer, false); break;
+            case TabCredits: credits.DrawBody(inner, director.Db.credits); break;
             default: DrawSettings(inner, s); break;
         }
     }

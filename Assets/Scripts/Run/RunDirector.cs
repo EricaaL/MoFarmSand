@@ -325,6 +325,9 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     /// <summary>How to Play is a tab of the Options page.</summary>
     public void ShowHowToPlay() { ShowOptions(OptionsScreen.TabHowToPlay); }
 
+    /// <summary>Credits is a tab of the Options page too.</summary>
+    public void ShowCredits() { ShowOptions(OptionsScreen.TabCredits); }
+
     /// <summary>Options page, from the main menu or the Esc menu; Back returns to whichever opened it.</summary>
     public void ShowOptions(int tab = OptionsScreen.TabOptions)
     {

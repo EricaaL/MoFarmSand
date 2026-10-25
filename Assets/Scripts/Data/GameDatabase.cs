@@ -28,6 +28,7 @@ public class GameDatabase : ScriptableObject
     [Header("Presentation")]
     public CozyWeatherMap cozyWeather;
     public UiTheme uiTheme;
+    public CreditsData credits;
 
     private SeasonCalendar calendarModel;
 

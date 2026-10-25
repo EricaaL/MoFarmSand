@@ -32,6 +32,13 @@ public class DataDriftTests
     }
 
     [Test]
+    public void CreditsAreLinkedAndFilled()
+    {
+        Assert.IsNotNull(db.credits, "GameDatabase.credits is missing (run MoFarmSand > Add Credits)");
+        Assert.Greater(db.credits.sections.Count, 0, "credits have no sections");
+    }
+
+    [Test]
     public void EveryTipIdHasATipAsset()
     {
         foreach (string id in TipIds.All)

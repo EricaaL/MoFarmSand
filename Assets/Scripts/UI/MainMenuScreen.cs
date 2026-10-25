@@ -1,6 +1,6 @@
 using UnityEngine;
 
-/// <summary>The first screen: Start Game (opens the save slots), Options, How to Play, Quit. Drawn over the live, blurred farm.</summary>
+/// <summary>The first screen: Start Game (opens the save slots), Options, How to Play, Credits, Quit. Drawn over the live, blurred farm.</summary>
 public class MainMenuScreen : IRunScreen
 {
     private readonly RunDirector director;
@@ -33,9 +33,9 @@ public class MainMenuScreen : IRunScreen
         ImGuiKit.Heading(new Rect(110f * s, 110f * s, 1100f * s, 190f * s), "DOGSEND", 175f, ImGuiKit.Text);
 
         // The first pill is lit until the pointer picks another, like the highlighted "Start Game" in the design.
-        string[] labels = { "Start Game", "Options", "How to Play", confirmQuit ? "Click again to quit" : "Quit" };
-        float x = 135f * s, w = 445f * s, h = 100f * s, step = 135f * s;
-        float y = 458f * s;
+        string[] labels = { "Start Game", "Options", "How to Play", "Credits", confirmQuit ? "Click again to quit" : "Quit" };
+        float x = 135f * s, w = 445f * s, h = 92f * s, step = 115f * s;
+        float y = 430f * s;
         int hovered = -1;
         for (int i = 0; i < labels.Length; i++)
             if (new Rect(x, y + i * step, w, h).Contains(Event.current.mousePosition)) hovered = i;
@@ -49,6 +49,7 @@ public class MainMenuScreen : IRunScreen
                 case 0: director.ShowTitle(); return;
                 case 1: director.ShowOptions(); return;
                 case 2: director.ShowHowToPlay(); return;
+                case 3: director.ShowCredits(); return;
                 default:
                     if (confirmQuit) { director.QuitGame(); return; }
                     confirmQuit = true;
