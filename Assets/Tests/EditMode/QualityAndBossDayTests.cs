@@ -251,7 +251,7 @@ public class QualityAndBossDayTests
     public void ShieldBlocksOneHitPerChargeAndIsCapped()
     {
         PlayerHealth h = Track(new GameObject("Hero")).AddComponent<PlayerHealth>();
-        h.Restore(3, 3);
+        h.Restore(3, PlayerHealth.MaxShieldCharges); // the shield is also capped by max hearts, so allow a full one
 
         h.GrantShield(2);
         Assert.AreEqual(2, h.ShieldCharges);

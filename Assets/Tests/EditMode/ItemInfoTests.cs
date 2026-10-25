@@ -21,6 +21,15 @@ public class ItemInfoTests
         };
     }
 
+    /// <summary>First day index of the named season, so the tests don't depend on how many days a season lasts.</summary>
+    private int FirstDayOf(string seasonName)
+    {
+        for (int d = 0; d < 400; d++)
+            if (db.Calendar.DateOf(d).season.displayName == seasonName) return d;
+        Assert.Fail($"no day falls in {seasonName}");
+        return 0;
+    }
+
     private static InfoLine Find(ItemInfo info, string labelStart)
     {
         foreach (InfoLine l in info.lines) if (l.label.StartsWith(labelStart)) return l;
@@ -95,11 +104,12 @@ public class ItemInfoTests
     [Test]
     public void PlantingAdviceReflectsHowGoodTheCurrentSeasonIs()
     {
-        // Tomato is best in summer: day 3 is the first summer day, day 0 is spring.
-        Assert.That(Find(ItemInfoBuilder.Build(Seed("seed_tomato"), Ctx(3)), "Planting now").value, Does.Contain("Great"));
+        // Tomato is best in summer; day 0 is spring.
+        int summer = FirstDayOf("Summer");
+        Assert.That(Find(ItemInfoBuilder.Build(Seed("seed_tomato"), Ctx(summer)), "Planting now").value, Does.Contain("Great"));
         string spring = Find(ItemInfoBuilder.Build(Seed("seed_tomato"), Ctx(0)), "Planting now").value;
         Assert.That(spring, Does.Contain("Summer"), "points to the better season");
-        Assert.That(Find(ItemInfoBuilder.Build(Seed("seed_spinach"), Ctx(3)), "Planting now").value, Does.Contain("Poor"), "spinach in summer");
+        Assert.That(Find(ItemInfoBuilder.Build(Seed("seed_spinach"), Ctx(summer)), "Planting now").value, Does.Contain("Poor"), "spinach in summer");
     }
 
     [Test]
@@ -107,7 +117,7 @@ public class ItemInfoTests
     {
         SeedData seed = Seed("seed_tomato"); // stocked spring, summer; not winter
         Assert.That(Find(ItemInfoBuilder.Build(seed, Ctx(0)), "Merchant price").value, Does.Contain("coins"));
-        Assert.That(Find(ItemInfoBuilder.Build(seed, Ctx(10)), "Merchant price").value, Does.Contain("not sold in Winter"));
+        Assert.That(Find(ItemInfoBuilder.Build(seed, Ctx(FirstDayOf("Winter"))), "Merchant price").value, Does.Contain("not sold in Winter"));
     }
 
     // ------------------------------------------------------------------ crops
@@ -143,7 +153,7 @@ public class ItemInfoTests
         int expectedSpring = EconomyModel.SellPrice(row, spring.date.season, 1f);
         Assert.AreEqual(expectedSpring, FirstNumber(Find(ItemInfoBuilder.Build(tomato, spring), "Sells for (Spring)").value));
 
-        ItemInfoContext winter = Ctx(10);
+        ItemInfoContext winter = Ctx(FirstDayOf("Winter"));
         int expectedWinter = EconomyModel.SellPrice(row, winter.date.season, 1f);
         Assert.AreEqual(expectedWinter, FirstNumber(Find(ItemInfoBuilder.Build(tomato, winter), "Sells for (Winter)").value));
         Assert.AreNotEqual(expectedSpring, expectedWinter, "prices change with the season");

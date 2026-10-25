@@ -53,6 +53,9 @@ public class CaterpillarBoss : MonoBehaviour
     private int cornerCount;
     private int cornerIndex;
     private float nextRepathTime;
+    private readonly StuckTracker stuck = new StuckTracker();
+    private Vector3 escapeHeading;
+    private Vector3 lastBlockNormal;
 
     public bool IsAwake => awake;
 
@@ -121,11 +124,21 @@ public class CaterpillarBoss : MonoBehaviour
         if (to.sqrMagnitude > 0.01f)
         {
             // Scared (garlic): run directly away from the player; chasing resumes when the timer ends.
-            Vector3 heading = scared ? -to : ChaseHeading(to);
+            Vector3 heading = scared ? -to : stuck.Escaping ? escapeHeading : ChaseHeading(to);
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(heading), 8f * Time.deltaTime);
             // Chewing after a bite or rearing up to spit: stay put (fleeing from garlic still wins).
             bool staggered = hunger != null && hunger.IsStaggered;
-            if (scared || (!Holding && !Winding && !staggered)) Move(heading.normalized * chaseSpeed * Time.deltaTime);
+            if (scared || (!Holding && !Winding && !staggered))
+            {
+                Vector3 before = transform.position;
+                lastBlockNormal = Vector3.zero;
+                Vector3 step = heading.normalized * chaseSpeed * Time.deltaTime;
+                Move(step);
+                // Wedged between scenery (barn and a crate): sidestep along the wall for a moment, then chase again.
+                if (!scared && stuck.Tick(Time.deltaTime, step.magnitude, Vector3.ProjectOnPlane(transform.position - before, Vector3.up).magnitude))
+                    escapeHeading = EscapeHeading(to);
+            }
+            else stuck.Reset();
         }
 
         if (scared)
@@ -167,6 +180,16 @@ public class CaterpillarBoss : MonoBehaviour
         return toPlayer;
     }
 
+    /// <summary>Along the wall it is pressed against, leaning a little away from it; straight sideways if no wall was seen.</summary>
+    private Vector3 EscapeHeading(Vector3 toPlayer)
+    {
+        Vector3 normal = lastBlockNormal.sqrMagnitude > 0.0001f ? lastBlockNormal.normalized : -toPlayer.normalized;
+        Vector3 along = Vector3.Cross(Vector3.up, normal) * stuck.Side;
+        Vector3 heading = along + normal * 0.5f;
+        heading.y = 0f;
+        return heading.sqrMagnitude > 0.0001f ? heading : -toPlayer;
+    }
+
     private void Repath()
     {
         cornerCount = 0;
@@ -184,7 +207,8 @@ public class CaterpillarBoss : MonoBehaviour
         for (int pass = 0; pass < 2 && delta.sqrMagnitude > 0.000001f; pass++)
         {
             float dist = delta.magnitude;
-            int n = Physics.SphereCastNonAlloc(transform.position + Vector3.up * castLift, bodyRadius, delta / dist, moveHits, dist + skin,
+            Vector3 castOrigin = transform.position + Vector3.up * castLift;
+            int n = Physics.SphereCastNonAlloc(castOrigin, bodyRadius, delta / dist, moveHits, dist + skin,
                 ~0, QueryTriggerInteraction.Ignore);
 
             int best = -1;
@@ -195,6 +219,8 @@ public class CaterpillarBoss : MonoBehaviour
                 if (player != null && h.transform.IsChildOf(player)) continue;   // the bite logic owns player contact
                 if (h.rigidbody != null && !h.rigidbody.isKinematic) continue;   // thrown crops, loose props
                 if (h.normal.y > 0.5f) continue;                                 // floor and farm plots
+                // Already touching it: a cast from inside reports distance 0 in every direction, so only block steps that push in.
+                if (h.distance <= 0.0001f && !PushesInto(h.collider, castOrigin, delta)) continue;
                 if (best < 0 || h.distance < moveHits[best].distance) best = i;
             }
 
@@ -209,10 +235,22 @@ public class CaterpillarBoss : MonoBehaviour
             Vector3 normal = hit.normal;
             normal.y = 0f;
             if (normal.sqrMagnitude < 0.0001f) return;
+            lastBlockNormal = normal;
             Vector3 left = delta / dist * Mathf.Max(0f, dist - hit.distance);
             delta = Vector3.ProjectOnPlane(left, normal.normalized);
             delta.y = 0f;
         }
+    }
+
+    /// <summary>True if stepping by <paramref name="delta"/> moves toward a collider the head already overlaps; sliding along or away is fine.</summary>
+    private static bool PushesInto(Collider other, Vector3 origin, Vector3 delta)
+    {
+        // Closest point is undefined on a concave mesh: use its centre instead.
+        Vector3 closest = other is MeshCollider mc && !mc.convex ? other.bounds.center : other.ClosestPoint(origin);
+        Vector3 away = origin - closest;
+        away.y = 0f;
+        if (away.sqrMagnitude < 0.000001f) return true; // centre inside it: no clean way out, so treat it as solid
+        return Vector3.Dot(delta, away) < -0.0001f;
     }
 
     private void UpdateSpit(float distance)
