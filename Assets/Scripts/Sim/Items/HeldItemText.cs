@@ -5,7 +5,7 @@ public struct HeldItemLabel
     public bool visible;
     /// <summary>The big count, e.g. "7 / 10" or "x4".</summary>
     public string main;
-    /// <summary>The small line under it, e.g. "+3 crops" or "plots".</summary>
+    /// <summary>The small line under it, e.g. "+3" (spare crops) or "plots".</summary>
     public string sub;
     /// <summary>Ammo is nearly gone: draw it red.</summary>
     public bool low;
@@ -35,7 +35,7 @@ public static class HeldItemText
             {
                 visible = true,
                 main = nothing ? "Out of ammo" : $"{rounds} / {crop.ammoPerCrop}",
-                sub = spare > 0 ? $"+{spare} crop{(spare == 1 ? "" : "s")}" : string.Empty,
+                sub = spare > 0 ? $"+{spare}" : string.Empty,
                 low = nothing || (spare <= 0 && rounds <= LowRounds),
                 outOfAmmo = nothing
             };

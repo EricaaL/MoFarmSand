@@ -410,7 +410,7 @@ public static class RunSystemsBuilder
         NodeTypeData nBoss = NodeType("boss", "The Caterpillar", "B", new Color(0.95f, 0.4f, 0.55f), "The final night. Feed the caterpillar until it bursts.", n =>
         { n.encounter = caterpillar; n.startsAtNight = true; n.disasterChance = 0f; n.coinReward = new Vector2Int(0, 0); n.endsRun = true; n.farmingAllowed = false; });
         NodeTypeData nSeasonBoss = NodeType("season_boss", "Hungry Caterpillar", "B", new Color(0.85f, 0.35f, 0.7f), "The season's mandatory night. Feed the caterpillar before dawn.", n =>
-        { n.encounter = elite; n.startsAtNight = true; n.disasterChance = 0f; n.coinReward = new Vector2Int(20, 35); n.farmingAllowed = false; n.survivableLoss = true; n.lossGrowthMultiplier = 0.65f; });
+        { n.encounter = elite; n.startsAtNight = true; n.disasterChance = 0f; n.coinReward = new Vector2Int(20, 35); n.farmingAllowed = false; n.survivableLoss = false; n.lossGrowthMultiplier = 0.65f; });
         NodeTypeRegistry nodeTypes = Registry<NodeTypeRegistry, NodeTypeData>($"{Data}/Registries/NodeTypeRegistry.asset",
             nFarm, nMerchant, nDisaster, nElite, nRest, nEvent, nTreasure, nBoss, nSeasonBoss);
 

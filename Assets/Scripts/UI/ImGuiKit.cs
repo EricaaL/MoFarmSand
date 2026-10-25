@@ -152,18 +152,20 @@ public static class ImGuiKit
     }
 
     /// <summary>Icon followed by a value, e.g. a coin and "10". The icon is as tall as the row.</summary>
-    public static void IconValue(Rect r, Texture tex, string value, float size, Color color, TextAnchor anchor = TextAnchor.MiddleLeft, bool bold = false)
+    /// <param name="alpha">Fades the icon and the value together (1 = solid).</param>
+    public static void IconValue(Rect r, Texture tex, string value, float size, Color color, TextAnchor anchor = TextAnchor.MiddleLeft, bool bold = false, float alpha = 1f)
     {
+        color.a *= alpha;
         float gap = S(10f);
         if (anchor == TextAnchor.MiddleRight || anchor == TextAnchor.UpperRight || anchor == TextAnchor.LowerRight)
         {
             // Right-aligned: the icon hugs the number instead of sitting at the far left of the row.
             float tw = TextWidth(value, size, bold ? Face.Bold : Face.Body) + S(6f);
-            Icon(new Rect(r.xMax - tw - gap - r.height, r.y, r.height, r.height), tex);
+            Icon(new Rect(r.xMax - tw - gap - r.height, r.y, r.height, r.height), tex, alpha);
             Label(new Rect(r.xMax - tw, r.y, tw, r.height), value, size, color, anchor, bold, false);
             return;
         }
-        Icon(new Rect(r.x, r.y, r.height, r.height), tex);
+        Icon(new Rect(r.x, r.y, r.height, r.height), tex, alpha);
         Label(new Rect(r.x + r.height + gap, r.y, r.width - r.height - gap, r.height), value, size, color, anchor, bold, false);
     }
 

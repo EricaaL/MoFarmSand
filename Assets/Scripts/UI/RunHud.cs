@@ -75,15 +75,7 @@ public class RunHud
             if (ImGuiKit.Button(seedsButton, "Get Seeds", true, 20f)) director.ShowBetaSeeds();
         }
 
-        // Lost a boss fight last season: say why the crops are slow.
-        RunState run = director.Run;
         float notesY = cardBottom + 14 * s;
-        if (run != null && run.growthDebuffSeason >= 0 && plan.date.seasonIndex == run.growthDebuffSeason)
-        {
-            int slower = Mathf.RoundToInt((1f - run.growthDebuffMult) * 100f);
-            ImGuiKit.HudLabel(new Rect(w - 420 * s, notesY, 404 * s, 26 * s), $"Sluggish soil: crops grow {slower}% slower", 18f, TextAnchor.MiddleRight, true);
-            notesY += 28 * s;
-        }
 
         // Disaster banner.
         if (bannerDisaster != null && Time.unscaledTime < bannerUntil)
@@ -166,6 +158,14 @@ public class RunHud
 
         string nodeName = plan.node != null ? plan.node.displayName : "";
         ImGuiKit.Label(new Rect(inner.x, inner.yMax - 74 * c, inner.width, 56 * c), nodeName, 34f * CardScale, ImGuiKit.Text, TextAnchor.MiddleCenter, false, false);
+
+        // Lost a boss fight last season, so crops grow slower this season: a small, faint note under the day's type.
+        RunState run = director.Run;
+        if (run != null && run.growthDebuffSeason >= 0 && plan.date.seasonIndex == run.growthDebuffSeason)
+        {
+            Color faint = DisasterRed; faint.a = 0.5f;
+            ImGuiKit.Label(new Rect(inner.x, inner.yMax - 31 * c, inner.width, 22 * c), "Sluggish soil", 17f * CardScale, faint, TextAnchor.MiddleCenter, true, false);
+        }
 
         // Key hints under the card: both caps share one width and one x, so the caps and their words line up.
         float capW = ImGuiKit.KeyCapWidth("ESC", "TAB");

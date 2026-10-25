@@ -29,10 +29,10 @@ public class HeldItemTextTests
         HeldItemLabel l = HeldItemText.Format(Shooter(), 3, 7);
         Assert.IsTrue(l.visible);
         Assert.AreEqual("7 / 10", l.main);
-        Assert.AreEqual("+3 crops", l.sub);
+        Assert.AreEqual("+3", l.sub);
         Assert.IsFalse(l.low);
         Assert.IsFalse(l.outOfAmmo);
-        Assert.AreEqual("+1 crop", HeldItemText.Format(Shooter(), 1, 7).sub);
+        Assert.AreEqual("+1", HeldItemText.Format(Shooter(), 1, 7).sub);
     }
 
     [Test]
@@ -41,7 +41,7 @@ public class HeldItemTextTests
         // Fresh peas: nothing fired yet, so nothing is "loaded", but the first shot loads a crop. Show 10 / 10.
         HeldItemLabel l = HeldItemText.Format(Shooter(), 3, 0);
         Assert.AreEqual("10 / 10", l.main);
-        Assert.AreEqual("+2 crops", l.sub, "one of the three crops is the one that gets loaded");
+        Assert.AreEqual("+2", l.sub, "one of the three crops is the one that gets loaded");
         Assert.IsFalse(l.low);
         Assert.IsFalse(l.outOfAmmo);
 

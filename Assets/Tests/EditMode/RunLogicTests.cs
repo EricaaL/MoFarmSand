@@ -133,7 +133,7 @@ public class RunLogicTests
     }
 
     [Test]
-    public void LosingASeasonBossKeepsTheYearAliveButSlowsNextSeasonsCrops()
+    public void LosingASeasonBossEndsTheYear()
     {
         (RunState run, MetaProgress meta) = RunAtSeasonBoss(0);
         MapNode cur = run.currentNodeId < 0 ? null : run.map.Get(run.currentNodeId);
@@ -141,19 +141,12 @@ public class RunLogicTests
         Assert.AreEqual("season_boss", run.map.Get(bossNode).nodeTypeId);
         RunLogic.BeginNode(run, bossNode);
         DayPlan plan = DayPlanner.Plan(run, bossNode, db);
-        int coins = run.coins;
         run.hp = 0;
 
         RunLogic.CompleteNode(run, meta, DayOutcome.Failed, plan, db);
 
-        Assert.AreEqual(RunPhase.Banking, run.phase, "the year goes on to the season-end bank stop");
-        Assert.AreEqual(coins, run.coins, "no reward for a lost fight");
-        Assert.GreaterOrEqual(run.hp, 1);
-        Assert.AreEqual(1, run.growthDebuffSeason, "summer is the next season");
-
-        RunLogic.FinishBanking(run, meta);
-        MapNode summerDay = run.map.Get(run.map.Get(run.currentNodeId).next[0]);
-        Assert.Less(DayPlanner.Plan(run, summerDay.id, db).growthMultiplier, 1f, "summer crops grow slower");
+        Assert.AreEqual(RunPhase.Lost, run.phase, "no soft landing: the year is over");
+        Assert.AreEqual(-1, run.growthDebuffSeason, "nothing carries over to a next season");
     }
 
     [Test]

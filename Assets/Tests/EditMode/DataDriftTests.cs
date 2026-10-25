@@ -158,13 +158,11 @@ public class DataDriftTests
     }
 
     [Test]
-    public void OnlySeasonBossesAreSurvivableToLose()
+    public void NoBossLossIsSurvivable()
     {
-        NodeTypeData seasonBoss = db.nodeTypes.Get("season_boss"), finalBoss = db.nodeTypes.Get("boss");
-        Assert.IsTrue(seasonBoss.survivableLoss);
-        Assert.IsFalse(finalBoss.survivableLoss);
-        Assert.Greater(seasonBoss.lossGrowthMultiplier, 0f);
-        Assert.Less(seasonBoss.lossGrowthMultiplier, 1f);
+        // Dying to any boss ends the year ("YOU DIED", then the next year); the survivable-loss option stays off everywhere.
+        Assert.IsFalse(db.nodeTypes.Get("season_boss").survivableLoss);
+        Assert.IsFalse(db.nodeTypes.Get("boss").survivableLoss);
     }
 
     [Test]

@@ -27,9 +27,9 @@ MonoBehaviour:
   healOnStart: 0
   growthBonus: 1
   eventPool: {fileID: 0}
-  coinReward: {x: 20, y: 35}
+  coinReward: {x: 5, y: 15}
   endsRun: 0
-  survivableLoss: 1
+  survivableLoss: 0
   lossGrowthMultiplier: 0.65
   minLayer: 0
   maxPerPath: 0
