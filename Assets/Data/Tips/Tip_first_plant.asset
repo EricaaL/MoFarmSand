@@ -14,5 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tipId: first_plant
   title: It's growing
-  body: Crops ripen by themselves and a timer counts down over the plot. Plant a
-    few more while you wait.
+  body: Crops ripen by themselves. Plant a few more while you wait!

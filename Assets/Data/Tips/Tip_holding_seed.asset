@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tipId: holding_seed
   title: Plant a seed
-  body: 'Walk up to an empty plot and press E to plant this seed. Plant in its own
-    season: out-of-season crops grow slowly and come out weak.'
+  body: Walk up to an empty plot and press E to plant this seed. Make sure to plant
+    on season, off season crops grow weaker.

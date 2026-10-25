@@ -127,7 +127,7 @@ public static class MainCharacterBuilder
         foreach (string guid in AssetDatabase.FindAssets("t:Model", new[] { BreakdanceDir }))
         {
             string name = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(guid));
-            SetupClip(new ClipSpec(name, name, name, false, BreakdanceDir), avatar);
+            SetupClip(new ClipSpec(name, name, name, true, BreakdanceDir), avatar);
         }
     }
 

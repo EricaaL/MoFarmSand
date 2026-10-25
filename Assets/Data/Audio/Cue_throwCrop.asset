@@ -12,8 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78f05f6e5eb2f1141ab0d09089c7ad37, type: 3}
   m_Name: Cue_throwCrop
   m_EditorClassIdentifier: 
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: 4ff5f50ed31ef44938b52e8fced973b7, type: 3}
+  - {fileID: 8300000, guid: 900ee1c5a43a5483b9608a38d0bf7fee, type: 3}
+  - {fileID: 8300000, guid: 6c612aab3321f4fb6880269ba2101d9e, type: 3}
+  - {fileID: 8300000, guid: 22b78bb57830c4f67afce4440672c5ea, type: 3}
+  - {fileID: 8300000, guid: 3f24454de66ef46b0b18a63848f7db77, type: 3}
+  - {fileID: 8300000, guid: 19c78b08787fa4925a44cd642e1523c3, type: 3}
   volume: 1
   pitchRange: {x: 0.95, y: 1.05}
   minInterval: 0.05
+  maxSeconds: 0
+  fadeInSeconds: 0
   loop: 0

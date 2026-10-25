@@ -14,5 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tipId: support_held
   title: Support crop
-  body: Right-click to eat it for Bark Shield charges. The shield wears off after
-    20 seconds.
+  body: Right-click to eat it for a Bark Shield.

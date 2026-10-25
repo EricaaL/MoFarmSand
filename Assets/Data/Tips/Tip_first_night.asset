@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tipId: first_night
   title: Feed the pest
-  body: Don't hurt it, feed it. Hit it with crops until its fullness bar is full,
-    before dawn. Dodge its bites and the slime it spits.
+  body: Don't hurt it, feed it! Hit it with crops until its fullness bar is full,
+    before dawn comes...

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c0992f02d536f74cbd5842c20551ece, type: 3}
   m_Name: MapGenConfig
   m_EditorClassIdentifier: 
-  lanes: 7
+  lanes: 6
   pathCount: 6
   bands:
   - fromLayer: 0

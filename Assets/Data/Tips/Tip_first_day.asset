@@ -14,5 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tipId: first_day
   title: Welcome!
-  body: Walk with W A S D. Pick a hotbar slot with 1-8 or the mouse wheel. Hold a
-    seed, stand at an empty plot and press E to plant it.
+  body: Walk with W A S D. Pick a hotbar slot with 1-8 or the mouse wheel.

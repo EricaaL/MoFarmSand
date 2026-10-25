@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tipId: merchant
   title: The merchant
-  body: Press E to trade. He buys your crops for coins and sells seeds. His shelf
-    is limited and restocks on Merchant days.
+  body: Press E to trade. The crow buys your crops for coins and sells seeds. He
+    only restocks on Merchant days.

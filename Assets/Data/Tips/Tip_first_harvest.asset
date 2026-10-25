@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tipId: first_harvest
   title: Crops are ammo
-  body: Keep what you harvest to feed the boss at night, or sell some to the merchant
-    for coins. Press E at the bell when you're ready to end the day.
+  body: Keep what you harvest to prepare before night comes, or sell some to the
+    merchant for coins. Press E at the bell to end the day early.

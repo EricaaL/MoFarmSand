@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private InputActionAsset inputActions;
-    [SerializeField] private float moveSpeed = 2.5f; // walk: hold the Sprint key (Shift)
+    [SerializeField] private float moveSpeed = 2.5f; // walk: hold the Sprint action's key (Left Shift); running is the default
     [SerializeField] private float runSpeed = 5f;    // default speed
     [SerializeField] private float turnSpeed = 720f;
     [SerializeField] private float gravity = -20f;

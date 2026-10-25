@@ -8,7 +8,7 @@ public static class ControlsScreen
         ("Moving", new[]
         {
             ("W A S D", "Walk around"),
-            ("Left Shift", "Sprint"),
+            ("Left Shift", "Walk"),
         }),
         ("Farming", new[]
         {

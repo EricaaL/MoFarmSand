@@ -12,8 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78f05f6e5eb2f1141ab0d09089c7ad37, type: 3}
   m_Name: Cue_wither
   m_EditorClassIdentifier: 
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: ae26f0a7f99fbf447ac0833cb8f2bfa4, type: 3}
+  - {fileID: 8300000, guid: 71c5cb808b1440e4eb924e2bb38d7d9c, type: 3}
+  - {fileID: 8300000, guid: 24a351bbba45f5848a59db1e22975e5f, type: 3}
   volume: 1
   pitchRange: {x: 0.95, y: 1.05}
   minInterval: 0.05
+  maxSeconds: 0
+  fadeInSeconds: 0
   loop: 0

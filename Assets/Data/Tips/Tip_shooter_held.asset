@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tipId: shooter_held
   title: Auto-fire crop
-  body: Hold left-click to fire toward the cursor. One harvested crop is 10 shots.
+  body: 'Hold left-click to fire toward the cursor. '
