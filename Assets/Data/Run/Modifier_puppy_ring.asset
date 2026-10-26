@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5af8f227832a8924a8360e053d76286b, type: 3}
+  m_Name: Modifier_puppy_ring
+  m_EditorClassIdentifier: 
+  modifierId: puppy_ring
+  displayName: Puppy Ring
+  description: Attack crops you grow are 20% more effective.
+  price: 20
+  resistDisasterIds: []
+  resistAmount: 0
+  resistAllDisasters: 0
+  disasterChanceCut: 0
+  growthMult: 1
+  bonusMaxHp: 0
+  bonusInventorySlots: 0
+  harmfulEventChanceMult: 1
+  extraCropChance: 0
+  harvestSeedChance: 0
+  depositLimitBonus: 0
+  sellBonusCoins: 0
+  supportCropBoost: 0
+  attackCropBoost: 0.2
+  randomSeedsOnBuy: 0
+  shopStock: 1
+  shopItem: 1

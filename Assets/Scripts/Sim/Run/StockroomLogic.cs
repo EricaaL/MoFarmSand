@@ -34,7 +34,7 @@ public static class StockroomLogic
     public static int SeedKinds(int baseKinds, int level, StockroomConfig cfg)
         => baseKinds + (cfg != null && cfg.extraSeedKindAtLevel > 0 && level >= cfg.extraSeedKindAtLevel ? 1 : 0);
 
-    /// <summary>How many charms he stocks on Merchant days.</summary>
+    /// <summary>How many trinkets he stocks on Merchant days.</summary>
     public static int CharmSlots(int baseSlots, int level, StockroomConfig cfg)
         => baseSlots + (cfg != null && cfg.extraCharmAtLevel > 0 && level >= cfg.extraCharmAtLevel ? 1 : 0);
 
@@ -44,7 +44,7 @@ public static class StockroomLogic
         if (cfg == null || level <= 0) return string.Empty;
         string text = $"+{cfg.unitsPerLevel} of every seed per restock";
         if (cfg.extraSeedKindAtLevel > 0 && level == cfg.extraSeedKindAtLevel) text += ", +1 kind of seed";
-        if (cfg.extraCharmAtLevel > 0 && level == cfg.extraCharmAtLevel) text += ", +1 charm";
+        if (cfg.extraCharmAtLevel > 0 && level == cfg.extraCharmAtLevel) text += ", +1 trinket";
         return text;
     }
 }

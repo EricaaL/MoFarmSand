@@ -13,10 +13,14 @@ public sealed class HarvestBonus
     /// <summary>Per-harvest chance (0-1) of a bonus seed, summed over the run's modifiers.</summary>
     public float SeedChance { get; }
 
+    /// <summary>Per-harvest chance (0-1) of one more of the harvested crop, summed over the run's modifiers.</summary>
+    public float ExtraCropChance { get; }
+
     public HarvestBonus(GameDatabase db, RunState run, SeededRng rng)
     {
         this.rng = rng;
         SeedChance = ChanceFor(db, run);
+        ExtraCropChance = ExtraCropChanceFor(db, run);
         if (db.items != null)
             foreach (ItemData item in db.items.All)
                 if (item is SeedData seed && CropAvailability.IsSeedAvailable(seed, run.unlockedIds, db)) seeds.Add(seed);
@@ -30,6 +34,18 @@ public sealed class HarvestBonus
             if (db.modifiers.TryGet(id, out RunModifierData m)) chance += Mathf.Max(0f, m.harvestSeedChance);
         return Mathf.Clamp01(chance);
     }
+
+    public static float ExtraCropChanceFor(GameDatabase db, RunState run)
+    {
+        if (db.modifiers == null) return 0f;
+        float chance = 0f;
+        foreach (string id in run.modifierIds)
+            if (db.modifiers.TryGet(id, out RunModifierData m)) chance += Mathf.Max(0f, m.extraCropChance);
+        return Mathf.Clamp01(chance);
+    }
+
+    /// <summary>Rolls once: true if this harvest gives one more of the crop. Draws nothing when no modifier offers the chance.</summary>
+    public bool RollExtraCrop() => ExtraCropChance > 0f && rng.NextFloat() < ExtraCropChance;
 
     /// <summary>Rolls once. Returns a uniformly random seed of any kind, or null for no bonus.</summary>
     public SeedData Roll()

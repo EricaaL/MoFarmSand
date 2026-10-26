@@ -364,12 +364,76 @@ public class RunLogicTests
         RunState run = RunLogic.NewRun(3, db, new MetaProgress());
         Assert.AreEqual(0f, DayPlanner.ResistFor(run, db, "locust"));
         Assert.AreEqual(1f, DayPlanner.ModifierGrowth(run, db));
+        Assert.AreEqual(0f, DayPlanner.DisasterChanceCut(run, db));
 
-        run.modifierIds.Add("scarecrow");
+        run.modifierIds.Add("buddog_statue");
         run.modifierIds.Add("fertilizer");
         Assert.AreEqual(0.5f, DayPlanner.ResistFor(run, db, "locust"), 1e-5f);
-        Assert.AreEqual(0f, DayPlanner.ResistFor(run, db, "storm"));
-        Assert.AreEqual(1.2f, DayPlanner.ModifierGrowth(run, db), 1e-5f);
+        Assert.AreEqual(0.5f, DayPlanner.ResistFor(run, db, "storm"), 1e-5f);
+        Assert.AreEqual(0.05f, DayPlanner.DisasterChanceCut(run, db), 1e-5f);
+        Assert.AreEqual(1.5f, DayPlanner.ModifierGrowth(run, db), 1e-5f);
+    }
+
+    [Test]
+    public void CharmsGiveSlotsExtraCropsAndFewerBadEvents()
+    {
+        RunState run = RunLogic.NewRun(3, db, new MetaProgress());
+        Assert.AreEqual(0, DayPlanner.BonusSlots(run, db));
+        Assert.AreEqual(1f, DayPlanner.HarmfulEventMult(run, db));
+        Assert.AreEqual(0f, HarvestBonus.ExtraCropChanceFor(db, run));
+
+        run.modifierIds.Add("small_pouch");
+        run.modifierIds.Add("scarecrow");
+        run.modifierIds.Add("diamond_hoe");
+        Assert.AreEqual(1, DayPlanner.BonusSlots(run, db));
+        Assert.AreEqual(0.5f, DayPlanner.HarmfulEventMult(run, db), 1e-5f);
+        Assert.AreEqual(0.2f, HarvestBonus.ExtraCropChanceFor(db, run), 1e-5f);
+    }
+
+    [Test]
+    public void ShopCharmsAddUp()
+    {
+        RunState run = RunLogic.NewRun(3, db, new MetaProgress());
+        Assert.AreEqual(0, Charms.DepositLimitBonus(run, db));
+        Assert.AreEqual(0, Charms.SellBonus(run, db));
+        Assert.AreEqual(1f, Charms.CropStrength(run, db, CropType.Support));
+        Assert.AreEqual(1f, Charms.CropStrength(run, db, CropType.Projectile));
+
+        run.modifierIds.Add("doggy_bank");
+        run.modifierIds.Add("shiny_rock");
+        run.modifierIds.Add("puppy_charm");
+        run.modifierIds.Add("puppy_ring");
+        Assert.AreEqual(10, Charms.DepositLimitBonus(run, db));
+        Assert.AreEqual(2, Charms.SellBonus(run, db));
+        Assert.AreEqual(1.2f, Charms.CropStrength(run, db, CropType.Support), 1e-5f);
+        Assert.AreEqual(1.2f, Charms.CropStrength(run, db, CropType.Shooter), 1e-5f);
+        Assert.AreEqual(db.bank.maxDepositPerSeason + 10, BankLogic.DepositLimit(db.bank, 10));
+    }
+
+    [Test]
+    public void BlindBoxGivesThreeSeedsAndIsStockedThreeTimes()
+    {
+        RunState run = RunLogic.NewRun(3, db, new MetaProgress());
+        RunModifierData box = db.modifiers.Get("blind_box");
+        Assert.AreEqual(3, box.randomSeedsOnBuy);
+        Assert.AreEqual(3, Charms.RollSeeds(db, run, box.randomSeedsOnBuy, new SeededRng(5)).Count);
+        Assert.AreEqual(Charms.RollSeeds(db, run, 3, new SeededRng(5)), Charms.RollSeeds(db, run, 3, new SeededRng(5)), "same seed, same box");
+        run.modifierIds.Add("blind_box");   // even if somehow owned, the box is not a passive charm
+        Assert.AreEqual(1f, DayPlanner.ModifierGrowth(run, db));
+    }
+
+    [Test]
+    public void ChanceCutLowersDisasterOddsButNotForcedDisasters()
+    {
+        CalendarDate date = db.Calendar.DateOf(2);
+        int plain = 0, cut = 0;
+        for (int seed = 0; seed < 400; seed++)
+        {
+            if (!DisasterRoller.Roll(date, 0.5f, db.disasters, new SeededRng(seed)).IsNone) plain++;
+            if (!DisasterRoller.Roll(date, 0.5f, db.disasters, new SeededRng(seed), null, 0.3f).IsNone) cut++;
+            Assert.IsFalse(DisasterRoller.Roll(date, 1f, db.disasters, new SeededRng(seed), null, 0.3f).IsNone, "forced days stay forced");
+        }
+        Assert.Less(cut, plain);
     }
 
     [Test]
@@ -410,7 +474,7 @@ public class RunLogicTests
             Assert.AreEqual(3, kinds.Count, $"{season.displayName} kit has projectile, shooter and support crops");
             int filled = 0;
             foreach (SlotSave s in run.inventory) if (s.count > 0) filled++;
-            Assert.LessOrEqual(filled, InventoryOps.Slots - BetaKit.FreeSlots, $"{season.displayName} kit leaves a slot free for farmland plots");
+            Assert.LessOrEqual(filled, InventoryOps.BaseSlots - BetaKit.FreeSlots, $"{season.displayName} kit leaves a slot free for farmland plots");
             foreach (PriceTable.PriceRow row in db.prices.rows)
                 if (row.StockedIn(season)) Assert.Greater(InventoryOps.CountOf(run.inventory, row.crop.Id), 0, $"{row.crop.Id} in {season.displayName}");
         }

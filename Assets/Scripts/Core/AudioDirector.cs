@@ -105,6 +105,7 @@ public class AudioDirector : MonoBehaviour
             lastHp = health.Hp;
             lastShield = health.ShieldCharges;
             health.OnChanged += HandleHealth;
+            health.OnRestored += HandleHealthRestored;
             death = health.GetComponent<PlayerDeath>();
             if (death != null) death.Died += HandleDied;
         }
@@ -161,7 +162,11 @@ public class AudioDirector : MonoBehaviour
             hunger.OnBossSatisfied -= HandleSatisfied;
             hunger.OnBossEvolved -= HandleEvolved;
         }
-        if (health != null) health.OnChanged -= HandleHealth;
+        if (health != null)
+        {
+            health.OnChanged -= HandleHealth;
+            health.OnRestored -= HandleHealthRestored;
+        }
     }
 
     private void OnDestroy()
@@ -253,6 +258,9 @@ public class AudioDirector : MonoBehaviour
         lastHp = health.Hp;
         lastShield = health.ShieldCharges;
     }
+
+    // A new day loads the run's hearts (below the scene's full default): that is not a hit, so no hurt sound.
+    private void HandleHealthRestored() { lastHp = health.Hp; }
 
     private void HandleCoinsMoved() { Play(library != null ? library.coin : null); }
 

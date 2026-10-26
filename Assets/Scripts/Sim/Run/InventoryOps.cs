@@ -4,7 +4,10 @@ using System.Collections.Generic;
 /// <summary>Inventory edits on the saved snapshot (the live PlayerInventory has its own equivalents).</summary>
 public static class InventoryOps
 {
+    /// <summary>Slots saved in a snapshot: the base hotbar plus the one the Small Pouch adds.</summary>
     public static int Slots => PlayerInventory.SlotCount;
+    /// <summary>Slots every run can use; charms add to it.</summary>
+    public static int BaseSlots => PlayerInventory.BaseSlots;
 
     public static void EnsureSize(List<SlotSave> slots)
     {
@@ -12,8 +15,8 @@ public static class InventoryOps
         if (slots.Count > Slots) slots.RemoveRange(Slots, slots.Count - Slots);
     }
 
-    /// <summary>Stacks onto an existing slot or fills the first empty one. Returns false if full.</summary>
-    public static bool Add(List<SlotSave> slots, string itemId, int count)
+    /// <summary>Stacks onto an existing slot or fills the first empty one among the first <paramref name="capacity"/>. Returns false if full.</summary>
+    public static bool Add(List<SlotSave> slots, string itemId, int count, int capacity = PlayerInventory.BaseSlots)
     {
         if (string.IsNullOrEmpty(itemId) || count <= 0) return false;
         EnsureSize(slots);
@@ -25,7 +28,7 @@ public static class InventoryOps
                 slots[i] = new SlotSave(itemId, slots[i].count + count, blended);
                 return true;
             }
-        for (int i = 0; i < slots.Count; i++)
+        for (int i = 0; i < slots.Count && i < capacity; i++)
             if (slots[i].count <= 0) { slots[i] = new SlotSave(itemId, count); return true; }
         return false;
     }

@@ -19,6 +19,6 @@ public class StockroomConfig : ScriptableObject
     [Min(0)] public int starterUnitsPerLevel = 1;
     [Tooltip("At this level the merchant stocks one more kind of seed (0 = never).")]
     [Min(0)] public int extraSeedKindAtLevel = 2;
-    [Tooltip("At this level he also stocks one more charm (0 = never).")]
+    [Tooltip("At this level he also stocks one more trinket (0 = never).")]
     [Min(0)] public int extraCharmAtLevel = 3;
 }

@@ -10,15 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5af8f227832a8924a8360e053d76286b, type: 3}
-  m_Name: Modifier_rain_barrel
+  m_Name: Modifier_diamond_hoe
   m_EditorClassIdentifier: 
-  modifierId: rain_barrel
-  displayName: Rain Barrel
-  description: Halves the severity of Drought and Heatwave.
-  price: 25
-  resistDisasterIds:
-  - drought
-  - heatwave
-  resistAmount: 0.5
+  modifierId: diamond_hoe
+  displayName: Diamond Hoe
+  description: Every harvest has a 20% chance to give one more crop.
+  price: 50
+  resistDisasterIds: []
+  resistAmount: 0
+  resistAllDisasters: 0
+  disasterChanceCut: 0
   growthMult: 1
   bonusMaxHp: 0
+  bonusInventorySlots: 0
+  harmfulEventChanceMult: 1
+  extraCropChance: 0.2

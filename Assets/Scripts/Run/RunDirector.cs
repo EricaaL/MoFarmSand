@@ -77,7 +77,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     public bool IsRoguelike => runMode == RunMode.Roguelike;
     public bool IsBeta => betaMode;
     public bool IsDayRunning => dayRunning;
-    /// <summary>The merchant is at his booth every day. Merchant days additionally stock charms (see DayPlanner).</summary>
+    /// <summary>The merchant is at his booth every day. Merchant days additionally stock trinkets (see DayPlanner).</summary>
     public bool MerchantOpen => dayRunning && plan != null;
     public GameDatabase Db => db;
     public SaveFile File => RunSession.Current;
@@ -626,6 +626,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
             if (Meta != null) Meta.farmlands = Mathf.Max(Meta.farmlands, BetaFarmlands);
         }
 
+        inventory.SetCapacity(PlayerInventory.BaseSlots + DayPlanner.BonusSlots(run, db));   // Small Pouch
         inventory.Restore(run.inventory, run.activeSlot, db.items);
         health.Restore(run.hp, run.maxHp);
         wallet.Set(run.coins);
@@ -637,6 +638,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         conditions.Growth.Set("day", plan.growthMultiplier);
         conditions.Configure(plan.date, plan.weather, plan.dayLengthSeconds);
         conditions.Bonus = new HarvestBonus(db, run, SeededRng.Derive(run.runSeed, plan.nodeId, RngStreams.HarvestBonus));
+        ApplyCropCharms();
 
         DisasterData data = plan.disaster.IsNone || db.disasters == null ? null : db.disasters.Get(plan.disaster.disasterId);
         disaster.Begin(plan.disaster, run.runSeed, plan.nodeId);
@@ -650,6 +652,9 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
             bossHunger.Configure(plan.encounter);
             // Bosses grow stronger every year: more feeding needed, faster, eventually harder-hitting.
             bossHunger.ApplyScaling(BossScaling.ForYear(run.YearNumber(Meta), db.difficulty));
+            // Starts somewhere random on the farm, in front of the dog and clear of scenery.
+            CaterpillarBoss caterpillar = bossRoot != null ? bossRoot.GetComponentInChildren<CaterpillarBoss>(true) : null;
+            if (caterpillar != null && health != null) caterpillar.SpawnAround(health.transform);
         }
 
         dayRunning = true;
@@ -775,9 +780,12 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
 
     // ---------------------------------------------------------------- bank
 
+    /// <summary>Extra coins that may be banked each season (Doggy Bank).</summary>
+    public int DepositLimitBonus => Run != null ? Charms.DepositLimitBonus(Run, db) : 0;
+
     public DepositResult Deposit(int amount)
     {
-        DepositResult r = BankLogic.Deposit(Run, Meta, amount, db.bank);
+        DepositResult r = BankLogic.Deposit(Run, Meta, amount, db.bank, DepositLimitBonus);
         if (r.spent > 0) { wallet.Set(Run.coins); RunSession.Commit(); CoinsMoved?.Invoke(); }
         return r;
     }
@@ -821,12 +829,33 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     /// <summary>Coins moved outside the shop: a bank deposit or withdrawal, or an event reward.</summary>
     public static event System.Action CoinsMoved;
 
+    /// <summary>The seeds a Blind Box offer gives right now. Seeded by the day and the box's remaining stock, so reloading can't re-roll them.</summary>
+    private List<SeedData> BlindBoxSeeds(ShopOffer offer, RunModifierData box) =>
+        Charms.RollSeeds(db, Run, box.randomSeedsOnBuy, SeededRng.Derive(Run.runSeed, plan.nodeId * 16 + offer.stock, RngStreams.BlindBox));
+
+    /// <summary>Hands the crops-grow-stronger charms (Puppy Charm, Puppy Ring) to the farm's conditions. Call when the day starts and after buying a charm.</summary>
+    private void ApplyCropCharms()
+    {
+        if (conditions == null || Run == null) return;
+        conditions.AttackStrength = Charms.CropStrength(Run, db, CropType.Projectile);
+        conditions.SupportStrength = Charms.CropStrength(Run, db, CropType.Support);
+    }
+
+    /// <summary>True if buying this offer would not fit in the hotbar (a seed, or a Blind Box's seeds).</summary>
+    public bool OfferNoRoom(ShopOffer offer)
+    {
+        if (offer.kind == OfferKind.Seed) return db.items.TryGet(offer.id, out ItemData seedItem) && !inventory.CanFit(seedItem);
+        if (db.modifiers.TryGet(offer.id, out RunModifierData box) && box.randomSeedsOnBuy > 0)
+            return !inventory.CanFitAll(BlindBoxSeeds(offer, box));
+        return false;
+    }
+
     public bool Buy(int offerIndex)
     {
         if (plan == null || offerIndex < 0 || offerIndex >= plan.offers.Count) return false;
         ShopOffer offer = plan.offers[offerIndex];
         int price = OfferPrice(offer);
-        bool noRoom = offer.kind == OfferKind.Seed && db.items.TryGet(offer.id, out ItemData seedItem) && !inventory.CanFit(seedItem);
+        bool noRoom = OfferNoRoom(offer);
         if (offer.stock <= 0 || wallet.Coins < price || noRoom)
         {
             BuyRefused?.Invoke();
@@ -840,7 +869,14 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         else
         {
             if (!db.modifiers.TryGet(offer.id, out RunModifierData mod)) return false;
-            Run.modifierIds.Add(mod.Id);
+            if (mod.randomSeedsOnBuy > 0)
+            {
+                // A Blind Box is used up on the spot: its seeds go straight into the hotbar and it is never owned.
+                foreach (SeedData seed in BlindBoxSeeds(offer, mod)) inventory.AddItem(seed, 1);
+            }
+            else Run.modifierIds.Add(mod.Id);
+            ApplyCropCharms();
+            if (mod.bonusInventorySlots != 0) inventory.SetCapacity(PlayerInventory.BaseSlots + DayPlanner.BonusSlots(Run, db));
             if (mod.bonusMaxHp != 0) health.Restore(health.Hp + Mathf.Max(0, mod.bonusMaxHp), health.MaxHp + mod.bonusMaxHp);
         }
 
@@ -855,7 +891,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     {
         PriceTable.PriceRow row = db.prices.RowForCrop(crop.Id);
         float shock = (disaster != null ? disaster.SellPrice.Product : 1f) * MarketMultiplier;
-        return EconomyModel.SellPrice(row, plan.date.season, Run.market.GetDemand(crop.Id), shock);
+        return EconomyModel.SellPrice(row, plan.date.season, Run.market.GetDemand(crop.Id), shock) + Charms.SellBonus(Run, db);   // Shiny Rock
     }
 
     /// <summary>Sells up to <paramref name="count"/> crops one at a time so each sale lowers the next price.</summary>

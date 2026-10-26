@@ -18,7 +18,7 @@ MonoBehaviour:
   color: {r: 0.95, g: 0.75, b: 0.25, a: 1}
   icon: {fileID: 2800000, guid: 5ab48981118191046884012ff6a0ec02, type: 3}
   legendLabel: Merchant Day
-  description: Sell crops, buy seeds and charms.
+  description: Sell crops, buy seeds and trinkets.
   farmingAllowed: 1
   encounter: {fileID: 0}
   startsAtNight: 0

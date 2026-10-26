@@ -15,6 +15,7 @@ MonoBehaviour:
   eventId: scarecrow_hex
   title: The Scarecrow's Hex
   body: The old scarecrow turns its sack head toward you. "Feed me, or wear my curse."
+  harmful: 1
   options:
   - label: Accept the hex
     coinCost: 0

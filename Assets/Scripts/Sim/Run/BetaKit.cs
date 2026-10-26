@@ -36,7 +36,7 @@ public static class BetaKit
         foreach (PriceTable.PriceRow row in db.prices.rows)
         {
             if (row.seed == null || !row.StockedIn(season)) continue;
-            if (FilledSlots(run.inventory) >= InventoryOps.Slots - FreeSlots) break;
+            if (FilledSlots(run.inventory) >= InventoryOps.BaseSlots - FreeSlots) break;
             InventoryOps.Add(run.inventory, row.seed.Id, SeedCount);
         }
     }

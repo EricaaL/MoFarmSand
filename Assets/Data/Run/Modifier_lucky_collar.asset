@@ -15,8 +15,21 @@ MonoBehaviour:
   modifierId: lucky_collar
   displayName: Lucky Collar
   description: +1 max HP for the rest of the run.
-  price: 40
+  price: 30
   resistDisasterIds: []
   resistAmount: 0
+  resistAllDisasters: 0
+  disasterChanceCut: 0
   growthMult: 1
   bonusMaxHp: 1
+  bonusInventorySlots: 0
+  harmfulEventChanceMult: 1
+  extraCropChance: 0
+  harvestSeedChance: 0
+  depositLimitBonus: 0
+  sellBonusCoins: 0
+  supportCropBoost: 0
+  attackCropBoost: 0
+  randomSeedsOnBuy: 0
+  shopStock: 1
+  shopItem: 1

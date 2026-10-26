@@ -11,6 +11,10 @@ public class FarmConditions : MonoBehaviour
     private int cachedVersion = -1;
 
     public ModifierStack Growth { get; } = new ModifierStack();
+    /// <summary>Strength factor on attack (thrown and shooter) crops planted now: 1.2 = 20% stronger (Puppy Ring).</summary>
+    public float AttackStrength { get; set; } = 1f;
+    /// <summary>Strength factor on support crops planted now (Puppy Charm).</summary>
+    public float SupportStrength { get; set; } = 1f;
     public CalendarDate Date { get; private set; }
     public DayWeather Weather { get; private set; }
     /// <summary>Seconds of daylight today (0 = no clock), for the off-season growth ceiling.</summary>
@@ -32,6 +36,18 @@ public class FarmConditions : MonoBehaviour
         return true;
     }
 
+    /// <summary>Seam event for the HUD: a harvest gave one more of the crop.</summary>
+    public event Action<CropData> OnBonusCrop;
+
+    /// <summary>Rolls for one more of the harvested crop (Diamond Hoe) and adds it if it hits and there's room. Returns whether one was granted.</summary>
+    public bool TryGrantExtraCrop(PlayerInventory inventory, CropData crop, float quality)
+    {
+        if (Bonus == null || inventory == null || crop == null || !Bonus.RollExtraCrop()) return false;
+        if (!inventory.AddItem(crop, 1, quality)) return false;
+        OnBonusCrop?.Invoke(crop);
+        return true;
+    }
+
     public void Configure(CalendarDate date, DayWeather weather, float dayLengthSeconds = 0f)
     {
         Date = date;
@@ -44,7 +60,8 @@ public class FarmConditions : MonoBehaviour
     public float QualityFor(CropData crop)
     {
         if (crop == null || Date.season == null) return 1f;
-        return ClimateModel.Quality(crop, Date, Weather, climate);
+        float strength = crop.type == CropType.Support ? SupportStrength : AttackStrength;
+        return ClimateModel.Quality(crop, Date, Weather, climate) * strength;
     }
 
     public float GrowthRateFor(CropData crop)

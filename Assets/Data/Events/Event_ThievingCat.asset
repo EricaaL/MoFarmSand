@@ -16,6 +16,7 @@ MonoBehaviour:
   title: The Thieving Cat
   body: A sleek black cat slinks off your porch with a sack of your things in its
     jaws.
+  harmful: 1
   options:
   - label: Tussle with the cat for your crops
     coinCost: 0

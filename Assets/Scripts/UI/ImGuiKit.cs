@@ -510,7 +510,7 @@ public static class ImGuiKit
             if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && tab.Contains(Event.current.mousePosition))
             {
                 result = i;
-                if (i != selected) ConsumeTabClick(); else Event.current.Use();
+                if (i != selected) ConsumeTabClick(); else ConsumeSmallClick();
             }
             x += w + gap;
         }

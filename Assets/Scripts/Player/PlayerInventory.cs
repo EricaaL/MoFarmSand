@@ -6,7 +6,10 @@ using UnityEngine.Serialization;
 
 public class PlayerInventory : MonoBehaviour
 {
-    public const int SlotCount = 8;
+    /// <summary>Hotbar slots every run has.</summary>
+    public const int BaseSlots = 8;
+    /// <summary>Slots that exist in storage: the base ones plus the one the Small Pouch adds. Only <see cref="Capacity"/> of them are usable.</summary>
+    public const int SlotCount = BaseSlots + 1;
 
     [Serializable]
     public struct Slot
@@ -26,6 +29,8 @@ public class PlayerInventory : MonoBehaviour
     /// <summary>Seam event for audio: the player picked a different hotbar slot (keys, scroll wheel or click).</summary>
     public static event Action SlotSelected;
     public int ActiveIndex { get; private set; }
+    /// <summary>How many hotbar slots are usable right now (<see cref="BaseSlots"/> plus charms like the Small Pouch).</summary>
+    public int Capacity { get; private set; } = BaseSlots;
     public ItemData ActiveItem => slots[ActiveIndex].item;
     /// <summary>Active slot as a crop (throwable / edible), or null if it holds a seed or nothing.</summary>
     public CropData ActiveCrop => slots[ActiveIndex].item as CropData;
@@ -37,7 +42,7 @@ public class PlayerInventory : MonoBehaviour
 
     private static readonly Key[] HotKeys =
     {
-        Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6, Key.Digit7, Key.Digit8
+        Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6, Key.Digit7, Key.Digit8, Key.Digit9
     };
 
     private void Awake()
@@ -55,7 +60,7 @@ public class PlayerInventory : MonoBehaviour
         {
             for (int i = 0; i < HotKeys.Length; i++)
             {
-                if (kb[HotKeys[i]].wasPressedThisFrame) { SetActive(i); break; }
+                if (i < Capacity && kb[HotKeys[i]].wasPressedThisFrame) { SetActive(i); break; }
             }
         }
 
@@ -63,16 +68,24 @@ public class PlayerInventory : MonoBehaviour
         if (mouse != null)
         {
             float scroll = mouse.scroll.ReadValue().y;
-            if (scroll > 0.1f) SetActive((ActiveIndex + SlotCount - 1) % SlotCount);
-            else if (scroll < -0.1f) SetActive((ActiveIndex + 1) % SlotCount);
+            if (scroll > 0.1f) SetActive((ActiveIndex + Capacity - 1) % Capacity);
+            else if (scroll < -0.1f) SetActive((ActiveIndex + 1) % Capacity);
         }
     }
 
     public Slot GetSlot(int i) => slots[i];
 
+    /// <summary>Sets how many slots are usable (clamped to the base count..storage size). Items already in a slot stay put.</summary>
+    public void SetCapacity(int capacity)
+    {
+        Capacity = Mathf.Clamp(capacity, BaseSlots, SlotCount);
+        if (ActiveIndex >= Capacity) ActiveIndex = 0;
+        OnChanged?.Invoke();
+    }
+
     public void SetActive(int index)
     {
-        index = Mathf.Clamp(index, 0, SlotCount - 1);
+        index = Mathf.Clamp(index, 0, Capacity - 1);
         if (index == ActiveIndex) return;
         ActiveIndex = index;
         OnChanged?.Invoke();
@@ -87,8 +100,24 @@ public class PlayerInventory : MonoBehaviour
     {
         if (item == null) return false;
         for (int i = 0; i < SlotCount; i++)
-            if (slots[i].item == item || IsFree(i)) return true;
+            if (slots[i].item == item || (i < Capacity && IsFree(i))) return true;
         return false;
+    }
+
+    /// <summary>True if every item in <paramref name="items"/> could be added: each either stacks onto an existing slot or gets a free one of its own.</summary>
+    public bool CanFitAll(IEnumerable<ItemData> items)
+    {
+        int free = 0;
+        for (int i = 0; i < Capacity; i++) if (IsFree(i)) free++;
+        HashSet<ItemData> needSlot = new HashSet<ItemData>();
+        foreach (ItemData item in items)
+        {
+            if (item == null) continue;
+            bool stacks = false;
+            for (int i = 0; i < SlotCount && !stacks; i++) stacks = slots[i].item == item;
+            if (!stacks) needSlot.Add(item);
+        }
+        return needSlot.Count <= free;
     }
 
     /// <summary>Adds items. Stacking blends quality by count, so a few weak crops weaken a strong stack proportionally.</summary>
@@ -102,7 +131,7 @@ public class PlayerInventory : MonoBehaviour
         }
         if (target < 0)
         {
-            for (int i = 0; i < SlotCount; i++)
+            for (int i = 0; i < Capacity; i++)
             {
                 if (IsFree(i)) { target = i; break; }
             }
@@ -204,7 +233,7 @@ public class PlayerInventory : MonoBehaviour
                 slots[i].quality = saved[i].EffectiveQuality;
             }
         }
-        ActiveIndex = Mathf.Clamp(activeIndex, 0, SlotCount - 1);
+        ActiveIndex = Mathf.Clamp(activeIndex, 0, Capacity - 1);
         OnChanged?.Invoke();
     }
 

@@ -13,4 +13,5 @@ public static class RngStreams
     public const int HarvestBonus = 10;
     public const int EventLoss = 11;
     public const int MarketEvent = 12;
+    public const int BlindBox = 13;
 }

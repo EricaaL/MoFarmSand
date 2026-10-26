@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// The IMGUI hotbar: eight slots, a hover tooltip describing the item, and drag-to-use.
+/// The IMGUI hotbar: eight slots (nine with the Small Pouch), a hover tooltip describing the item, and drag-to-use.
 /// Drag an item off the bar and drop it in the world: a seed plants on the plot there, an attack crop is thrown
 /// at that spot, a defense crop is eaten. Dropping it back on the bar (or right-click) cancels.
 /// </summary>
@@ -51,7 +51,7 @@ public class HotbarView
         Event e = Event.current;
         float s = ImGuiKit.Scale;
         float size = 88f * s, gap = 12f * s;
-        int count = PlayerInventory.SlotCount;
+        int count = inventory.Capacity;
         float total = count * size + (count - 1) * gap;
         float left = screenW * 0.5f - total * 0.5f;
         float top = screenH - size - 22f * s;

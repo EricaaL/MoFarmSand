@@ -89,6 +89,53 @@ public class CaterpillarBoss : MonoBehaviour
         playerController = p.GetComponent<PlayerController>();
     }
 
+    /// <summary>
+    /// Puts the boss at a random open spot in front of <paramref name="target"/> (never behind it), between
+    /// <paramref name="minDistance"/> and <paramref name="maxDistance"/> away, on the NavMesh and clear of colliders.
+    /// Keeps its current place if no such spot is found.
+    /// </summary>
+    public void SpawnAround(Transform target, float minDistance = 15f, float maxDistance = 25f)
+    {
+        if (target == null) return;
+        Vector3 forward = Vector3.ProjectOnPlane(target.forward, Vector3.up).normalized;
+        if (forward.sqrMagnitude < 0.5f) forward = Vector3.forward;
+        float clearRadius = bodyRadius * 2f;
+        for (int attempt = 0; attempt < 60; attempt++)
+        {
+            // Anywhere in the half-circle ahead (a quarter-turn either side leaves out the dog's back).
+            float angle = Random.Range(-85f, 85f);
+            float dist = Mathf.Sqrt(Random.Range(minDistance * minDistance, maxDistance * maxDistance));   // even over the area
+            Vector3 spot = target.position + Quaternion.Euler(0f, angle, 0f) * forward * dist;
+            if (!NavMesh.SamplePosition(spot, out NavMeshHit hit, 1.5f, NavMesh.AllAreas)) continue;
+            Vector3 flat = hit.position - target.position;
+            flat.y = 0f;
+            if (flat.magnitude > maxDistance || flat.magnitude < minDistance || Vector3.Dot(flat.normalized, forward) <= 0f) continue;
+            Vector3 at = new Vector3(hit.position.x, transform.position.y, hit.position.z);
+            if (Blocked(at, clearRadius, target)) continue;
+
+            transform.position = at;
+            transform.rotation = Quaternion.LookRotation(-flat.normalized);   // faces the farmer
+            stuck.Reset();
+            cornerCount = cornerIndex = 0;
+            return;
+        }
+    }
+
+    /// <summary>True if solid scenery overlaps the head's body at <paramref name="at"/>; floor, farm plots and loose props don't count.</summary>
+    private bool Blocked(Vector3 at, float radius, Transform ignore)
+    {
+        Collider[] found = Physics.OverlapSphere(at + Vector3.up * (castLift + bodyRadius), radius, ~0, QueryTriggerInteraction.Ignore);
+        foreach (Collider c in found)
+        {
+            if (c.transform.IsChildOf(transform) || c.transform.IsChildOf(ignore)) continue;
+            if (c.attachedRigidbody != null && !c.attachedRigidbody.isKinematic) continue;
+            Vector3 closest = c is MeshCollider mc && !mc.convex ? c.bounds.center : c.ClosestPoint(at + Vector3.up * (castLift + bodyRadius));
+            if (closest.y < at.y + castLift) continue;   // only reaches up from the ground: floor and low plots
+            return true;
+        }
+        return false;
+    }
+
     public void Wake()
     {
         awake = true;

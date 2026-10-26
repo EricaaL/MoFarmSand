@@ -10,14 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5af8f227832a8924a8360e053d76286b, type: 3}
-  m_Name: Modifier_frost_blanket
+  m_Name: Modifier_buddog_statue
   m_EditorClassIdentifier: 
-  modifierId: frost_blanket
-  displayName: Frost Blanket
-  description: Cuts Frost severity by 60%.
-  price: 25
-  resistDisasterIds:
-  - frost
-  resistAmount: 0.6
+  modifierId: buddog_statue
+  displayName: Buddog Statue
+  description: Disasters are 5% less likely and half as severe.
+  price: 35
+  resistDisasterIds: []
+  resistAmount: 0.5
+  resistAllDisasters: 1
+  disasterChanceCut: 0.05
   growthMult: 1
   bonusMaxHp: 0
+  bonusInventorySlots: 0
+  harmfulEventChanceMult: 1
+  extraCropChance: 0

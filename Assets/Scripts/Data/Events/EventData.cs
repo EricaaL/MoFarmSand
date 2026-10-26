@@ -21,6 +21,8 @@ public class EventData : ScriptableObject, IHasId
     public string title;
     [TextArea] public string body;
     public List<EventOption> options = new List<EventOption>();
+    [Tooltip("A bad event: every choice costs something. Trinkets like the Scarecrow make these come up less often.")]
+    public bool harmful;
     [Tooltip("Seasons this event can appear in. Empty = any season.")]
     public List<SeasonData> seasons = new List<SeasonData>();
 

@@ -14,9 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   modifierId: fertilizer
   displayName: Fertilizer
-  description: All crops grow 20% faster.
-  price: 35
+  description: All crops grow 50% faster.
+  price: 30
   resistDisasterIds: []
   resistAmount: 0
-  growthMult: 1.2
+  resistAllDisasters: 0
+  disasterChanceCut: 0
+  growthMult: 1.5
   bonusMaxHp: 0
+  bonusInventorySlots: 0
+  harmfulEventChanceMult: 1
+  extraCropChance: 0

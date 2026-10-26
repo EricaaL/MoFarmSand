@@ -9,7 +9,7 @@ public static class DisasterRoller
     /// same stream stay stable. <paramref name="resistFor"/> returns 0..1 severity reduction for a disaster id.
     /// </summary>
     public static DisasterRoll Roll(CalendarDate date, float nodeChance, DisasterRegistry registry,
-        SeededRng rng, Func<string, float> resistFor = null)
+        SeededRng rng, Func<string, float> resistFor = null, float chanceCut = 0f)
     {
         float chanceRoll = rng.NextFloat();
         float pickRoll = rng.NextFloat();
@@ -18,7 +18,7 @@ public static class DisasterRoller
         if (registry == null || date.season == null) return DisasterRoll.None;
 
         bool forced = nodeChance >= 1f;
-        float chance = Mathf.Clamp01(nodeChance + (nodeChance > 0f ? date.season.disasterChanceBonus : 0f));
+        float chance = Mathf.Clamp01(nodeChance + (nodeChance > 0f ? date.season.disasterChanceBonus : 0f) - Mathf.Max(0f, chanceCut));
         if (!forced && chanceRoll >= chance) return DisasterRoll.None;
 
         List<DisasterData> candidates = new List<DisasterData>();

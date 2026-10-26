@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 public enum OfferKind { Seed, Modifier }
@@ -51,7 +52,7 @@ public static class ShopGenerator
                 if (m != null && m.shopItem && !run.modifierIds.Contains(m.Id)) pool.Add(m);
             rng.Shuffle(pool);
             for (int i = 0; i < pool.Count && i < charmSlots; i++)
-                offers.Add(new ShopOffer { kind = OfferKind.Modifier, id = pool[i].Id, price = pool[i].price, stock = 1 });
+                offers.Add(new ShopOffer { kind = OfferKind.Modifier, id = pool[i].Id, price = pool[i].price, stock = Math.Max(1, pool[i].shopStock) });
         }
         return offers;
     }

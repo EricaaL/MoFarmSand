@@ -184,7 +184,11 @@ public class FarmTile : MonoBehaviour, IInteractable, IFarmPlot
         {
             if (inv != null && !inv.AddItem(crop, crop.harvestYield, quality)) return;
             // Permanent unlocks (e.g. Lucky Sprout) can add a small chance of a free random seed on top of the crop.
-            if (conditions != null) conditions.TryGrantBonusSeed(inv);
+            if (conditions != null)
+            {
+                conditions.TryGrantBonusSeed(inv);
+                conditions.TryGrantExtraCrop(inv, crop, quality);   // Diamond Hoe
+            }
             SetState(TileState.Empty);
             popTime = 0f;
             Harvested?.Invoke(this, crop);

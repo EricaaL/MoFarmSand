@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// A season-long market swing (inflation, deflation): from the day it strikes until the season ends, every price the merchant
-/// sets (seeds and charms he sells, crops he buys) is multiplied. Rolled per day by <see cref="MarketEventRoller"/>.
+/// sets (seeds and trinkets he sells, crops he buys) is multiplied. Rolled per day by <see cref="MarketEventRoller"/>.
 /// </summary>
 [CreateAssetMenu(fileName = "MarketEvent_New", menuName = "MoFarmSand/Economy/Market Event")]
 public class MarketEventData : ScriptableObject

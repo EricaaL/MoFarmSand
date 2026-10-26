@@ -14,10 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   modifierId: scarecrow
   displayName: Scarecrow
-  description: Halves the severity of Locust Swarms.
-  price: 25
-  resistDisasterIds:
-  - locust
-  resistAmount: 0.5
+  description: Bad mystery events come up half as often.
+  price: 20
+  resistDisasterIds: []
+  resistAmount: 0
+  resistAllDisasters: 0
+  disasterChanceCut: 0
   growthMult: 1
   bonusMaxHp: 0
+  bonusInventorySlots: 0
+  harmfulEventChanceMult: 0.5
+  extraCropChance: 0

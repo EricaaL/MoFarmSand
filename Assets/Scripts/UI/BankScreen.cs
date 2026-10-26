@@ -34,10 +34,11 @@ public class BankScreen : IRunScreen
         ImGuiKit.IconValue(new Rect(x + w * 0.5f, panel.y + 164 * s, w * 0.5f, 48 * s), theme != null ? theme.piggyBank : null, $"{meta.vaultCoins} / {VaultLogic.Cap(meta, cfg)}", 34f, ImGuiKit.Accent, TextAnchor.MiddleRight, true);
 
         // How much you may still deposit this season (a hard limit, never your whole purse by default).
-        int seasonLeft = cfg.maxDepositPerSeason > 0 ? Mathf.Max(0, cfg.maxDepositPerSeason - run.depositedThisSeason) : int.MaxValue;
+        int depositLimit = BankLogic.DepositLimit(cfg, director.DepositLimitBonus);
+        int seasonLeft = depositLimit > 0 ? Mathf.Max(0, depositLimit - run.depositedThisSeason) : int.MaxValue;
         int limit = Mathf.Min(run.coins, seasonLeft);
-        string allowance = cfg.maxDepositPerSeason > 0
-            ? $"Deposit limit this season: {seasonLeft} of {cfg.maxDepositPerSeason} left   ·   Fee: {cfg.depositFeePercent:0}%"
+        string allowance = depositLimit > 0
+            ? $"Deposit limit this season: {seasonLeft} of {depositLimit} left   ·   Fee: {cfg.depositFeePercent:0}%"
             : $"Fee: {cfg.depositFeePercent:0}%";
         ImGuiKit.Label(new Rect(x, panel.y + 218 * s, w, 28 * s), allowance, 18f, seasonLeft == 0 ? new Color(0.7f, 0.15f, 0.1f) : ImGuiKit.Muted);
 

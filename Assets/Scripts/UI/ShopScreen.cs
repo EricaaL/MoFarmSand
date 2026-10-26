@@ -151,7 +151,7 @@ public class ShopScreen : IRunScreen
         {
             director.Db.modifiers.TryGet(o.id, out RunModifierData m);
             ImGuiKit.Rounded(art, new Color(0.78f, 0.62f, 0.36f));
-            ImGuiKit.Label(art, "Charm", 28f, ImGuiKit.Text, TextAnchor.UpperCenter, true);
+            ImGuiKit.Label(art, "Trinket", 28f, ImGuiKit.Text, TextAnchor.UpperCenter, true);
             ImGuiKit.Label(new Rect(art.x + 10f * s, art.y + 50f * s, art.width - 20f * s, art.height - 60f * s), m != null ? m.displayName : o.id, 34f, ImGuiKit.Text, TextAnchor.MiddleCenter, true);
         }
         PricePill(card, soldOut ? "Sold out" : director.OfferPrice(o).ToString(), !soldOut, s, theme);
@@ -208,10 +208,9 @@ public class ShopScreen : IRunScreen
             {
                 ShopOffer o = plan.offers[selectedOffer];
                 int p = director.OfferPrice(o);
-                bool inventoryFull = false;
+                bool inventoryFull = director.OfferNoRoom(o);
                 if (o.kind == OfferKind.Seed && director.Db.items.TryGet(o.id, out ItemData item))
                 {
-                    inventoryFull = !director.Inventory.CanFit(item);
                     ItemInfo info = ItemInfoBuilder.Build(item, director.BuildItemContext(item));
                     title = info.title; desc = info.summary; grow = info.growTime; fullness = info.fullness; shield = info.shield; growIcon = ItemDetailCard.GrowIcon(info, theme);
                     PriceTable.PriceRow row = director.Db.prices.RowForSeed(o.id);

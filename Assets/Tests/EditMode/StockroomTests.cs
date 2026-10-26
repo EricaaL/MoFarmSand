@@ -218,7 +218,7 @@ public class StockroomTests
         StockroomConfig cfg = Config();
         Assert.That(StockroomLogic.DescribeLevel(1, cfg), Does.Contain("+2 of every seed"));
         Assert.That(StockroomLogic.DescribeLevel(2, cfg), Does.Contain("+1 kind of seed"));
-        Assert.That(StockroomLogic.DescribeLevel(3, cfg), Does.Contain("+1 charm"));
-        Assert.That(StockroomLogic.DescribeLevel(1, cfg), Does.Not.Contain("charm"));
+        Assert.That(StockroomLogic.DescribeLevel(3, cfg), Does.Contain("+1 trinket"));
+        Assert.That(StockroomLogic.DescribeLevel(1, cfg), Does.Not.Contain("trinket"));
     }
 }

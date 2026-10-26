@@ -50,7 +50,7 @@ public static class DayPlanner
 
         float nodeChance = plan.node != null ? plan.node.disasterChance : 0f;
         plan.disaster = DisasterRoller.Roll(plan.date, nodeChance, db.disasters,
-            SeededRng.Derive(run.runSeed, nodeId, RngStreams.Disaster), id => ResistFor(run, db, id));
+            SeededRng.Derive(run.runSeed, nodeId, RngStreams.Disaster), id => ResistFor(run, db, id), DisasterChanceCut(run, db));
 
         if (plan.node != null)
         {
@@ -62,7 +62,7 @@ public static class DayPlanner
             SeededRng rewardRng = SeededRng.Derive(run.runSeed, nodeId, RngStreams.Rewards);
             plan.coinReward = rewardRng.NextInt(plan.node.coinReward.x, plan.node.coinReward.y + 1);
 
-            // The merchant is always at his booth, but only restocks on Merchant days (fresh seeds plus passive charms).
+            // The merchant is always at his booth, but only restocks on Merchant days (fresh seeds plus passive trinkets).
             // On other days you can only buy what is left on the shelf from last time.
             plan.restocked = plan.node.merchantActive;
             plan.offers = plan.restocked
@@ -77,7 +77,7 @@ public static class DayPlanner
                 if (pool.Count > 0)
                 {
                     SeededRng evRng = SeededRng.Derive(run.runSeed, nodeId, RngStreams.Event);
-                    plan.evt = pool[evRng.NextInt(0, pool.Count)];
+                    plan.evt = PickEvent(pool, HarmfulEventMult(run, db), evRng);
                 }
             }
         }
@@ -96,9 +96,52 @@ public static class DayPlanner
         foreach (string id in run.modifierIds)
         {
             if (!db.modifiers.TryGet(id, out RunModifierData m)) continue;
-            if (m.resistDisasterIds.Contains(disasterId)) keep *= 1f - Mathf.Clamp01(m.resistAmount);
+            if (m.resistAllDisasters || m.resistDisasterIds.Contains(disasterId)) keep *= 1f - Mathf.Clamp01(m.resistAmount);
         }
         return 1f - keep;
+    }
+
+    /// <summary>Percentage points (0..1) taken off the chance of a disaster by owned modifiers.</summary>
+    public static float DisasterChanceCut(RunState run, GameDatabase db)
+    {
+        if (db.modifiers == null) return 0f;
+        float cut = 0f;
+        foreach (string id in run.modifierIds)
+            if (db.modifiers.TryGet(id, out RunModifierData m)) cut += Mathf.Max(0f, m.disasterChanceCut);
+        return Mathf.Clamp01(cut);
+    }
+
+    /// <summary>Extra hotbar slots from owned modifiers.</summary>
+    public static int BonusSlots(RunState run, GameDatabase db)
+    {
+        if (db.modifiers == null) return 0;
+        int slots = 0;
+        foreach (string id in run.modifierIds)
+            if (db.modifiers.TryGet(id, out RunModifierData m)) slots += Mathf.Max(0, m.bonusInventorySlots);
+        return slots;
+    }
+
+    /// <summary>1 = harmful events come up as often as any other; owned modifiers scale it down.</summary>
+    public static float HarmfulEventMult(RunState run, GameDatabase db)
+    {
+        if (db.modifiers == null) return 1f;
+        float mult = 1f;
+        foreach (string id in run.modifierIds)
+            if (db.modifiers.TryGet(id, out RunModifierData m)) mult *= Mathf.Clamp01(m.harmfulEventChanceMult);
+        return mult;
+    }
+
+    /// <summary>
+    /// Uniform pick from <paramref name="pool"/>. A harmful event that comes up is kept only with chance <paramref name="harmfulMult"/>,
+    /// otherwise the pick is redrawn from the other events. With a multiplier of 1 it draws exactly once, as before.
+    /// </summary>
+    public static EventData PickEvent(List<EventData> pool, float harmfulMult, SeededRng rng)
+    {
+        EventData pick = pool[rng.NextInt(0, pool.Count)];
+        if (!pick.harmful || harmfulMult >= 1f) return pick;
+        if (rng.NextFloat() < harmfulMult) return pick;
+        List<EventData> safe = pool.FindAll(e => !e.harmful);
+        return safe.Count > 0 ? safe[rng.NextInt(0, safe.Count)] : pick;
     }
 
     public static float ModifierGrowth(RunState run, GameDatabase db)

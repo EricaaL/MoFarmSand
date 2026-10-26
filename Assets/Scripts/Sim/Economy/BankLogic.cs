@@ -47,13 +47,17 @@ public static class BankLogic
         return new WithdrawResult { taken = taken, received = received };
     }
 
-    public static DepositResult Deposit(RunState run, MetaProgress meta, int amount, BankConfig cfg)
+    /// <summary>The most that may be banked each season: the config's limit plus charms like the Doggy Bank. 0 = no limit.</summary>
+    public static int DepositLimit(BankConfig cfg, int bonus = 0) => cfg.maxDepositPerSeason > 0 ? cfg.maxDepositPerSeason + Mathf.Max(0, bonus) : 0;
+
+    public static DepositResult Deposit(RunState run, MetaProgress meta, int amount, BankConfig cfg, int limitBonus = 0)
     {
         DepositResult none = default;
         if (amount <= 0 || run.coins <= 0) return none;
 
         int usable = Mathf.Min(amount, run.coins);
-        if (cfg.maxDepositPerSeason > 0) usable = Mathf.Min(usable, Mathf.Max(0, cfg.maxDepositPerSeason - run.depositedThisSeason));
+        int limit = DepositLimit(cfg, limitBonus);
+        if (limit > 0) usable = Mathf.Min(usable, Mathf.Max(0, limit - run.depositedThisSeason));
         if (usable <= 0) return none;
 
         float keep = 1f - Mathf.Clamp01(cfg.depositFeePercent / 100f);

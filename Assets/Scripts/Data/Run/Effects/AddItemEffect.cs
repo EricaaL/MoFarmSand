@@ -9,7 +9,7 @@ public class AddItemEffect : RunEffect
 
     public override void Apply(RunState run, GameDatabase db)
     {
-        if (item != null) InventoryOps.Add(run.inventory, item.Id, count);
+        if (item != null) InventoryOps.Add(run.inventory, item.Id, count, InventoryOps.BaseSlots + DayPlanner.BonusSlots(run, db));
     }
 
     public override string Describe() => item != null ? $"+{count} {item.DisplayName}" : "nothing";

@@ -20,6 +20,12 @@ public class RunHud
         toastUntil = Time.unscaledTime + 3f;
     }
 
+    private void OnBonusCrop(CropData crop)
+    {
+        toast = $"Diamond Hoe!  +1 {crop.DisplayName}";
+        toastUntil = Time.unscaledTime + 3f;
+    }
+
     /// <summary>Shows a short fading note in the middle of the screen.</summary>
     public void Say(string text)
     {
@@ -42,6 +48,7 @@ public class RunHud
         if (!bonusSubscribed && director.Conditions != null)
         {
             director.Conditions.OnBonusSeed += OnBonusSeed;
+            director.Conditions.OnBonusCrop += OnBonusCrop;
             bonusSubscribed = true;
         }
 
@@ -65,7 +72,7 @@ public class RunHud
         Rect coinRow = new Rect(26 * s, 96 * s, 260 * s, 52 * s);
         ImGuiKit.IconValue(coinRow, theme != null ? theme.coin : null, director.Wallet.Coins.ToString(), 38f, ImGuiKit.HudText, TextAnchor.MiddleLeft, true);
 
-        float cardBottom = DrawDateCard(plan, s, w, theme);
+        DrawDateCard(plan, s, w, theme);
 
         // Beta scene only: pick any seed. Registered with the hotbar's pointer check so clicking it doesn't also throw a crop.
         if (director.IsBeta)
@@ -74,8 +81,6 @@ public class RunHud
             HotbarView.BlockRect = seedsButton;
             if (ImGuiKit.Button(seedsButton, "Get Seeds", true, 20f)) director.ShowBetaSeeds();
         }
-
-        float notesY = cardBottom + 14 * s;
 
         // Disaster banner.
         if (bannerDisaster != null && Time.unscaledTime < bannerUntil)
@@ -87,17 +92,9 @@ public class RunHud
             ImGuiKit.HudLabel(b, $"{bannerDisaster.displayName.ToUpper()}  —  {bannerDisaster.bannerText}", 28f, TextAnchor.MiddleCenter, true, a);
             ImGuiKit.HudLabel(new Rect(b.x, b.yMax - 26 * s, b.width, 22 * s), $"Severity {Mathf.RoundToInt(bannerSeverity * 100f)}%", 16f, TextAnchor.MiddleCenter, false, a);
         }
-        else if (director.Disaster != null && director.Disaster.Current != null && IsDisasterDay(plan))
-        {
-            // Disaster days keep their note out here; any other day's disaster is named inside the date card, in red.
-            ImGuiKit.HudLabel(new Rect(w - 360 * s, notesY, 344 * s, 26 * s), $"! {director.Disaster.Current.displayName}", 20f, TextAnchor.MiddleRight, true);
-        }
     }
 
     private static readonly Color DisasterRed = new Color(0.78f, 0.12f, 0.1f);
-
-    /// <summary>The day's own type is Disaster (its hazard is certain), as opposed to a disaster that happened to strike another day.</summary>
-    private static bool IsDisasterDay(DayPlan plan) => plan.node != null && plan.node.nodeTypeId == "disaster";
 
     private const float CardScale = 0.78f;   // the date card is drawn at this fraction of its mockup size
 
@@ -153,7 +150,7 @@ public class RunHud
         ImGuiKit.Italic(new Rect(iconBox.xMax + 10 * c, inner.y + 238 * c, cw - 96 * c, 54 * c), $"{plan.weather.temperature:0}°C", 34f * CardScale, ImGuiKit.Muted, TextAnchor.MiddleLeft, false);
 
         // A disaster that struck an ordinary day: named in red just above the day's type.
-        if (!IsDisasterDay(plan) && director.Disaster != null && director.Disaster.Current != null)
+        if (director.Disaster != null && director.Disaster.Current != null)
             ImGuiKit.Label(new Rect(inner.x, inner.yMax - 110 * c, inner.width, 40 * c), director.Disaster.Current.displayName, 32f * CardScale, DisasterRed, TextAnchor.MiddleCenter, true, false);
 
         string nodeName = plan.node != null ? plan.node.displayName : "";

@@ -366,12 +366,17 @@ public static class RunSystemsBuilder
         EventRegistry events = Registry<EventRegistry, EventData>($"{Data}/Registries/EventRegistry.asset", evPup, evWell, evCrow, evTreasure,
             evCat, evGoose, evMoles, evHex, evBunnies, evFair, evLemonade, evMaze, evFeast, evLeaves, evPond, evBadger);
 
-        RunModifierData scarecrow = Modifier("scarecrow", "Scarecrow", "Halves the severity of Locust Swarms.", 25, new[] { "locust" }, 0.5f, 1f, 0);
-        RunModifierData rainBarrel = Modifier("rain_barrel", "Rain Barrel", "Halves the severity of Drought and Heatwave.", 25, new[] { "drought", "heatwave" }, 0.5f, 1f, 0);
-        RunModifierData stormCellar = Modifier("storm_cellar", "Storm Cellar", "Halves the severity of Storms.", 25, new[] { "storm" }, 0.5f, 1f, 0);
-        RunModifierData frostBlanket = Modifier("frost_blanket", "Frost Blanket", "Cuts Frost severity by 60%.", 25, new[] { "frost" }, 0.6f, 1f, 0);
-        RunModifierData fertilizer = Modifier("fertilizer", "Fertilizer", "All crops grow 20% faster.", 35, new string[0], 0f, 1.2f, 0);
-        RunModifierData luckyCollar = Modifier("lucky_collar", "Lucky Collar", "+1 max HP for the rest of the run.", 40, new string[0], 0f, 1f, 1);
+        RunModifierData scarecrow = Modifier("scarecrow", "Scarecrow", "Bad mystery events come up half as often.", 20, new string[0], 0f, 1f, 0, m => m.harmfulEventChanceMult = 0.5f);
+        RunModifierData smallPouch = Modifier("small_pouch", "Small Pouch", "Adds one more inventory slot.", 20, new string[0], 0f, 1f, 0, m => m.bonusInventorySlots = 1);
+        RunModifierData diamondHoe = Modifier("diamond_hoe", "Diamond Hoe", "Every harvest has a 20% chance to give one more crop.", 50, new string[0], 0f, 1f, 0, m => m.extraCropChance = 0.2f);
+        RunModifierData buddogStatue = Modifier("buddog_statue", "Buddog Statue", "Disasters are 5% less likely and half as severe.", 35, new string[0], 0.5f, 1f, 0, m => { m.resistAllDisasters = true; m.disasterChanceCut = 0.05f; });
+        RunModifierData fertilizer = Modifier("fertilizer", "Fertilizer", "All crops grow 50% faster.", 30, new string[0], 0f, 1.5f, 0);
+        RunModifierData luckyCollar = Modifier("lucky_collar", "Lucky Collar", "+1 max HP for the rest of the run.", 30, new string[0], 0f, 1f, 1);
+        RunModifierData doggyBank = Modifier("doggy_bank", "Doggy Bank", "You can bank 10 more coins at every season end.", 35, new string[0], 0f, 1f, 0, m => m.depositLimitBonus = 10);
+        RunModifierData blindBox = Modifier("blind_box", "Blind Box", "Gives you 3 random seeds. The merchant sells up to 3 of them.", 10, new string[0], 0f, 1f, 0, m => { m.randomSeedsOnBuy = 3; m.shopStock = 3; });
+        RunModifierData shinyRock = Modifier("shiny_rock", "Shiny Rock", "Every crop you sell fetches 2 coins more.", 40, new string[0], 0f, 1f, 0, m => m.sellBonusCoins = 2);
+        RunModifierData puppyCharm = Modifier("puppy_charm", "Puppy Charm", "Protective crops you grow are 20% more effective.", 20, new string[0], 0f, 1f, 0, m => m.supportCropBoost = 0.2f);
+        RunModifierData puppyRing = Modifier("puppy_ring", "Puppy Ring", "Attack crops you grow are 20% more effective.", 20, new string[0], 0f, 1f, 0, m => m.attackCropBoost = 0.2f);
         // Only comes from the Lucky Sprout permanent unlock, never from the merchant.
         RunModifierData seedFinder = A<RunModifierData>($"{Data}/Run/Modifier_seed_finder.asset", m =>
         {
@@ -380,7 +385,8 @@ public static class RunSystemsBuilder
             m.price = 0; m.harvestSeedChance = 0.12f; m.shopItem = false;
         });
         RunModifierRegistry modifiers = Registry<RunModifierRegistry, RunModifierData>($"{Data}/Registries/RunModifierRegistry.asset",
-            scarecrow, rainBarrel, stormCellar, frostBlanket, fertilizer, luckyCollar, seedFinder);
+            scarecrow, smallPouch, diamondHoe, buddogStatue, fertilizer, luckyCollar, seedFinder,
+            doggyBank, blindBox, shinyRock, puppyCharm, puppyRing);
         AddModifierEffect giveSeedFinder = A<AddModifierEffect>($"{Data}/Run/Effects/Effect_AddModifier_SeedFinder.asset", e => e.modifier = seedFinder);
 
         UnlockData uHardy = Unlock("hardy_paws", "Hardy Paws", "Start every run with +1 max HP.", 40, maxHp1);
@@ -394,7 +400,7 @@ public static class RunSystemsBuilder
         // ---- Node types ----
         NodeTypeData nFarm = NodeType("farm", "Farm Day", "F", new Color(0.45f, 0.8f, 0.4f), "A quiet day of planting and harvesting.", n =>
         { n.disasterChance = 0.15f; n.coinReward = new Vector2Int(5, 10); });
-        NodeTypeData nMerchant = NodeType("merchant", "Merchant", "M", new Color(0.95f, 0.75f, 0.25f), "Sell crops, buy seeds and charms.", n =>
+        NodeTypeData nMerchant = NodeType("merchant", "Merchant", "M", new Color(0.95f, 0.75f, 0.25f), "Sell crops, buy seeds and trinkets.", n =>
         { n.merchantActive = true; n.disasterChance = 0.1f; n.coinReward = new Vector2Int(0, 0); });
         NodeTypeData nDisaster = NodeType("disaster", "Disaster", "!", new Color(0.9f, 0.3f, 0.3f), "Hazardous weather is certain. Big reward if you survive.", n =>
         { n.disasterChance = 1f; n.coinReward = new Vector2Int(15, 25); n.minLayer = 2; });
@@ -823,12 +829,13 @@ public static class RunSystemsBuilder
         });
     }
 
-    private static RunModifierData Modifier(string id, string name, string desc, int price, string[] resist, float resistAmount, float growth, int hp)
+    private static RunModifierData Modifier(string id, string name, string desc, int price, string[] resist, float resistAmount, float growth, int hp, System.Action<RunModifierData> extra = null)
     {
         return A<RunModifierData>($"{Data}/Run/Modifier_{id}.asset", m =>
         {
             m.modifierId = id; m.displayName = name; m.description = desc; m.price = price;
             m.resistDisasterIds = new List<string>(resist); m.resistAmount = resistAmount; m.growthMult = growth; m.bonusMaxHp = hp;
+            extra?.Invoke(m);
         });
     }
 
@@ -949,6 +956,7 @@ public static class RunSystemsBuilder
         A<EventData>($"{Data}/Events/{file}.asset", e =>
         {
             e.eventId = id; e.title = title; e.body = body;
+            e.harmful = id == "thieving_cat" || id == "toll_goose" || id == "seed_moles" || id == "scarecrow_hex";   // every choice costs something
             e.options = new List<EventData.EventOption>(options);
             e.seasons = seasons != null ? new List<SeasonData>(seasons) : new List<SeasonData>();
         });

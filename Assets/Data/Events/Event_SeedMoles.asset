@@ -15,6 +15,7 @@ MonoBehaviour:
   eventId: seed_moles
   title: Moles in the Seed Shed
   body: Fresh mounds dot the floor of the seed shed. Something down there is chewing.
+  harmful: 1
   options:
   - label: Dig them out by paw
     coinCost: 0

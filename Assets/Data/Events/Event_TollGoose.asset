@@ -16,6 +16,7 @@ MonoBehaviour:
   title: The Toll Goose
   body: A huge goose plants itself in your farm gate and hisses. It clearly wants
     payment.
+  harmful: 1
   options:
   - label: Pay the goose's toll
     coinCost: 0

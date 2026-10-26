@@ -61,7 +61,7 @@ public static class UpgradeList
             if (e.type == EventType.MouseDown && e.button == 0 && row.Contains(e.mousePosition))
             {
                 selectedName = entries[i].name;
-                e.Use();
+                ImGuiKit.ConsumeSmallClick();
             }
             ImGuiKit.Rounded(row, isSel ? ImGuiKit.Orange : ImGuiKit.PanelLight);
             ImGuiKit.Label(new Rect(row.x + 20f * s, row.y, row.width - 40f * s, row.height), ImGuiKit.Fit(entries[i].name, 30f, row.width - 160f * s, 1), 30f, ImGuiKit.Text, TextAnchor.MiddleLeft);
