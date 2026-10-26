@@ -390,12 +390,14 @@ public static class RunSystemsBuilder
         AddModifierEffect giveSeedFinder = A<AddModifierEffect>($"{Data}/Run/Effects/Effect_AddModifier_SeedFinder.asset", e => e.modifier = seedFinder);
 
         UnlockData uHardy = Unlock("hardy_paws", "Hardy Paws", "Start every run with +1 max HP.", 40, maxHp1);
-        UnlockData uPouch = Unlock("seed_pouch", "Seed Pouch", "Start every run with 3 extra Turnip seeds.", 30, turnipSeeds3);
+        UnlockData uPouch = Unlock("seed_pouch", "Seed Pouch", "Start every year with 3 random seeds.", 30, A<AddRandomSeedsEffect>($"{Data}/Run/Effects/Effect_RandomSeeds3.asset", e => e.count = 3));
         UnlockData uEgg = Unlock("nest_egg", "Nest Egg", "Start every run with 25 extra coins.", 50, nestEgg);
-        UnlockData uPumpkin = Unlock("pumpkin_patch", "Pumpkin Patch", "Start every run with 3 Pumpkin seeds.", 60, pumpkinSeeds3);
+        UnlockData uPumpkin = Unlock("pumpkin_patch", "Pumpkin Patch", "Start every run with 3 Pumpkin seeds.", 50, pumpkinSeeds3);
+        UnlockData uWolf = Unlock("wolf_necklace", "Wolf Necklace", "Blocks one fatal hit each year.", 50, A<FatalSaveEffect>($"{Data}/Run/Effects/Effect_FatalSave1.asset", e => e.saves = 1));
+        UnlockData uGranary = Unlock("granary", "Granary", "Keep 3 random crops and 3 random seeds from last year.", 70, A<KeepLeftoversEffect>($"{Data}/Run/Effects/Effect_KeepLeftovers.asset", e => { e.crops = 3; e.seeds = 3; }));
         UnlockData uSprout = Unlock("lucky_sprout", "Lucky Sprout", "Each harvest has a 12% chance to also drop a random seed.", 45, giveSeedFinder);
         UnlockRegistry unlocks = Registry<UnlockRegistry, UnlockData>($"{Data}/Registries/UnlockRegistry.asset",
-            uHardy, uPouch, uEgg, uPumpkin, uSprout);
+            uHardy, uPouch, uEgg, uPumpkin, uSprout, uWolf, uGranary);
 
         // ---- Node types ----
         NodeTypeData nFarm = NodeType("farm", "Farm Day", "F", new Color(0.45f, 0.8f, 0.4f), "A quiet day of planting and harvesting.", n =>

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   unlockId: seed_pouch
   displayName: Seed Pouch
-  description: Start every run with 3 extra Turnip seeds.
+  description: Start every year with 3 random seeds.
   cost: 30
   onRunStart:
-  - {fileID: 11400000, guid: 9d5be3961095ba842b23c1555ceb8f05, type: 2}
+  - {fileID: 11400000, guid: 3f6ba553701b44a792774d35914e9425, type: 2}

@@ -15,6 +15,6 @@ MonoBehaviour:
   unlockId: pumpkin_patch
   displayName: Pumpkin Patch
   description: Start every run with 3 Pumpkin seeds.
-  cost: 60
+  cost: 50
   onRunStart:
   - {fileID: 11400000, guid: 52308f71008b2a14a9fd0f12f5eb46d7, type: 2}

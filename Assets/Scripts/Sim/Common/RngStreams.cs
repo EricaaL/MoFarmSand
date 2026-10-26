@@ -14,4 +14,5 @@ public static class RngStreams
     public const int EventLoss = 11;
     public const int MarketEvent = 12;
     public const int BlindBox = 13;
+    public const int Granary = 14;
 }

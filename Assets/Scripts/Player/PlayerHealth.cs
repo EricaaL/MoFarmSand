@@ -22,6 +22,10 @@ public class PlayerHealth : MonoBehaviour
 
     public event Action OnChanged;
     public event Action OnDied;
+    /// <summary>A hit that would have killed the dog was blocked by the Wolf Necklace.</summary>
+    public event Action OnFatalSaved;
+    /// <summary>Fatal hits still blocked this year.</summary>
+    public int FatalSaves { get; private set; }
     /// <summary>Raised by <see cref="Restore"/> just before <see cref="OnChanged"/>: hearts were set from the run, not lost to a hit.</summary>
     public event Action OnRestored;
 
@@ -39,6 +43,18 @@ public class PlayerHealth : MonoBehaviour
         if (ShieldCharges == 0) return;
         ShieldCharges = 0;
         OnChanged?.Invoke();
+    }
+
+    public void SetFatalSaves(int saves) { FatalSaves = Mathf.Max(0, saves); }
+
+    /// <summary>Spends a fatal save if one is left and <paramref name="amount"/> would kill: the hit is blocked and hearts stay as they are.</summary>
+    private bool SaveFromDeath(int amount)
+    {
+        if (FatalSaves <= 0 || Hp - amount > 0) return false;
+        FatalSaves--;
+        OnFatalSaved?.Invoke();
+        OnChanged?.Invoke();
+        return true;
     }
 
     /// <summary>Sets max and current HP from saved run state; clears the shield.</summary>
@@ -64,6 +80,7 @@ public class PlayerHealth : MonoBehaviour
     public void LoseHeart(int amount = 1)
     {
         if (Hp <= 0 || amount <= 0) return;
+        if (SaveFromDeath(amount)) return;
         Hp = Mathf.Max(0, Hp - amount);
         OnChanged?.Invoke();
         if (Hp == 0) OnDied?.Invoke();
@@ -79,6 +96,7 @@ public class PlayerHealth : MonoBehaviour
             OnChanged?.Invoke();
             return;
         }
+        if (SaveFromDeath(amount)) return;
         Hp = Mathf.Max(0, Hp - amount);
         OnChanged?.Invoke();
         if (Hp == 0) OnDied?.Invoke();

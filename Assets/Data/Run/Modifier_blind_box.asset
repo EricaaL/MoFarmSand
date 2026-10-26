@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   modifierId: blind_box
   displayName: Blind Box
-  description: Gives you 3 random seeds. The merchant sells up to 3 of them.
+  description: 'Gives you 3 random seeds. '
   price: 10
   resistDisasterIds: []
   resistAmount: 0

@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13e13505d82d586459cee17357914642, type: 3}
+  m_Name: Unlock_granary
+  m_EditorClassIdentifier: 
+  unlockId: granary
+  displayName: Granary
+  description: Keep 3 random crops and 3 random seeds from last year.
+  cost: 70
+  onRunStart:
+  - {fileID: 11400000, guid: 1ee585f37e734b598f02a8d82f1a63e0, type: 2}

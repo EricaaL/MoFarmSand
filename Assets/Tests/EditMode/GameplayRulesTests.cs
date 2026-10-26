@@ -60,6 +60,29 @@ public class GameplayRulesTests
     }
 
     [Test]
+    public void PlayerHealth_WolfNecklaceBlocksOneFatalHitOnly()
+    {
+        go = new GameObject("p");
+        PlayerHealth h = go.AddComponent<PlayerHealth>();
+        CallAwake(h);
+        h.SetFatalSaves(1);
+        int saved = 0, died = 0;
+        h.OnFatalSaved += () => saved++;
+        h.OnDied += () => died++;
+
+        h.TakeDamage(1);
+        Assert.AreEqual(2, h.Hp, "a hit that is not fatal goes through and keeps the necklace");
+        Assert.AreEqual(1, h.FatalSaves);
+        h.TakeDamage(2);
+        Assert.AreEqual(2, h.Hp, "the fatal hit is blocked");
+        Assert.AreEqual(0, h.FatalSaves);
+        Assert.AreEqual(1, saved);
+        h.TakeDamage(2);
+        Assert.AreEqual(0, h.Hp, "the next fatal hit kills");
+        Assert.AreEqual(1, died);
+    }
+
+    [Test]
     public void PlayerHealth_ShieldWearsOffAfterItsDuration()
     {
         go = new GameObject("p");

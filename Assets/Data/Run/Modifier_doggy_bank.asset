@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   modifierId: doggy_bank
   displayName: Doggy Bank
-  description: You can bank 10 more coins at every season end.
+  description: You can bank 10 more coins at the end of every season.
   price: 35
   resistDisasterIds: []
   resistAmount: 0

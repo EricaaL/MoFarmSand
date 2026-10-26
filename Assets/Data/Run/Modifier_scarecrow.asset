@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   modifierId: scarecrow
   displayName: Scarecrow
-  description: Bad mystery events come up half as often.
+  description: Mystery events will less likely to give you a bad outcome
   price: 20
   resistDisasterIds: []
   resistAmount: 0
@@ -25,3 +25,11 @@ MonoBehaviour:
   bonusInventorySlots: 0
   harmfulEventChanceMult: 0.5
   extraCropChance: 0
+  harvestSeedChance: 0
+  depositLimitBonus: 0
+  sellBonusCoins: 0
+  supportCropBoost: 0
+  attackCropBoost: 0
+  randomSeedsOnBuy: 0
+  shopStock: 1
+  shopItem: 1

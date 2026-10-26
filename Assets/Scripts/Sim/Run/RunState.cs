@@ -44,6 +44,8 @@ public class RunState
     public int coins;
     public int hp = 3;
     public int maxHp = 3;
+    /// <summary>Fatal hits still blocked this year (Wolf Necklace). Granted at year start, spent in play.</summary>
+    public int fatalSaves;
     public List<SlotSave> inventory = new List<SlotSave>();
     public int activeSlot;
 

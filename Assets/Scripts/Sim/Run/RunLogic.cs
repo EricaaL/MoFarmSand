@@ -6,7 +6,7 @@ public enum DayOutcome { Survived, BossDefeated, Failed }
 /// <summary>Pure run transitions. No scene access; everything is driven by RunDirector.</summary>
 public static class RunLogic
 {
-    public static RunState NewRun(int seed, GameDatabase db, MetaProgress meta)
+    public static RunState NewRun(int seed, GameDatabase db, MetaProgress meta, RunState previous = null)
     {
         RunState run = new RunState { runSeed = seed };
         run.map = MapGenerator.GenerateValidated(db.mapGen, db.Calendar.MapLayerCount, db.nodeTypes, seed, db.Calendar.SeasonBossDays());
@@ -31,7 +31,7 @@ public static class RunLogic
         foreach (string id in meta.unlockedIds)
         {
             if (db.unlocks == null || !db.unlocks.TryGet(id, out UnlockData unlock)) continue;
-            foreach (RunEffect e in unlock.onRunStart) if (e != null) e.Apply(run, db);
+            foreach (RunEffect e in unlock.onRunStart) if (e != null) e.ApplyAtYearStart(run, db, previous);
         }
 
         meta.runsStarted++;

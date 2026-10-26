@@ -16,7 +16,7 @@ public static class InventoryOps
     }
 
     /// <summary>Stacks onto an existing slot or fills the first empty one among the first <paramref name="capacity"/>. Returns false if full.</summary>
-    public static bool Add(List<SlotSave> slots, string itemId, int count, int capacity = PlayerInventory.BaseSlots)
+    public static bool Add(List<SlotSave> slots, string itemId, int count, int capacity = PlayerInventory.BaseSlots, float quality = 1f)
     {
         if (string.IsNullOrEmpty(itemId) || count <= 0) return false;
         EnsureSize(slots);
@@ -24,12 +24,12 @@ public static class InventoryOps
             if (slots[i].count > 0 && slots[i].itemId == itemId)
             {
                 // Rewards are normal strength: blend them into the existing stack.
-                float blended = (slots[i].EffectiveQuality * slots[i].count + count) / (slots[i].count + count);
+                float blended = (slots[i].EffectiveQuality * slots[i].count + quality * count) / (slots[i].count + count);
                 slots[i] = new SlotSave(itemId, slots[i].count + count, blended);
                 return true;
             }
         for (int i = 0; i < slots.Count && i < capacity; i++)
-            if (slots[i].count <= 0) { slots[i] = new SlotSave(itemId, count); return true; }
+            if (slots[i].count <= 0) { slots[i] = new SlotSave(itemId, count, quality); return true; }
         return false;
     }
 

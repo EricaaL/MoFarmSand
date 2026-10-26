@@ -496,7 +496,8 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     {
         if (!RunSession.HasActiveSlot) return;
         int seed = Environment.TickCount ^ (int)(DateTime.UtcNow.Ticks & 0x7FFFFFFF);
-        File.run = RunLogic.NewRun(seed, db, File.meta);
+        RunState lastYear = File.hasRun ? File.run : null;   // the Granary keeps some of what it left in the hotbar
+        File.run = RunLogic.NewRun(seed, db, File.meta, lastYear);
         if (betaMode)
         {
             File.run.freeRoam = true;
@@ -629,6 +630,9 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         inventory.SetCapacity(PlayerInventory.BaseSlots + DayPlanner.BonusSlots(run, db));   // Small Pouch
         inventory.Restore(run.inventory, run.activeSlot, db.items);
         health.Restore(run.hp, run.maxHp);
+        health.SetFatalSaves(run.fatalSaves);
+        health.OnFatalSaved -= HandleFatalSaved;
+        health.OnFatalSaved += HandleFatalSaved;
         wallet.Set(run.coins);
 
         BuildFarmlands(run.farmlands);
@@ -761,6 +765,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         run.activeSlot = inventory.ActiveIndex;
         run.hp = health.Hp;
         run.maxHp = health.MaxHp;
+        run.fatalSaves = health.FatalSaves;
         run.coins = wallet.Coins;
         // Whatever is left on the shelf carries to the next day. Merchant days refill it, so this is the refilled shelf minus purchases.
         run.shopStock = ShopStock.FromOffers(plan.offers);
@@ -832,6 +837,8 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     /// <summary>The seeds a Blind Box offer gives right now. Seeded by the day and the box's remaining stock, so reloading can't re-roll them.</summary>
     private List<SeedData> BlindBoxSeeds(ShopOffer offer, RunModifierData box) =>
         Charms.RollSeeds(db, Run, box.randomSeedsOnBuy, SeededRng.Derive(Run.runSeed, plan.nodeId * 16 + offer.stock, RngStreams.BlindBox));
+
+    private void HandleFatalSaved() { hud?.Say("The Wolf Necklace saved you!"); }
 
     /// <summary>Hands the crops-grow-stronger charms (Puppy Charm, Puppy Ring) to the farm's conditions. Call when the day starts and after buying a charm.</summary>
     private void ApplyCropCharms()

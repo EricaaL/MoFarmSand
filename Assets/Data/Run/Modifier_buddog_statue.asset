@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   modifierId: buddog_statue
   displayName: Buddog Statue
-  description: Disasters are 5% less likely and half as severe.
+  description: Disasters are less likely to strike and half as severe.
   price: 35
   resistDisasterIds: []
   resistAmount: 0.5
@@ -25,3 +25,11 @@ MonoBehaviour:
   bonusInventorySlots: 0
   harmfulEventChanceMult: 1
   extraCropChance: 0
+  harvestSeedChance: 0
+  depositLimitBonus: 0
+  sellBonusCoins: 0
+  supportCropBoost: 0
+  attackCropBoost: 0
+  randomSeedsOnBuy: 0
+  shopStock: 1
+  shopItem: 1

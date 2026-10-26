@@ -391,6 +391,56 @@ public class RunLogicTests
     }
 
     [Test]
+    public void WolfNecklaceAndSeedPouchApplyAtYearStart()
+    {
+        MetaProgress meta = new MetaProgress();
+        meta.unlockedIds.Add("wolf_necklace");
+        meta.unlockedIds.Add("seed_pouch");
+        RunState plain = RunLogic.NewRun(8, db, new MetaProgress());
+        RunState run = RunLogic.NewRun(8, db, meta);
+        Assert.AreEqual(0, plain.fatalSaves);
+        Assert.AreEqual(1, run.fatalSaves);
+        Assert.AreEqual(3, TotalSeeds(run) - TotalSeeds(plain), "the pouch adds three random seeds");
+        Assert.AreEqual(50, db.unlocks.Get("wolf_necklace").cost);
+        Assert.AreEqual(50, db.unlocks.Get("pumpkin_patch").cost);
+    }
+
+    private static int TotalSeeds(RunState run)
+    {
+        int total = 0;
+        foreach (SlotSave s in run.inventory) total += s.count;
+        return total;
+    }
+
+    [Test]
+    public void GranaryKeepsThreeCropsAndThreeSeedsFromLastYear()
+    {
+        CropData crop = null; SeedData seed = null;
+        foreach (ItemData item in db.items.All)
+        {
+            if (crop == null && item is CropData c) crop = c;
+            if (seed == null && item is SeedData sd) seed = sd;
+        }
+        RunState last = RunLogic.NewRun(2, db, new MetaProgress());
+        InventoryOps.EnsureSize(last.inventory);
+        for (int i = 0; i < last.inventory.Count; i++) last.inventory[i] = new SlotSave(string.Empty, 0);
+        last.inventory[0] = new SlotSave(crop.Id, 9, 1.1f);
+        last.inventory[1] = new SlotSave(seed.Id, 9);
+
+        MetaProgress meta = new MetaProgress();
+        meta.unlockedIds.Add("granary");
+        RunState with = RunLogic.NewRun(5, db, meta, last);
+        RunState without = RunLogic.NewRun(5, db, new MetaProgress(), last);
+
+        Assert.AreEqual(3, InventoryOps.CountOf(with.inventory, crop.Id));
+        Assert.AreEqual(InventoryOps.CountOf(without.inventory, seed.Id) + 3, InventoryOps.CountOf(with.inventory, seed.Id));
+        Assert.AreEqual(0, InventoryOps.CountOf(without.inventory, crop.Id));
+        Assert.AreEqual(70, db.unlocks.Get("granary").cost);
+        CollectionAssert.AreEqual(KeepLeftoversEffect.Pick(last.inventory, db, 3, 3, new SeededRng(1)), KeepLeftoversEffect.Pick(last.inventory, db, 3, 3, new SeededRng(1)));
+        Assert.AreEqual(0, InventoryOps.CountOf(RunLogic.NewRun(5, db, meta, null).inventory, crop.Id), "the very first year has no last year to keep from");
+    }
+
+    [Test]
     public void ShopCharmsAddUp()
     {
         RunState run = RunLogic.NewRun(3, db, new MetaProgress());
