@@ -94,7 +94,7 @@ public static class ClimateModel
     public static float Quality(CropData crop, CalendarDate date, DayWeather weather, ClimateConfig cfg)
     {
         float min = cfg != null ? cfg.minQuality : 0.25f;
-        float max = cfg != null ? cfg.maxQuality : 1.25f;
+        float max = cfg != null ? cfg.maxQuality : 1f;
         return Mathf.Clamp(GrowthMultiplier(crop, date, weather, cfg), min, max);
     }
 

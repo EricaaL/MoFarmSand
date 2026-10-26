@@ -21,15 +21,18 @@ public static class UpgradeList
     private static string selectedName;
 
     /// <summary>Draws the whole orange panel (frame, list, details) filling <paramref name="panel"/>.</summary>
-    public static void Draw(RunDirector director, Rect panel)
+    /// <param name="preview">When set, shows that slot's upgrades read-only (nothing can be bought) instead of the open slot's.</param>
+    public static void Draw(RunDirector director, Rect panel, MetaProgress preview = null)
     {
         float s = ImGuiKit.Scale;
-        MetaProgress meta = director.Meta;
+        MetaProgress meta = preview ?? director.Meta;
 
         ImGuiKit.TabRight(panel, "Upgrades");
         ImGuiKit.Rounded(panel, ImGuiKit.Orange);
 
-        List<Entry> entries = Build(director);
+        List<Entry> entries = Build(director, meta);
+        if (preview != null)
+            for (int i = 0; i < entries.Count; i++) { Entry p = entries[i]; p.canBuy = false; entries[i] = p; }
         if (entries.Count == 0)
         {
             ImGuiKit.Label(panel, "Nothing to buy yet.", 30f, ImGuiKit.Text, TextAnchor.MiddleCenter);
@@ -80,7 +83,9 @@ public static class UpgradeList
         // Right: the selected upgrade.
         Entry cur = entries[sel];
         float rx = list.xMax + 42f * s, rw = panel.xMax - rx - 44f * s;
-        ImGuiKit.Heading(new Rect(rx, panel.y + 34f * s, rw - 170f * s, 100f * s), cur.name, 66f, ImGuiKit.Text);
+        float titleW = rw - 170f * s, titleSize = 66f;
+        while (titleSize > 36f && ImGuiKit.TextWidth(cur.name, titleSize, ImGuiKit.Face.Display) > titleW) titleSize -= 2f;
+        ImGuiKit.Heading(new Rect(rx, panel.y + 34f * s, titleW, 100f * s), cur.name, titleSize, ImGuiKit.Text);
         UiTheme theme = ImGuiKit.Theme;
         ImGuiKit.IconValue(new Rect(panel.xMax - 220f * s, panel.y + 40f * s, 190f * s, 64f * s), theme != null ? theme.piggyBank : null, meta.vaultCoins.ToString(), 34f, ImGuiKit.Text, TextAnchor.MiddleRight);
         ImGuiKit.DashedRule(rx, panel.y + 142f * s, rw);
@@ -93,12 +98,11 @@ public static class UpgradeList
         if (ImGuiKit.Pill(new Rect(panel.xMax - 44f * s - 390f * s, panel.yMax - 22f * s - 90f * s, 390f * s, 76f * s), buyLabel, ImGuiKit.PillKind.Cream, cur.canBuy, 34f))
             cur.buy?.Invoke();
         if (!cur.done && !cur.canBuy)
-            ImGuiKit.Italic(new Rect(rx, panel.yMax - 22f * s - 90f * s, rw - 420f * s, 76f * s), "Not enough in the vault", 26f, ImGuiKit.Muted, TextAnchor.MiddleLeft);
+            ImGuiKit.Italic(new Rect(rx, panel.yMax - 22f * s - 90f * s, rw - 420f * s, 76f * s), preview != null ? "Upgrades are bought at the end of a year" : "Not enough in the vault", 26f, ImGuiKit.Muted, TextAnchor.MiddleLeft);
     }
 
-    private static List<Entry> Build(RunDirector director)
+    private static List<Entry> Build(RunDirector director, MetaProgress meta)
     {
-        MetaProgress meta = director.Meta;
         GameDatabase db = director.Db;
         var list = new List<Entry>();
 
@@ -149,6 +153,21 @@ public static class UpgradeList
                 detail = $"The vault holds {VaultLogic.CapFor(level, cfg)} -> {VaultLogic.CapFor(level + 1, cfg)} coins (you have {meta.vaultCoins}). Each level costs more than the last.",
                 price = price, canBuy = meta.vaultCoins >= price,
                 buy = () => director.BuyVault(),
+            });
+        }
+
+        if (db.bank != null)
+        {
+            BankConfig cfg = db.bank;
+            int level = meta.depositLevel;
+            int price = VaultLogic.DepositPriceFor(level, cfg);
+            list.Add(new Entry
+            {
+                name = "Bigger Deposits",
+                tag = level > 0 ? $"lv {level}" : null,
+                detail = $"Bank more each season: {BankLogic.DepositLimit(cfg, VaultLogic.DepositBonus(level, cfg))} -> {BankLogic.DepositLimit(cfg, VaultLogic.DepositBonus(level + 1, cfg))} coins per season. Each level costs more than the last.",
+                price = price, canBuy = meta.vaultCoins >= price,
+                buy = () => director.BuyDepositUpgrade(),
             });
         }
 

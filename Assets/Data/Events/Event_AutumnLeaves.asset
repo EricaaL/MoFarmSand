@@ -25,7 +25,7 @@ MonoBehaviour:
   - label: Rake it up slowly
     coinCost: 0
     effects:
-    - {fileID: 11400000, guid: 52308f71008b2a14a9fd0f12f5eb46d7, type: 2}
+    - {fileID: 11400000, guid: 42373a6541d946e8958db1e25b5441a6, type: 2}
     hideEffects: 0
   seasons:
   - {fileID: 11400000, guid: e86be3641e5dfff48a2987ea6cb996ac, type: 2}

@@ -15,6 +15,19 @@ public class EventData : ScriptableObject, IHasId
         public List<RunEffect> effects;
         [Tooltip("Leave the effects' descriptions off the button, for labels that already say it (\"Take 10 coins\").")]
         public bool hideEffects;
+
+        /// <summary>Coins this option takes: the up-front cost plus any coin-losing effect (a toll, a plate at the feast). The player needs this many to pick it.</summary>
+        public int TotalCoinCost
+        {
+            get
+            {
+                int total = coinCost;
+                if (effects != null)
+                    foreach (RunEffect e in effects)
+                        if (e is AddCoinsEffect coins && coins.amount < 0) total -= coins.amount;
+                return total;
+            }
+        }
     }
 
     public string eventId;

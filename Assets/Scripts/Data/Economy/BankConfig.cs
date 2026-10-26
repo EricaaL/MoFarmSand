@@ -27,4 +27,12 @@ public class BankConfig : ScriptableObject
     [Tooltip("Each level owned multiplies the next price by this. Keep it below capGrowth so every level stays affordable.")]
     [Min(1f)] public float upgradePriceGrowth = 1.6f;
     [Min(1)] public int upgradeRoundTo = 5;
+
+    [Header("Bigger Deposits upgrade (repeatable, unlimited)")]
+    [Tooltip("Extra coins per season the bank accepts for each level.")]
+    [Min(1)] public int depositUpgradeStep = 10;
+    [Tooltip("Vault coins for the first Bigger Deposits level.")]
+    [Min(1)] public int depositUpgradeBasePrice = 50;
+    [Tooltip("Each level owned multiplies the next price by this.")]
+    [Min(1f)] public float depositUpgradePriceGrowth = 1.5f;
 }

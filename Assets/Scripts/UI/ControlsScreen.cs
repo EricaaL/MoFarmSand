@@ -7,12 +7,12 @@ public static class ControlsScreen
     {
         ("Moving", new[]
         {
-            ("W A S D", "Walk around"),
+            ("W A S D", "Run around"),
             ("Left Shift", "Walk"),
         }),
         ("Farming", new[]
         {
-            ("E", "Plant, harvest, talk to the merchant, ring the bell"),
+            ("E", "Interactions"),
             ("Left Click", "Harvest a ripe plot near you"),
         }),
         ("Items", new[]

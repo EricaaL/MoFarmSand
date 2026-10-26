@@ -37,7 +37,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     [Tooltip("Camera that circles the farm behind the title screens (MoFarmSand > Add Title Orbit).")]
     [SerializeField] private TitleOrbit titleOrbit;
 
-    private enum View { None, MainMenu, Options, Title, Map, Event, Bank, Shop, Summary, Items, Pause, Route, BetaSeeds }
+    private enum View { None, MainMenu, Options, Title, Map, Event, Bank, Shop, Summary, Items, Pause, Route, BetaSeeds, Upgrades }
 
     private View view;
     private IRunScreen screen;
@@ -55,6 +55,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     private BankScreen bankScreen;
     private ShopScreen shopScreen;
     private SummaryScreen summaryScreen;
+    private UpgradesScreen upgradesScreen;
     private ItemInfoScreen itemInfoScreen;
     private ItemInfoScreen itemListScreen;
     private BetaSeedsScreen betaSeedsScreen;
@@ -123,6 +124,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         bankScreen = new BankScreen(this);
         shopScreen = new ShopScreen(this);
         summaryScreen = new SummaryScreen(this);
+        upgradesScreen = new UpgradesScreen(this);
         itemInfoScreen = new ItemInfoScreen(this);
         itemListScreen = new ItemInfoScreen(this);
         betaSeedsScreen = new BetaSeedsScreen(this);
@@ -149,10 +151,11 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
             switch (view)
             {
                 case View.Items: CloseItems(); break;
+                case View.Upgrades: CloseUpgrades(); break;
                 case View.Shop: CloseShop(); break;   // back to the game; a second Esc opens the pause menu
                 case View.BetaSeeds: CloseBetaSeeds(); break;
                 case View.Options: CloseOptions(); break;
-                case View.Title: if (RunSession.HasActiveSlot) titleScreen.BackToSlots(); else ShowMainMenu(); break;   // upgrades -> slots -> main menu
+                case View.Title: if (titleScreen.ClosePreview()) { } else if (RunSession.HasActiveSlot) titleScreen.BackToSlots(); else ShowMainMenu(); break;   // slots -> main menu
                 case View.Route: CloseRoute(); break;
                 case View.Pause: ClosePause(); break;
                 case View.None: if (dayRunning) ShowPause(); break;
@@ -351,6 +354,8 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     }
     public void ShowMap() { dayRunning = false; ClearEventProp(); Show(View.Map, mapScreen); }
     public void ShowBank() { dayRunning = false; ClearEventProp(); Show(View.Bank, bankScreen); }
+    public void ShowUpgrades() { if (view != View.Map || !RunLogic.CanVisitUpgrades(Run, Meta)) return; Show(View.Upgrades, upgradesScreen); }
+    public void CloseUpgrades() { if (view == View.Upgrades) Show(View.Map, mapScreen); }
     public void ShowSummary() { dayRunning = false; ClearEventProp(); Show(View.Summary, summaryScreen); }
 
     public void ShowItems()
@@ -508,9 +513,16 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         Route();
     }
 
-    public bool BuyStockroom()
+    /// <summary>Upgrades bought from the map before the first node of a year reach that year's snapshot straight away.</summary>
+    private void SyncUpgrades()
+    {
+        if (RunLogic.CanVisitUpgrades(Run, Meta)) RunLogic.RefreshUpgrades(Run, Meta, db);
+    }
+
+public bool BuyStockroom()
     {
         if (!RunSession.HasActiveSlot || !StockroomLogic.TryBuy(Meta, db.stockroom)) return false;
+        SyncUpgrades();
         RunSession.Commit();
         return true;
     }
@@ -518,6 +530,15 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     public bool BuyVault()
     {
         if (!RunSession.HasActiveSlot || !VaultLogic.TryBuy(Meta, db.bank)) return false;
+        SyncUpgrades();
+        RunSession.Commit();
+        return true;
+    }
+
+    public bool BuyDepositUpgrade()
+    {
+        if (!RunSession.HasActiveSlot || !VaultLogic.TryBuyDeposit(Meta, db.bank)) return false;
+        SyncUpgrades();
         RunSession.Commit();
         return true;
     }
@@ -525,6 +546,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     public bool BuyFarmland()
     {
         if (!RunSession.HasActiveSlot || !FarmlandLogic.TryBuy(Meta, db.farmland)) return false;
+        SyncUpgrades();
         RunSession.Commit();
         return true;
     }
@@ -532,6 +554,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     public bool BuyUnlock(UnlockData unlock)
     {
         if (!RunSession.HasActiveSlot || !BankLogic.TryBuyUnlock(Meta, unlock)) return false;
+        SyncUpgrades();
         RunSession.Commit();
         return true;
     }
@@ -595,7 +618,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         if (plan == null || plan.evt == null || optionIndex < 0 || optionIndex >= plan.evt.options.Count) return;
         EventData.EventOption option = plan.evt.options[optionIndex];
         RunState run = Run;
-        if (run.coins < option.coinCost) return;
+        if (run.coins < option.TotalCoinCost) return;
 
         run.coins -= option.coinCost;
         int coinsBefore = run.coins;
@@ -778,6 +801,12 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
 
         yield return new WaitForSecondsRealtime(phase == GamePhase.Lost ? db.run.deathScreenSeconds : db.run.dayEndDelay);
         if (phase == GamePhase.Lost) DeathReveal.Arm();   // the next screen comes up blurred and sharpens
+        else
+        {
+            // Crops picked up during the wait still count.
+            run.inventory = inventory.Snapshot();
+            RunSession.Commit();
+        }
         ReloadScene();
     }
 
@@ -786,7 +815,7 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
     // ---------------------------------------------------------------- bank
 
     /// <summary>Extra coins that may be banked each season (Doggy Bank).</summary>
-    public int DepositLimitBonus => Run != null ? Charms.DepositLimitBonus(Run, db) : 0;
+    public int DepositLimitBonus => (Run != null ? Charms.DepositLimitBonus(Run, db) : 0) + VaultLogic.DepositBonus(Meta.depositLevel, db.bank);
 
     public DepositResult Deposit(int amount)
     {
@@ -901,17 +930,22 @@ public class RunDirector : MonoBehaviour, IDayOutcomeHandler
         return EconomyModel.SellPrice(row, plan.date.season, Run.market.GetDemand(crop.Id), shock) + Charms.SellBonus(Run, db);   // Shiny Rock
     }
 
-    /// <summary>Sells up to <paramref name="count"/> crops one at a time so each sale lowers the next price.</summary>
-    public int Sell(CropData crop, int count)
+    /// <summary>What the merchant pays for any seed: a flat coin, unaffected by season, demand or market events.</summary>
+    public const int SeedSellPrice = 1;
+
+    public int SellPriceOf(ItemData item) => item is CropData crop ? SellPriceOf(crop) : SeedSellPrice;
+
+    /// <summary>Sells up to <paramref name="count"/> items one at a time so each crop sale lowers the next price. Seeds pay a flat <see cref="SeedSellPrice"/>.</summary>
+    public int Sell(ItemData item, int count)
     {
         int earned = 0;
         for (int i = 0; i < count; i++)
         {
-            if (!inventory.TryRemove(crop, 1)) break;
-            int price = SellPriceOf(crop);
+            if (!inventory.TryRemove(item, 1)) break;
+            int price = SellPriceOf(item);
             wallet.Add(price);
             earned += price;
-            EconomyModel.ApplySale(Run.market, crop.Id, 1, db.economy);
+            if (item is CropData crop) EconomyModel.ApplySale(Run.market, crop.Id, 1, db.economy);
         }
         if (earned > 0) Sold?.Invoke();
         return earned;

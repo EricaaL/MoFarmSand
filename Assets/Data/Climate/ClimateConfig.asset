@@ -18,7 +18,7 @@ MonoBehaviour:
   seasonPenaltyExponent: 2
   offSeasonDayFraction: 0.92
   minQuality: 0.25
-  maxQuality: 1.25
+  maxQuality: 1
   fallbackKind: 0
   rules:
   - kind: 4

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Unlock_pumpkin_patch
   m_EditorClassIdentifier: 
   unlockId: pumpkin_patch
-  displayName: Pumpkin Patch
-  description: Start every run with 3 Pumpkin seeds.
+  displayName: Pea Pod
+  description: Start every year with 3 Peas seeds.
   cost: 50
   onRunStart:
-  - {fileID: 11400000, guid: 52308f71008b2a14a9fd0f12f5eb46d7, type: 2}
+  - {fileID: 11400000, guid: 14e9e3c615c146f888c84d4d248c2e16, type: 2}

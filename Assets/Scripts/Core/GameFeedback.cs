@@ -15,6 +15,9 @@ public class GameFeedback : MonoBehaviour
     [SerializeField] private float hitShake = 0.6f;
     [SerializeField] private Color playerHitColor = new Color(1f, 0.15f, 0.15f);
     [SerializeField] private float playerFlashSeconds = 0.35f;
+    [SerializeField] private Color zapBlue = new Color(0.25f, 0.55f, 1f);
+    [SerializeField] private float zapFlashSeconds = 0.5f;
+    [SerializeField] private float zapFlickerSeconds = 0.05f;
     [SerializeField] private float hitStopSeconds = 0.06f;
     [SerializeField] private float burstCutSeconds = 2.2f;
 
@@ -48,6 +51,7 @@ public class GameFeedback : MonoBehaviour
             playerHealth.OnChanged += HandleHealthChanged;
             playerHealth.OnRestored += HandleHealthRestored;
         }
+        StrikeHazardEffect.PlayerStruck += HandleStruck;
     }
 
     private void OnDisable()
@@ -63,6 +67,7 @@ public class GameFeedback : MonoBehaviour
             playerHealth.OnChanged -= HandleHealthChanged;
             playerHealth.OnRestored -= HandleHealthRestored;
         }
+        StrikeHazardEffect.PlayerStruck -= HandleStruck;
         Time.timeScale = 1f;
     }
 
@@ -102,6 +107,29 @@ public class GameFeedback : MonoBehaviour
         for (float t = 0f; t < playerFlashSeconds; t += Time.unscaledDeltaTime)
         {
             playerBlock.SetColor(BaseColorId, Color.Lerp(playerHitColor, Color.white, t / playerFlashSeconds));
+            foreach (Renderer r in renderers) if (r != null) r.SetPropertyBlock(playerBlock);
+            yield return null;
+        }
+        foreach (Renderer r in renderers) if (r != null) r.SetPropertyBlock(null);
+        playerFlash = null;
+    }
+
+    private void HandleStruck()
+    {
+        if (playerHealth == null) return;
+        if (playerFlash != null) StopCoroutine(playerFlash);
+        playerFlash = StartCoroutine(FlashPlayerZap());
+    }
+
+    /// <summary>Thunder: the dog crackles between white and blue, then fades back to its own colours.</summary>
+    private IEnumerator FlashPlayerZap()
+    {
+        Renderer[] renderers = playerHealth.GetComponentsInChildren<Renderer>();
+        for (float t = 0f; t < zapFlashSeconds; t += Time.unscaledDeltaTime)
+        {
+            float fade = t / zapFlashSeconds;
+            Color zap = Mathf.FloorToInt(t / zapFlickerSeconds) % 2 == 0 ? Color.white : zapBlue;
+            playerBlock.SetColor(BaseColorId, Color.Lerp(zap, Color.white, fade * fade));
             foreach (Renderer r in renderers) if (r != null) r.SetPropertyBlock(playerBlock);
             yield return null;
         }

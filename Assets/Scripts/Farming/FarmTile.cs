@@ -147,7 +147,9 @@ public class FarmTile : MonoBehaviour, IInteractable, IFarmPlot
 
     public bool CanInteract(GameObject who)
     {
-        if (GameManager.Instance != null && !GameManager.Instance.CanFarm) return false;
+        // Once a quiet day ends (before the screen switches) ripe crops can still be picked up, but nothing new is planted.
+        if (GameManager.Instance != null && !GameManager.Instance.CanFarm
+            && !(GameManager.Instance.Phase == GamePhase.DayEnd && state == TileState.Harvestable)) return false;
         if (IsBlocked) return false;
         return state != TileState.Growing;
     }

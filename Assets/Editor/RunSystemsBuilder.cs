@@ -100,7 +100,7 @@ public static class RunSystemsBuilder
         ClimateConfig climate = A<ClimateConfig>($"{Data}/Climate/ClimateConfig.asset", c =>
         {
             c.minGrowth = 0.12f; c.maxGrowth = 1.6f; c.fallbackKind = WeatherKind.Clear;
-            c.seasonPenaltyExponent = 2f; c.offSeasonDayFraction = 0.83f; c.minQuality = 0.25f; c.maxQuality = 1.25f;
+            c.seasonPenaltyExponent = 2f; c.offSeasonDayFraction = 0.83f; c.minQuality = 0.25f; c.maxQuality = 1f;
             c.rules = new List<ClimateConfig.WeatherKindRule>
             {
                 Rule(WeatherKind.Snow, -100f, 1f, 0.3f, 1f),
@@ -241,9 +241,9 @@ public static class RunSystemsBuilder
         DamageEffect damage1 = A<DamageEffect>($"{Data}/Run/Effects/Effect_Damage1.asset", e => e.amount = 1);
         AddCoinsEffect coins25 = A<AddCoinsEffect>($"{Data}/Run/Effects/Effect_Coins25.asset", e => e.amount = 25);
         AddCoinsEffect coins10 = A<AddCoinsEffect>($"{Data}/Run/Effects/Effect_Coins10.asset", e => e.amount = 10);
-        AddItemEffect turnipSeeds3 =A<AddItemEffect>($"{Data}/Run/Effects/Effect_TurnipSeeds3.asset", e => { e.item = seedTurnip; e.count = 3; });
+        AddItemEffect turnipSeeds2 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_TurnipSeeds2.asset", e => { e.item = seedTurnip; e.count = 2; });
         AddItemEffect pumpkinSeeds3 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_PumpkinSeeds3.asset", e => { e.item = seedPumpkin; e.count = 3; });
-        AddItemEffect pumpkinSeeds4 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_PumpkinSeeds4.asset", e => { e.item = seedPumpkin; e.count = 4; });
+        AddItemEffect pumpkinSeeds2 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_PumpkinSeeds2.asset", e => { e.item = seedPumpkin; e.count = 2; });
         AddCoinsEffect nestEgg = A<AddCoinsEffect>($"{Data}/Run/Effects/Effect_NestEgg25.asset", e => e.amount = 25);
         // Penalties and extra rewards for the bad and seasonal events below.
         LoseItemsEffect loseItems2 = A<LoseItemsEffect>($"{Data}/Run/Effects/Effect_LoseItems2.asset", e => { e.kind = LoseItemsEffect.Kind.SeedsOrCrops; e.count = 2; });
@@ -257,6 +257,8 @@ public static class RunSystemsBuilder
         AddItemEffect tomatoSeeds1 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_TomatoSeeds1.asset", e => { e.item = seedTomato; e.count = 1; });
         AddItemEffect spinachSeeds2 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_SpinachSeeds2.asset", e => { e.item = seedSpinach; e.count = 2; });
         AddItemEffect pumpkinSeeds1 = A<AddItemEffect>($"{Data}/Run/Effects/Effect_PumpkinSeeds1.asset", e => { e.item = seedPumpkin; e.count = 1; });
+        AddRandomCropsEffect randomCrops2 = A<AddRandomCropsEffect>($"{Data}/Run/Effects/Effect_RandomCrops2.asset", e => e.count = 2);
+        AddRandomSeedsEffect randomSeeds3 = A<AddRandomSeedsEffect>($"{Data}/Run/Effects/Effect_RandomSeeds3.asset", e => e.count = 3);
         AddCoinsEffect coins15 = A<AddCoinsEffect>($"{Data}/Run/Effects/Effect_Coins15.asset", e => e.amount = 15);
 
         EventData evPup = A<EventData>($"{Data}/Events/Event_StrayPup.asset", e =>
@@ -276,7 +278,7 @@ public static class RunSystemsBuilder
             e.options = new List<EventData.EventOption>
             {
                 new EventData.EventOption { label = "Drink deeply", coinCost = 0, effects = new List<RunEffect> { healFull } },
-                new EventData.EventOption { label = "Toss in a coin and wish", coinCost = 3, effects = new List<RunEffect> { turnipSeeds3 } },
+                new EventData.EventOption { label = "Toss in a coin and wish", coinCost = 3, effects = new List<RunEffect> { turnipSeeds2 } },
             };
         });
         EventData evCrow = A<EventData>($"{Data}/Events/Event_GreedyCrow.asset", e =>
@@ -285,8 +287,8 @@ public static class RunSystemsBuilder
             e.body = "A crow clutches a pouch of fat pumpkin seeds. \"Shiny coins. Fair trade, yes?\"";
             e.options = new List<EventData.EventOption>
             {
-                new EventData.EventOption { label = "Trade 10 coins for seeds", coinCost = 10, effects = new List<RunEffect> { pumpkinSeeds4 } },
-                new EventData.EventOption { label = "Reach into the hollow stump", coinCost = 0, effects = new List<RunEffect> { damage1, coins25 } },
+                new EventData.EventOption { label = "Trade 10 coins for seeds", coinCost = 10, effects = new List<RunEffect> { pumpkinSeeds2 } },
+                new EventData.EventOption { label = "Reach into the hollow stump", coinCost = 0, effects = new List<RunEffect> { damage1, coins15 } },
                 new EventData.EventOption { label = "Shoo the crow away", coinCost = 0, effects = new List<RunEffect>() },
             };
         });
@@ -300,6 +302,16 @@ public static class RunSystemsBuilder
                 new EventData.EventOption { label = "Take 10 coins", coinCost = 0, effects = new List<RunEffect> { coins10 }, hideEffects = true },
             };
         });
+
+        // ---- Healing events: a free full heal ----
+        EventData evCampfire = Event("cozy_campfire", "Event_CozyCampfire", "The Cozy Campfire",
+            "A little campfire crackles by the fence. Nobody is around, but a blanket and a pot of cocoa are waiting.",
+            Opt("Warm up by the fire", 0, healFull),
+            Opt("Grab the food near it", 0, randomCrops2));
+        EventData evHoneybee = Event("honeybee_healer", "Event_HoneybeeHealer", "The Honeybee Healer",
+            "A round little bee hovers over your shoulder with a tiny satchel. \"Scraped knees? Sore paws? Honey fixes everything.\"",
+            Opt("Accept a honey salve", 0, healFull),
+            Opt("Look around", 0, randomSeeds3));
 
         // ---- Bad events: every choice costs something ----
         EventData evCat = Event("thieving_cat", "Event_ThievingCat", "The Thieving Cat",
@@ -350,7 +362,7 @@ public static class RunSystemsBuilder
             "A huge pile of crunchy leaves sits by the barn. Something glints inside.",
             new[] { autumn },
             Opt("Dive right in", 0, damage1, coins15),
-            Opt("Rake it up slowly", 0, pumpkinSeeds1));
+            Opt("Rake it up slowly", 0, pumpkinSeeds2));
         EventData evPond = Event("winter_pond", "Event_WinterPond", "The Frozen Pond",
             "The pond has iced over. A coin pouch is stuck just under the surface.",
             new[] { winter },
@@ -364,7 +376,7 @@ public static class RunSystemsBuilder
             Opt("Point it to the inn", 0));
 
         EventRegistry events = Registry<EventRegistry, EventData>($"{Data}/Registries/EventRegistry.asset", evPup, evWell, evCrow, evTreasure,
-            evCat, evGoose, evMoles, evHex, evBunnies, evFair, evLemonade, evMaze, evFeast, evLeaves, evPond, evBadger);
+            evCat, evGoose, evMoles, evHex, evBunnies, evFair, evLemonade, evMaze, evFeast, evLeaves, evPond, evBadger, evCampfire, evHoneybee);
 
         RunModifierData scarecrow = Modifier("scarecrow", "Scarecrow", "Bad mystery events come up half as often.", 20, new string[0], 0f, 1f, 0, m => m.harmfulEventChanceMult = 0.5f);
         RunModifierData smallPouch = Modifier("small_pouch", "Small Pouch", "Adds one more inventory slot.", 20, new string[0], 0f, 1f, 0, m => m.bonusInventorySlots = 1);
@@ -373,7 +385,7 @@ public static class RunSystemsBuilder
         RunModifierData fertilizer = Modifier("fertilizer", "Fertilizer", "All crops grow 50% faster.", 30, new string[0], 0f, 1.5f, 0);
         RunModifierData luckyCollar = Modifier("lucky_collar", "Lucky Collar", "+1 max HP for the rest of the run.", 30, new string[0], 0f, 1f, 1);
         RunModifierData doggyBank = Modifier("doggy_bank", "Doggy Bank", "You can bank 10 more coins at every season end.", 35, new string[0], 0f, 1f, 0, m => m.depositLimitBonus = 10);
-        RunModifierData blindBox = Modifier("blind_box", "Blind Box", "Gives you 3 random seeds. The merchant sells up to 3 of them.", 10, new string[0], 0f, 1f, 0, m => { m.randomSeedsOnBuy = 3; m.shopStock = 3; });
+        RunModifierData blindBox = Modifier("blind_box", "Blind Box", "Gives you 3 random seeds. Always at the merchant, in every season; restocked on Merchant days.", 10, new string[0], 0f, 1f, 0, m => { m.randomSeedsOnBuy = 3; m.shopStock = 3; });
         RunModifierData shinyRock = Modifier("shiny_rock", "Shiny Rock", "Every crop you sell fetches 2 coins more.", 40, new string[0], 0f, 1f, 0, m => m.sellBonusCoins = 2);
         RunModifierData puppyCharm = Modifier("puppy_charm", "Puppy Charm", "Protective crops you grow are 20% more effective.", 20, new string[0], 0f, 1f, 0, m => m.supportCropBoost = 0.2f);
         RunModifierData puppyRing = Modifier("puppy_ring", "Puppy Ring", "Attack crops you grow are 20% more effective.", 20, new string[0], 0f, 1f, 0, m => m.attackCropBoost = 0.2f);
@@ -392,7 +404,7 @@ public static class RunSystemsBuilder
         UnlockData uHardy = Unlock("hardy_paws", "Hardy Paws", "Start every run with +1 max HP.", 40, maxHp1);
         UnlockData uPouch = Unlock("seed_pouch", "Seed Pouch", "Start every year with 3 random seeds.", 30, A<AddRandomSeedsEffect>($"{Data}/Run/Effects/Effect_RandomSeeds3.asset", e => e.count = 3));
         UnlockData uEgg = Unlock("nest_egg", "Nest Egg", "Start every run with 25 extra coins.", 50, nestEgg);
-        UnlockData uPumpkin = Unlock("pumpkin_patch", "Pumpkin Patch", "Start every run with 3 Pumpkin seeds.", 50, pumpkinSeeds3);
+        UnlockData uPumpkin = Unlock("pumpkin_patch", "Pea Pod", "Start every year with 3 Peas seeds.", 50, A<AddItemEffect>($"{Data}/Run/Effects/Effect_PeasSeeds3.asset", e => { e.item = seedPeas; e.count = 3; }));   // id kept from the old Pumpkin Patch so saves still own it
         UnlockData uWolf = Unlock("wolf_necklace", "Wolf Necklace", "Blocks one fatal hit each year.", 50, A<FatalSaveEffect>($"{Data}/Run/Effects/Effect_FatalSave1.asset", e => e.saves = 1));
         UnlockData uGranary = Unlock("granary", "Granary", "Keep 3 random crops and 3 random seeds from last year.", 70, A<KeepLeftoversEffect>($"{Data}/Run/Effects/Effect_KeepLeftovers.asset", e => { e.crops = 3; e.seeds = 3; }));
         UnlockData uSprout = Unlock("lucky_sprout", "Lucky Sprout", "Each harvest has a 12% chance to also drop a random seed.", 45, giveSeedFinder);

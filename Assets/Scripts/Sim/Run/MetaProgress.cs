@@ -18,6 +18,8 @@ public class MetaProgress
     public int stockroomLevel;
     /// <summary>Bigger Vault level (0 = none). Raises the vault limit. Permanent.</summary>
     public int vaultLevel;
+    /// <summary>Bigger Deposits level (0 = none). Raises the per-season deposit limit. Permanent.</summary>
+    public int depositLevel;
     public int lastRunDeposited;
     public int lastRunCoinsLost;
 }

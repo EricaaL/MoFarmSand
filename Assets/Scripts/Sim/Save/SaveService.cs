@@ -122,6 +122,7 @@ public sealed class SaveService
     {
         MetaProgress meta = file.meta;
         meta.vaultLevel = TierPricing.ClampOwned(meta.vaultLevel, 0);
+        meta.depositLevel = TierPricing.ClampOwned(meta.depositLevel, 0);
         meta.vaultCoins = Mathf.Clamp(meta.vaultCoins, 0, db.bank != null ? VaultLogic.Cap(meta, db.bank) : int.MaxValue);
         if (db.unlocks != null) meta.unlockedIds.RemoveAll(id => !db.unlocks.TryGet(id, out _));
         meta.farmlands = TierPricing.ClampOwned(meta.farmlands, db.farmland != null ? db.farmland.maxFarmlands : 0);

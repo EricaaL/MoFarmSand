@@ -145,6 +145,9 @@ public class StockroomTests
         Assert.Greater(StockroomLogic.RestockUnits(baseUnits, 1, db.stockroom), baseUnits);
     }
 
+    /// <summary>A passive trinket line; the Blind Box is its own permanent line and takes no trinket slot.</summary>
+    private bool IsCharm(ShopOffer o) => o.kind == OfferKind.Modifier && db.modifiers.Get(o.id).randomSeedsOnBuy <= 0;
+
     [Test]
     public void HigherLevelsStockMoreKindsOfSeedAndCharms()
     {
@@ -161,8 +164,8 @@ public class StockroomTests
             List<ShopOffer> top = ShopGenerator.Generate(db, RunAtLevel(TopLevel), summer, new SeededRng(s));
             maxKinds0 = Mathf.Max(maxKinds0, low.FindAll(o => o.kind == OfferKind.Seed).Count);
             maxKinds2 = Mathf.Max(maxKinds2, mid.FindAll(o => o.kind == OfferKind.Seed).Count);
-            charms0 = Mathf.Max(charms0, low.FindAll(o => o.kind == OfferKind.Modifier).Count);
-            charms3 = Mathf.Max(charms3, top.FindAll(o => o.kind == OfferKind.Modifier).Count);
+            charms0 = Mathf.Max(charms0, low.FindAll(IsCharm).Count);
+            charms3 = Mathf.Max(charms3, top.FindAll(IsCharm).Count);
         }
         Assert.AreEqual(baseKinds, maxKinds0);
         Assert.AreEqual(baseKinds + 1, maxKinds2, "level 2 adds one more kind of seed");

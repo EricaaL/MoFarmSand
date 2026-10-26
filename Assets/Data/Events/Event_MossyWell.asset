@@ -23,4 +23,4 @@ MonoBehaviour:
   - label: Toss in a coin and wish
     coinCost: 3
     effects:
-    - {fileID: 11400000, guid: 9d5be3961095ba842b23c1555ceb8f05, type: 2}
+    - {fileID: 11400000, guid: ba55be55bdb746c3a1206d402d3df562, type: 2}

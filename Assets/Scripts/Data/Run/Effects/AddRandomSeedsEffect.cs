@@ -8,7 +8,7 @@ public class AddRandomSeedsEffect : RunEffect
 
     public override void Apply(RunState run, GameDatabase db)
     {
-        foreach (SeedData seed in Charms.RollSeeds(db, run, count, SeededRng.Derive(run.runSeed, 1, RngStreams.Loadout)))
+        foreach (SeedData seed in Charms.RollSeeds(db, run, count, SeededRng.Derive(run.runSeed, 1 + run.DayIndex, RngStreams.Loadout)))
             InventoryOps.Add(run.inventory, seed.Id, 1);
     }
 

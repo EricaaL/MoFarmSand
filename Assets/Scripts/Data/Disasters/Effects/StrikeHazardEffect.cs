@@ -16,6 +16,9 @@ public class StrikeHazardEffect : DisasterEffect
     public GameObject telegraphFx;
     public GameObject strikeFx;
 
+    /// <summary>Raised when a bolt lands on the player (after the damage), so presentation can zap-flash the dog.</summary>
+    public static event System.Action PlayerStruck;
+
     public override DisasterEffectRuntime CreateRuntime(float severity01) => new Runtime(this, severity01);
 
     private sealed class Runtime : DisasterEffectRuntime
@@ -59,7 +62,11 @@ public class StrikeHazardEffect : DisasterEffect
                 world.Shake(fx.shake);
                 Vector3 d = world.PlayerPosition - s.pos;
                 d.y = 0f;
-                if (d.magnitude <= fx.radius) world.DamagePlayer(fx.damage);
+                if (d.magnitude <= fx.radius)
+                {
+                    world.DamagePlayer(fx.damage);
+                    PlayerStruck?.Invoke();
+                }
             }
         }
     }

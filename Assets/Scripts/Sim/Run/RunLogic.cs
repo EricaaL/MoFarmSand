@@ -24,10 +24,7 @@ public static class RunLogic
 
         GrantStartingSeeds(run, db);
 
-        // A small starter shelf so the merchant is usable from day one, until the first Merchant day restocks him.
-        run.shopStock = ShopStock.FromOffers(ShopGenerator.Generate(db, run, db.Calendar.DateOf(0),
-            SeededRng.Derive(seed, 0, RngStreams.Shop), includeModifiers: false,
-            seedStock: StockroomLogic.StarterUnits(db.economy.starterSeedStock, run.stockroomLevel, db.stockroom)));
+        BuildStarterShelf(run, db);
         foreach (string id in meta.unlockedIds)
         {
             if (db.unlocks == null || !db.unlocks.TryGet(id, out UnlockData unlock)) continue;
@@ -39,6 +36,36 @@ public static class RunLogic
         run.phase = RunPhase.ChoosingNode;
         return run;
     }
+
+    /// <summary>A small starter shelf so the merchant is usable from day one, until the first Merchant day restocks him.</summary>
+    private static void BuildStarterShelf(RunState run, GameDatabase db)
+    {
+        run.shopStock = ShopStock.FromOffers(ShopGenerator.Generate(db, run, db.Calendar.DateOf(0),
+            SeededRng.Derive(run.runSeed, 0, RngStreams.Shop), includeModifiers: false,
+            seedStock: StockroomLogic.StarterUnits(db.economy.starterSeedStock, run.stockroomLevel, db.stockroom)));
+    }
+
+    /// <summary>
+    /// Upgrades bought after the year began (the map's Upgrades button, before the first node): brings the year's snapshot up to
+    /// date, rebuilds the starter shelf and applies the start-of-year effects of any newly bought unlock.
+    /// </summary>
+    public static void RefreshUpgrades(RunState run, MetaProgress meta, GameDatabase db)
+    {
+        run.farmlands = TierPricing.ClampOwned(meta.farmlands, db.farmland != null ? db.farmland.maxFarmlands : 0);
+        run.stockroomLevel = TierPricing.ClampOwned(meta.stockroomLevel, db.stockroom != null ? db.stockroom.maxLevel : 0);
+        foreach (string id in meta.unlockedIds)
+        {
+            if (run.unlockedIds.Contains(id)) continue;
+            run.unlockedIds.Add(id);
+            if (db.unlocks == null || !db.unlocks.TryGet(id, out UnlockData unlock)) continue;
+            foreach (RunEffect e in unlock.onRunStart) if (e != null) e.ApplyAtYearStart(run, db, null);
+        }
+        BuildStarterShelf(run, db);
+    }
+
+    /// <summary>The map's Upgrades button is open only in year 2 onwards, before any node has been chosen.</summary>
+    public static bool CanVisitUpgrades(RunState run, MetaProgress meta)
+        => run != null && !run.freeRoam && run.phase == RunPhase.ChoosingNode && run.visited.Count == 0 && run.currentNodeId < 0 && run.YearNumber(meta) > 1;
 
     /// <summary>A few random seed types, deterministic for the run seed and limited to seeds sold on day 0.</summary>
     public static void GrantStartingSeeds(RunState run, GameDatabase db)

@@ -19,12 +19,12 @@ MonoBehaviour:
   - label: Trade 10 coins for seeds
     coinCost: 10
     effects:
-    - {fileID: 11400000, guid: a5747064053b6304db8bb0622a98d05d, type: 2}
+    - {fileID: 11400000, guid: 42373a6541d946e8958db1e25b5441a6, type: 2}
   - label: Reach into the hollow stump
     coinCost: 0
     effects:
     - {fileID: 11400000, guid: e80067aa542e82041a85f68e4f3bff24, type: 2}
-    - {fileID: 11400000, guid: 0b5787e7b229d6c4f83c552c808d1436, type: 2}
+    - {fileID: 11400000, guid: a2be096c547e40c458ffe2c9074746e5, type: 2}
   - label: Shoo the crow away
     coinCost: 0
     effects: []

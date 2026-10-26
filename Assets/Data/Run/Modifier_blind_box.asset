@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   modifierId: blind_box
   displayName: Blind Box
-  description: 'Gives you 3 random seeds. '
+  description: 'Gives you 3 random seeds. Always at the merchant, in every season; restocked on Merchant days.'
   price: 10
   resistDisasterIds: []
   resistAmount: 0

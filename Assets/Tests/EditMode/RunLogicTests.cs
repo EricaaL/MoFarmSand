@@ -473,6 +473,22 @@ public class RunLogicTests
     }
 
     [Test]
+    public void BlindBoxIsAlwaysOnTheShelfAndTheYearStartsWithOne()
+    {
+        RunState run = RunLogic.NewRun(3, db, new MetaProgress());
+        ShopStockEntry starter = run.shopStock.Find(e => e.id == "blind_box");
+        Assert.IsNotNull(starter, "the starter shelf has a Blind Box");
+        Assert.AreEqual(1, starter.stock);
+
+        foreach (SeasonData season in db.calendar.seasons)
+        {
+            List<ShopOffer> offers = ShopGenerator.Generate(db, run, new CalendarDate { season = season }, new SeededRng(4));
+            ShopOffer box = offers.Find(o => o.id == "blind_box");
+            Assert.AreEqual(db.modifiers.Get("blind_box").shopStock, box.stock, $"restock refills the box in {season.displayName}");
+        }
+    }
+
+    [Test]
     public void ChanceCutLowersDisasterOddsButNotForcedDisasters()
     {
         CalendarDate date = db.Calendar.DateOf(2);

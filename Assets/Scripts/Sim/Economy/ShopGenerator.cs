@@ -49,11 +49,18 @@ public static class ShopGenerator
         {
             List<RunModifierData> pool = new List<RunModifierData>();
             foreach (RunModifierData m in db.modifiers.All)
-                if (m != null && m.shopItem && !run.modifierIds.Contains(m.Id)) pool.Add(m);
+                if (m != null && m.shopItem && m.randomSeedsOnBuy <= 0 && !run.modifierIds.Contains(m.Id)) pool.Add(m);
             rng.Shuffle(pool);
             for (int i = 0; i < pool.Count && i < charmSlots; i++)
                 offers.Add(new ShopOffer { kind = OfferKind.Modifier, id = pool[i].Id, price = pool[i].price, stock = Math.Max(1, pool[i].shopStock) });
         }
+
+        // Boxes (Blind Box) are a permanent line on the shelf in every season, not one of the trinket slots.
+        // A merchant-day restock refills them to their full stock; the starter shelf holds one.
+        if (db.modifiers != null)
+            foreach (RunModifierData m in db.modifiers.All)
+                if (m != null && m.shopItem && m.randomSeedsOnBuy > 0)
+                    offers.Add(new ShopOffer { kind = OfferKind.Modifier, id = m.Id, price = m.price, stock = includeModifiers ? Math.Max(1, m.shopStock) : 1 });
         return offers;
     }
 }

@@ -22,6 +22,17 @@ public class MapScreen : IRunScreen
     private static readonly Color NightPurple = new Color(0.17f, 0.08f, 0.31f);
     private const float MapShiftLeft = 170f;  // the whole graph sits a little left of centre, clear of the legend
 
+    // Pen: draw your own route on the map. The tool state is per screen; the strokes live on RunState.ink.
+    private static readonly Color[] InkColors =
+    {
+        new Color(0.12f, 0.12f, 0.14f), new Color(0.82f, 0.18f, 0.18f), new Color(0.15f, 0.38f, 0.85f), new Color(0.15f, 0.55f, 0.25f),
+    };
+    private const float InkWidth = 5f;
+    private const float EraserRadius = 22f;
+    private bool penOn, eraser;
+    private int inkColor;
+    private MapInkStroke activeStroke;
+
     // Order of the legend rows (node type ids); rows without an icon or label are skipped.
     private static readonly string[] LegendOrder = { "farm", "merchant", "event", "disaster", "season_boss" };
 
@@ -69,6 +80,16 @@ public class MapScreen : IRunScreen
         DrawBackground(db, maxLayer, h, s);
         DrawSeasonLabels(db, maxLayer, yOf, s);
 
+        // Pen input comes first so a stroke never also clicks the node under it.
+        Rect penBar = PenBarRect(h, s);
+        Rect backRect = new Rect(36f * s, 30f * s, 110f * s, 110f * s);
+        // Year 2 onwards: the upgrade shop stays open until the first node is chosen.
+        bool canUpgrade = !readOnly && RunLogic.CanVisitUpgrades(run, director.Meta);
+        Rect upgradesRect = new Rect(36f * s, 156f * s, 260f * s, 60f * s);
+        bool overUi = penBar.Contains(e.mousePosition) || backRect.Contains(e.mousePosition) || (canUpgrade && upgradesRect.Contains(e.mousePosition));
+        if (penOn) HandlePen(run, e, overUi, w, h, s);
+        else activeStroke = null;
+
         MapNode current = run.currentNodeId >= 0 ? map.Get(run.currentNodeId) : null;
 
         // Edges.
@@ -100,7 +121,7 @@ public class MapScreen : IRunScreen
             Vector2 ic = new Vector2(p.x, p.y - bossLift);   // where the node is drawn and hit-tested
             float ir = bossLift > 0f ? r * BossArtScale : r;
             bool hover = (mouse - ic).sqrMagnitude <= ir * ir * 1.4f;
-            if (hover) hovered = n;
+            if (hover && !penOn) hovered = n;
 
             // "You are here": the day in progress.
             if (run.phase == RunPhase.InDay && n.id == run.pendingNodeId)
@@ -145,7 +166,7 @@ public class MapScreen : IRunScreen
             }
             if (visited) DrawTick(new Vector2(ic.x + ir * 0.7f, ic.y + ir * 0.7f), 16f * s);
 
-            if (!readOnly && available && hover && e.type == EventType.MouseDown && e.button == 0)
+            if (!readOnly && !penOn && available && hover && e.type == EventType.MouseDown && e.button == 0)
             {
                 ImGuiKit.ConsumeSmallClick();
                 director.ChooseNode(n.id);
@@ -161,17 +182,120 @@ public class MapScreen : IRunScreen
             ImGuiKit.Label(tag, "YOU ARE HERE", 24f, new Color(0.08f, 0.4f, 0.12f), TextAnchor.MiddleCenter, true);
         }
 
+        DrawInk(run, w, h, s);
         DrawLegend(db, s);
         DrawHeader(run, w, s);
+        DrawPenBar(run, penBar, s);
+        if (penOn && !overUi) DrawPenCursor(mouse, s);
         if (director.IsBeta && !readOnly) DrawBetaPanel(run, db, h, s, content);
         if (hovered != null) DrawTooltip(hovered, db, mouse, s, readOnly || RunLogic.CanEnter(run, hovered.id),
             BossScaling.ForYear(run.YearNumber(director.Meta), db.difficulty));
 
+        if (canUpgrade && ImGuiKit.Pill(upgradesRect, "Upgrades", ImGuiKit.PillKind.Cream, true, 28f))
+        {
+            director.ShowUpgrades();
+            return;
+        }
+
         // Back: the read-only route returns to the pause menu, the choosing map opens it.
-        if (ImGuiKit.BackButton(new Rect(36f * s, 30f * s, 110f * s, 110f * s)))
+        if (ImGuiKit.BackButton(backRect))
         {
             if (readOnly) director.CloseRoute(); else director.ShowPause();
         }
+    }
+
+    // ------------------------------------------------------------------ pen
+
+    private static Vector2 ToScreen(float mx, float my, float w, float h, float scroll, float s) => new Vector2(w * 0.5f + mx * s, h + scroll + my * s);
+
+    /// <summary>Bottom-left corner, growing upward when open. The beta panel owns that corner, so the pen sits beside it there.</summary>
+    private Rect PenBarRect(float h, float s)
+    {
+        float height = (penOn ? 280f : 52f) * s;
+        float x = (director.IsBeta && !readOnly ? 404f : 36f) * s;
+        return new Rect(x, h - 36f * s - height, 200f * s, height);
+    }
+
+    private void HandlePen(RunState run, Event e, bool overUi, float w, float h, float s)
+    {
+        // The inverse of ToScreen, so strokes stay put when the window is resized or the map scrolls.
+        float mx = (e.mousePosition.x - w * 0.5f) / s, my = (e.mousePosition.y - h - scroll) / s;
+        switch (e.type)
+        {
+            case EventType.MouseDown when e.button == 0 && !overUi:
+                if (eraser) MapInk.EraseAt(run.ink, mx, my, EraserRadius);
+                else if (MapInk.TotalPoints(run.ink) < MapInk.MaxPoints) activeStroke = MapInk.Begin(run.ink, inkColor, mx, my);
+                e.Use();
+                break;
+            case EventType.MouseDrag when e.button == 0:
+                if (eraser) MapInk.EraseAt(run.ink, mx, my, EraserRadius);
+                else if (activeStroke != null) MapInk.Extend(run.ink, activeStroke, mx, my, 3f);
+                if (eraser || activeStroke != null) e.Use();
+                break;
+            case EventType.MouseUp when e.button == 0:
+                activeStroke = null;
+                break;
+        }
+    }
+
+    private void DrawInk(RunState run, float w, float h, float s)
+    {
+        float width = InkWidth * s;
+        foreach (MapInkStroke stroke in run.ink)
+        {
+            Color col = InkColors[Mathf.Clamp(stroke.color, 0, InkColors.Length - 1)];
+            col.a = 0.92f;
+            Vector2 prev = Vector2.zero;
+            for (int i = 0; i + 1 < stroke.xy.Count; i += 2)
+            {
+                Vector2 p = ToScreen(stroke.xy[i], stroke.xy[i + 1], w, h, scroll, s);
+                if (i > 0 && (p.y > -50f && p.y < h + 50f || prev.y > -50f && prev.y < h + 50f)) ImGuiKit.Line(prev, p, width, col);
+                if (p.y > -50f && p.y < h + 50f) ImGuiKit.Circle(p, width * 0.5f, col);
+                prev = p;
+            }
+        }
+    }
+
+    private void DrawPenBar(RunState run, Rect bar, float s)
+    {
+        if (ImGuiKit.Pill(new Rect(bar.x, bar.yMax - 52f * s, bar.width, 52f * s), penOn ? "Pen: ON" : "Pen", ImGuiKit.PillKind.Panel, true, 24f, penOn))
+        {
+            penOn = !penOn;
+            activeStroke = null;
+        }
+        if (!penOn) return;
+
+        float y = bar.y, sw = 40f * s, gap = (bar.width - 4f * sw) / 3f;
+        for (int i = 0; i < InkColors.Length; i++)
+        {
+            Rect r = new Rect(bar.x + i * (sw + gap), y, sw, sw);
+            bool picked = !eraser && i == inkColor;
+            ImGuiKit.Circle(r.center, sw * 0.5f + (picked ? 5f * s : 2f * s), picked ? ImGuiKit.Orange : ImGuiKit.Cream);
+            ImGuiKit.Circle(r.center, sw * 0.5f, InkColors[i]);
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && r.Contains(Event.current.mousePosition))
+            {
+                ImGuiKit.ConsumeSmallClick();
+                inkColor = i;
+                eraser = false;
+            }
+        }
+        y += sw + 14f * s;
+        if (ImGuiKit.Pill(new Rect(bar.x, y, bar.width, 44f * s), "Eraser", ImGuiKit.PillKind.Panel, true, 20f, eraser)) eraser = !eraser;
+        y += 52f * s;
+        if (ImGuiKit.Button(new Rect(bar.x, y, bar.width, 44f * s), "Undo", run.ink.Count > 0, 20f)) MapInk.Undo(run.ink);
+        y += 52f * s;
+        if (ImGuiKit.Button(new Rect(bar.x, y, bar.width, 44f * s), "Clear all", run.ink.Count > 0, 20f)) run.ink.Clear();
+    }
+
+    private void DrawPenCursor(Vector2 m, float s)
+    {
+        if (eraser)
+        {
+            ImGuiKit.Circle(m, EraserRadius * s, new Color(1f, 1f, 1f, 0.35f));
+            return;
+        }
+        ImGuiKit.Circle(m, InkWidth * s * 0.5f + 2f * s, Color.white);
+        ImGuiKit.Circle(m, InkWidth * s * 0.5f, InkColors[inkColor]);
     }
 
     // ------------------------------------------------------------------ background

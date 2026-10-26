@@ -31,8 +31,8 @@ public class ClimateConfig : ScriptableObject
     [Range(0f, 1f)] public float offSeasonDayFraction = 0.83f;
     [Tooltip("Harvested crops are at least this effective, however bad the season was.")]
     [Range(0.05f, 1f)] public float minQuality = 0.25f;
-    [Tooltip("Best-season crops can be this much stronger than normal.")]
-    [Range(1f, 2f)] public float maxQuality = 1.25f;
+    [Tooltip("Best-season crops can be this much stronger than normal (1 = in-season crops are just normal).")]
+    [Range(1f, 2f)] public float maxQuality = 1f;
     public WeatherKind fallbackKind = WeatherKind.Clear;
     public List<WeatherKindRule> rules = new List<WeatherKindRule>();
 }

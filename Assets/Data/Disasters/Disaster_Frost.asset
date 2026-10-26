@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   disasterId: blizzard
   displayName: Blizzard
-  bannerText: A killing chill. Crops barely grow.
+  bannerText: A killing Blizzard. Crops barely grow.
   uiColor: {r: 0.6, g: 0.85, b: 1, a: 1}
   seasonWeights:
   - season: {fileID: 11400000, guid: 1d6fbdaaca771e14a9656673775f7040, type: 2}
@@ -24,7 +24,7 @@ MonoBehaviour:
   - season: {fileID: 11400000, guid: 5bc8feee265739b4a9788711bdfbe020, type: 2}
     weight: 3
   minDay: 0
-  severityRange: {x: 0.4, y: 1}
+  severityRange: {x: 0.6, y: 1}
   activeAtNight: 0
   effects:
   - {fileID: 11400000, guid: 22e12a8a904857946a1e6b970af3430d, type: 2}

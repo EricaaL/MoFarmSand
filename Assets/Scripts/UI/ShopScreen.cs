@@ -6,8 +6,12 @@ public class ShopScreen : IRunScreen
     private readonly RunDirector director;
     private bool selling;
     private int selectedOffer;
-    private CropData selectedCrop;
+    private ItemData selectedCrop;
     private float scroll;
+    private int pressedPill = -1, flashPill = -1;
+    private float flashTime;
+    private int fullPill = -1;
+    private float fullTime;
 
     public ShopScreen(RunDirector director) { this.director = director; }
 
@@ -51,9 +55,9 @@ public class ShopScreen : IRunScreen
 
         // Big heading for the open side; the other side is a small grey toggle in the corner.
         ImGuiKit.Heading(new Rect(1000f * s, 70f * s, 800f * s, 130f * s), selling ? "SELL" : "BUY", 112f, light, TextAnchor.MiddleCenter);
-        Rect toggle = new Rect(1700f * s, 70f * s, 180f * s, 76f * s);
+        Rect toggle = new Rect(1600f * s, 70f * s, 180f * s, 76f * s);
         bool hover = toggle.Contains(Event.current.mousePosition);
-        ImGuiKit.Heading(toggle, selling ? "BUY" : "SELL", 56f, hover ? Color.white : dim, TextAnchor.MiddleRight);
+        ImGuiKit.Heading(toggle, selling ? "BUY" : "SELL", 56f, hover ? Color.white : dim, TextAnchor.MiddleCenter);
         if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && hover)
         {
             ImGuiKit.ConsumeSmallClick();
@@ -106,11 +110,49 @@ public class ShopScreen : IRunScreen
             ImGuiKit.Rounded(card, dim);
             if (!filled) continue;
 
-            if (selling) DrawSellCard(card, crops[i], s, theme);
-            else DrawOfferCard(card, plan.offers[i], s, theme);
+            Rect pill = new Rect(card.center.x - 82f * s, card.yMax - 56f * s, 164f * s, 46f * s);
+            bool overPill = pill.Contains(mouse);
+            if (overPill && e.type == EventType.MouseDown && e.button == 0) pressedPill = i;
+            if (e.rawType == EventType.MouseUp) pressedPill = -1;
+            // Hover brightens the pill, and it greys out while held and for a moment after a purchase or sale.
+            Color pillColor = ImGuiKit.PanelLight;
+            {
+                bool flash = flashPill == i && Time.realtimeSinceStartup - flashTime < 0.25f;
+                if (flash || (pressedPill == i && overPill)) pillColor = new Color(0.62f, 0.61f, 0.6f);
+                else if (overPill && (selling || plan.offers[i].stock > 0)) pillColor = Color.Lerp(ImGuiKit.PanelLight, Color.white, 0.6f);
+            }
+
+            if (selling) DrawSellCard(card, crops[i], s, theme, pillColor);
+            else DrawOfferCard(card, plan.offers[i], s, theme, pillColor, fullPill == i && Time.realtimeSinceStartup - fullTime < 1.5f);
 
             if (e.type == EventType.MouseDown && e.button == 0 && card.Contains(mouse))
             {
+                // Double-clicking the coin pill sells one of that item.
+                if (selling && e.clickCount >= 2 && overPill)
+                {
+                    selectedCrop = crops[i];
+                    flashPill = i;
+                    flashTime = Time.realtimeSinceStartup;
+                    e.Use();
+                    director.Sell(crops[i], 1);
+                    continue;
+                }
+                // Double-clicking the coin pill under a seed buys it.
+                if (!selling && e.clickCount >= 2 && overPill)
+                {
+                    selectedOffer = i;
+                    flashPill = i;
+                    flashTime = Time.realtimeSinceStartup;
+                    // No room: the pill says so for a moment instead of the price.
+                    if (plan.offers[i].stock > 0 && director.OfferNoRoom(plan.offers[i]))
+                    {
+                        fullPill = i;
+                        fullTime = Time.realtimeSinceStartup;
+                    }
+                    e.Use();
+                    director.Buy(i);
+                    continue;
+                }
                 bool changed = selling ? selectedCrop != crops[i] : selectedOffer != i;
                 if (selling) selectedCrop = crops[i]; else selectedOffer = i;
                 if (changed) ImGuiKit.ConsumeShopSelectClick(); else e.Use();
@@ -126,18 +168,18 @@ public class ShopScreen : IRunScreen
         }
     }
 
-    private System.Collections.Generic.List<CropData> SellCrops()
+    private System.Collections.Generic.List<ItemData> SellCrops()
     {
-        var list = new System.Collections.Generic.List<CropData>();
+        var list = new System.Collections.Generic.List<ItemData>();
         for (int i = 0; i < PlayerInventory.SlotCount; i++)
         {
             PlayerInventory.Slot slot = director.Inventory.GetSlot(i);
-            if (slot.item is CropData crop && slot.count > 0 && !list.Contains(crop)) list.Add(crop);
+            if ((slot.item is CropData || slot.item is SeedData) && slot.count > 0 && !list.Contains(slot.item)) list.Add(slot.item);
         }
         return list;
     }
 
-    private void DrawOfferCard(Rect card, ShopOffer o, float s, UiTheme theme)
+    private void DrawOfferCard(Rect card, ShopOffer o, float s, UiTheme theme, Color pillColor, bool showFull)
     {
         bool soldOut = o.stock <= 0;
         Rect art = new Rect(card.x + 22f * s, card.y + 14f * s, card.width - 44f * s, 296f * s);
@@ -154,27 +196,28 @@ public class ShopScreen : IRunScreen
             ImGuiKit.Label(art, "Trinket", 28f, ImGuiKit.Text, TextAnchor.UpperCenter, true);
             ImGuiKit.Label(new Rect(art.x + 10f * s, art.y + 50f * s, art.width - 20f * s, art.height - 60f * s), m != null ? m.displayName : o.id, 34f, ImGuiKit.Text, TextAnchor.MiddleCenter, true);
         }
-        PricePill(card, soldOut ? "Sold out" : director.OfferPrice(o).ToString(), !soldOut, s, theme);
+        if (showFull && !soldOut) PricePill(card, "Inventory full", false, s, theme, pillColor, 22f);
+        else PricePill(card, soldOut ? "Sold out" : director.OfferPrice(o).ToString(), !soldOut, s, theme, pillColor);
     }
 
-    private void DrawSellCard(Rect card, CropData crop, float s, UiTheme theme)
+    private void DrawSellCard(Rect card, ItemData crop, float s, UiTheme theme, Color pillColor)
     {
         Rect art = new Rect(card.x + 22f * s, card.y + 14f * s, card.width - 44f * s, 296f * s);
         ImGuiKit.Rounded(art, ImGuiKit.PanelLight);
         ItemIconDrawer.Draw(new Rect(art.x + 10f * s, art.y + 10f * s, art.width - 20f * s, art.height - 20f * s), crop);
-        PricePill(card, director.SellPriceOf(crop).ToString(), true, s, theme);
+        PricePill(card, director.SellPriceOf(crop).ToString(), true, s, theme, pillColor);
     }
 
-    private static void PricePill(Rect card, string text, bool coin, float s, UiTheme theme)
+    private static void PricePill(Rect card, string text, bool coin, float s, UiTheme theme, Color? fill = null, float plainSize = 26f)
     {
         Rect pill = new Rect(card.center.x - 82f * s, card.yMax - 56f * s, 164f * s, 46f * s);
-        ImGuiKit.Rounded(pill, ImGuiKit.PanelLight);
+        ImGuiKit.Rounded(pill, fill ?? ImGuiKit.PanelLight);
         if (coin)
         {
             ImGuiKit.Icon(new Rect(pill.x + 14f * s, pill.y + 5f * s, 36f * s, 36f * s), theme != null ? theme.coin : null);
             ImGuiKit.Label(new Rect(pill.x + 54f * s, pill.y, pill.width - 56f * s, pill.height), text, 30f, ImGuiKit.Text, TextAnchor.MiddleLeft, false, false);
         }
-        else ImGuiKit.Label(pill, text, 26f, ImGuiKit.Muted, TextAnchor.MiddleCenter);
+        else ImGuiKit.Label(pill, text, plainSize, ImGuiKit.Muted, TextAnchor.MiddleCenter);
     }
 
     // ------------------------------------------------------------------ left: the selected card
@@ -235,18 +278,21 @@ public class ShopScreen : IRunScreen
         }
         else if (selectedCrop != null)
         {
-            CropData crop = selectedCrop;
+            ItemData crop = selectedCrop;
             ItemInfo info = ItemInfoBuilder.Build(crop, director.BuildItemContext(crop));
             int owned = director.Inventory.CountOf(crop);
-            title = crop.displayName; sub = $"owned {owned}"; desc = info.summary; fullness = info.fullness; shield = info.shield;
+            title = crop.DisplayName; sub = $"owned {owned}"; desc = info.summary; fullness = info.fullness; shield = info.shield;
             price = director.SellPriceOf(crop);
             action = "SELL";
             canAct = owned > 0;
             act = () => director.Sell(crop, 1);
             actAll = () => director.Sell(crop, director.Inventory.CountOf(crop));
-            float demand = director.Run.market.GetDemand(crop.Id);
-            EconomyConfig eco = director.Db.economy;
-            demand01 = Mathf.Clamp01((demand - eco.minDemand) / Mathf.Max(0.01f, eco.maxDemand - eco.minDemand));
+            if (crop is CropData)
+            {
+                float demand = director.Run.market.GetDemand(crop.Id);
+                EconomyConfig eco = director.Db.economy;
+                demand01 = Mathf.Clamp01((demand - eco.minDemand) / Mathf.Max(0.01f, eco.maxDemand - eco.minDemand));
+            }
         }
         else
         {

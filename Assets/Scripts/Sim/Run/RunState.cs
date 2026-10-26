@@ -39,6 +39,8 @@ public class RunState
     /// <summary>Node whose event prop was left hungry by the player's choice (the wild chocobo then eats planted crops that day).</summary>
     public int hungryNodeId = -1;
     public List<int> visited = new List<int>();
+    /// <summary>The player's pen drawings on the route map.</summary>
+    public List<MapInkStroke> ink = new List<MapInkStroke>();
     public RunPhase phase = RunPhase.ChoosingNode;
 
     public int coins;
