@@ -6,6 +6,10 @@ The signature mechanic is the **inverted boss fight**: you don't chip a health b
 
 Built for the DIGI 237: The Art of Storytelling pitch (pitch deck plus a rendered gameplay trailer). Target audience: 13+.
 
+## Trailer
+
+[Watch the trailer on Vimeo](https://vimeo.com/1239642898)
+
 ## Team
 
 | Name | Role |
@@ -36,66 +40,6 @@ Built for the DIGI 237: The Art of Storytelling pitch (pitch deck plus a rendere
 | Tab | Inventory |
 | Esc | Pause menu |
 | T | Trailer cameras (in Play mode) |
-
-## Setup
-
-1. Install **Unity 6000.0.46f1** (see `ProjectSettings/ProjectVersion.txt`). The project uses URP and the new Input System.
-2. Clone the repo and import the Asset Store packs that are git-ignored for size. GUIDs match, so scene and prefab references reconnect:
-   - Poly Universal Pack (`Assets/polyperfect/`)
-   - Low Poly Trees Pack (`Assets/Low Poly Trees Pack/`)
-   - Cartoon Grass (`Assets/CartoonGrass/`)
-   - Low Poly Fantasy Bundle (`Assets/LowPolyFantasyBundle/`)
-   - COZY: Stylized Weather 3 (`Packages/com.distantlands.cozy.core/`)
-3. Optional: copy the **Beautiful Magic** font (`BeautifulMagic.ttf`) into `Assets/Art/UI/Fonts/`. It is personal-use only and git-ignored. Without it, headings fall back to Open Sans Bold.
-4. Open the project and the scene `Assets/Scenes/GoldenSliceScene.unity`, then press Play.
-
-`Library/`, `Recordings/` and generated `.csproj` / `.sln` files are ignored.
-
-## Project layout
-
-```text
-Assets/
-  Art/          Models, animations, materials, UI art
-  Audio/        Music and sound effects
-  Data/         ScriptableObject assets (crops, seasons, events, prices, tips...)
-  Editor/       Builders and menu tools (MoFarmSand menu)
-  Prefabs/      Crops, characters, FX, systems
-  Scenes/       GoldenSliceScene (main), BetaTestScene, TrailerEpilogueScene
-  Scripts/
-    Sim/        Pure C# rules: seeded RNG, calendar, map, economy, bank, save
-    Run/        RunDirector, disasters, COZY bridge, merchant
-    Farming/    Plots and crops
-    Player/     Movement, combat, health
-    Boss/       Hunger meter, evolution, reactions
-    UI/         IMGUI screens and HUD
-  Tests/        EditMode tests
-.agents/doc/    Architecture guide and task notes
-```
-
-### Architecture in short
-
-- **ScriptableObjects, not JSON, for all templates** (crops, bosses, seasons, events, prices). JSON is used only for save data.
-- **One owner per fact.** A rule or stat lives in exactly one asset or registry.
-- **`Assets/Scripts/Sim/` stays pure:** no MonoBehaviours, `UnityEngine.Random`, frame time, COZY or scene lookups. A test enforces it.
-- **Events only at seams** (HUD, audio, camera). The main game path calls methods directly.
-- The UI is IMGUI and stays that way.
-
-More detail is in [`AGENTS.md`](AGENTS.md) and [`.agents/doc/implementation-guide.md`](.agents/doc/implementation-guide.md).
-
-## Editor tools
-
-Most setup is additive and idempotent, under the **MoFarmSand** menu (for example *Add Demo Polish*, *Add UI Theme*, *Add Blizzard*, *Add Chocobo*). Re-running one keeps values you have tuned.
-
-Trailer capture: gameplay uses Cinemachine (`CM_Gameplay`), trailer shots are `CM_*` cameras driven by `TrailerDirector`. Use **MoFarmSand > Record Trailer Take** to record an H.264 MP4 into `Recordings/` with Unity Recorder.
-
-## Tests
-
-EditMode tests live in `Assets/Tests/EditMode`. Run them from the Unity Test Runner, or headless with the editor closed:
-
-```powershell
-& "<Unity 6000.0.46f1>\Editor\Unity.exe" -batchmode -nographics -projectPath "<project>" `
-  -runTests -testPlatform EditMode -testResults "$env:TEMP\results.xml" -logFile "$env:TEMP\tests.log"
-```
 
 ## Scope
 
